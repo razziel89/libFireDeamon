@@ -1,0 +1,240 @@
+#!/bin/bash
+# libFireDeamon local configuration generator
+#
+# Will generate a file called "make.vars" which contains
+# local configuration parameters.
+
+cat << EOF
+This script is not like you ordinary configure script as it has not been
+created using autoconf and automake but manually. hence, you won't get
+messages about libraries not found or similar things. Instead, it only uses
+the proviced flags to generate a file called "make.vars" which contains
+important variables for the Makefile. If libraries/headers cannot be found,
+you will get these error messages during the make process.
+
+EOF
+
+# Output file name
+output=make.vars
+commandlinesave="$@"
+
+# Default configuration options
+PREFIX=
+OBJDIR=objdir
+LIBDIR=lib
+INCDIR=include
+SRCDIR=src
+PYTHONDIR=bindings
+
+PYTHONLIB=
+PYTHONINC=
+CGALLIB=
+CGALINC=
+SWIGINC=
+GXX=
+AR=
+SWIG=
+PYTHON=
+
+USEPYTHON=true
+
+function helptext {
+cat << EOF
+Will generate a file called "make.vars" which contains
+local configuration parameters.
+
+Usage:
+configure --prefix PREFIX -I INCLUDEDIR -L LIBDIR [FLAGS]
+
+Each --enable-XXX flag has a corresponding --disable-XXX
+flag that can be used to turn off the feature.
+
+Flags:
+--prefix                the prefix for the whole installation
+--enable-python         will also build python bindings
+--cgal-inc              the cgal include directory
+--cgal-lib              the cgal lib directory. Contains
+                            libCGAL.so.10
+--python-inc            the python include directory. NOT YET NEEDED
+--python-lib            the python lib directory. NOT YET NEEDED
+--swig                  will use the specified swig executable.
+                        Deafault: first in PATH
+--swig-inc              the directory for swigs *.i files
+--ar                    will use the specified ar.
+                        Deafault: first in PATH
+--g++                   will use the specified g++ compiler.
+                        Deafault: first in PATH
+--python                will use the specified python interpreter.
+                        Deafault: first in PATH
+EOF
+}
+
+function nospace {
+if grep -q -E "\s" <<< "$1"
+then
+    echo "A path with spaces is not supported, sorry. Aborting." >&2
+    echo "Bad path: $1" >&2
+exit 101
+fi
+}
+
+function notdef {
+if [[ ! "$2" ]]
+then
+    echo "Flag $1 not defined, aborting." >&2
+    exit 102
+fi
+}
+
+#read in command line parameters
+while [[ $# -gt 0 ]]
+do
+    case "$1" in
+        --prefix)
+            shift
+            PREFIX="$1"
+        ;;
+        --enable-python)
+            USEPYTHON=true
+        ;;
+        --disable-python)
+            USEPYTHON=false
+        ;;
+        --python-inc)
+            shift
+            nospace "$1"
+            PYTHONINC="$1"
+        ;;
+        --python-lib)
+            shift
+            nospace "$1"
+            PYTHONLIB="$1"
+        ;;
+        --cgal-inc)
+            shift
+            nospace "$1"
+            CGALINC="$1"
+        ;;
+        --cgal-lib)
+            shift
+            nospace "$1"
+            CGALLIB="$1"
+        ;;
+        --ar)
+            shift
+            nospace "$1"
+            AR="$1"
+        ;;
+        --swig)
+            shift
+            nospace "$1"
+            SWIG="$1"
+        ;;
+        --swig-inc)
+            shift
+            nospace "$1"
+            SWIGINC="$1"
+        ;;
+        --g++)
+            shift
+            nospace "$1"
+            GXX="$1"
+        ;;
+        --python)
+            shift
+            nospace "$1"
+            PYTHON="$1"
+        ;;
+        *)
+            helptext
+            echo "Command line option $1 not known, aborting and printing help text."
+            exit 100
+        ;;
+    esac
+    shift
+done
+
+notdef --prefix "$PREFIX" 
+notdef --cgal-lib "$CGALLIB" 
+notdef --cgal-inc "$CGALINC" 
+
+if [ "$USEPYTHON" == "true" ]
+then
+    notdef --python-inc "$PYTHONINC"
+    notdef --python-lib "$PYTHONLIB"
+fi
+
+if [[ ! "$SWIG" ]]
+then
+    SWIG=$(which swig)
+fi
+echo "Using swig:               $SWIG"
+if [[ ! "$GXX" ]]
+then
+    GXX=$(which g++)
+fi
+echo "Using g++:                $GXX"
+if [[ ! "$AR" ]]
+then
+    AR=$(which ar)
+fi
+if [[ ! "$SWIGINC" ]]
+then
+    swigversion=$($SWIG -version | awk '$1 ~ /SWIG/ && $2 ~ /Version/{print $3}')
+    if [ -d $(dirname $SWIG)/../share/swig/$swigversion/python ]
+    then
+        SWIGINC="$(dirname $SWIG)/../share/swig/$swigversion/python"
+    else
+        echo "The swig inclusion directory $(dirname $SWIG)/../share/swig/$swigversion/python does not exist, aborting."
+        exit 102
+    fi
+fi
+echo "Using swig include:       $SWIGINC"
+
+if [ "$USEPYTHON" == "true" ]
+then
+    if [[ ! "$PYTHON" ]]
+    then
+        PYTHON=$(which python)
+    fi
+    echo "Using python:             $PYTHON"
+    libpython="python$($PYTHON -c 'import sys; print sys.version[:3]')"
+fi
+
+cat > $output << EOF
+# This file was built as follows."
+# $0 $commandlinesave
+
+PREFIX    := $PREFIX
+
+SRCDIR    := $SRCDIR
+OBJDIR    := $OBJDIR
+LIBDIR    := $LIBDIR
+INCDIR    := $INCDIR
+
+GXX       := $GXX
+AR        := $AR
+
+CGALLIB   := $CGALLIB
+CGALINC   := $CGALINC
+
+LDFLAGS   := -lCGAL
+
+EOF
+if [ "$USEPYTHON" == "true" ]
+then cat >> $output << EOF
+SWIG      := $SWIG
+SWIGINC   := $SWIGINC
+
+PYTHONDIR     := $PYTHONDIR
+PYTHONLIB     := $PYTHONLIB
+PYTHONINC     := $PYTHONINC
+PYTHON        := $PYTHON
+
+PYTHONLDFLAGS := -l$libpython
+
+EOF
+fi
+cat >> $output << EOF
+USEPYTHON     := $USEPYTHON
+EOF
