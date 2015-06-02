@@ -32,8 +32,8 @@ template <class SkinSurface, class Polyhedron>
 //that information will not be returned.
 void get_polyhedron(SkinSurface &skin,
 				   Polyhedron &p,
-				   i_vec_t &ivec,
-                   d_vec_t &dvec,
+				   std::vector<int> &ivec,
+                   std::vector<double> &dvec,
                    int *nr_vertices,
                    int *nr_facets)
 {
@@ -87,14 +87,14 @@ typedef Weighted_point::Point                               Bare_point;
 typedef CGAL::Polyhedron_3<K,
   CGAL::Skin_surface_polyhedral_items_3<Skin_surface_3> >   Polyhedron;
 
-void make_skin_surface(double shrink_factor, int nr_atoms, d_vec_t &coord_radii_vec, d_vec_t &dvec, i_vec_t &ivec, int *length_vert, int *length_face) {
+void make_skin_surface(double shrink_factor, int nr_atoms, std::vector<double> coord_radii_vec, std::vector<int> *ivec, std::vector<double> *dvec, std::vector<int> *length) {
     //declare variables for computation
     FT shrinkfactor = shrink_factor;
     std::list<Weighted_point> l;
     Polyhedron p;
 
     //read in centers of points from the input variables
-    for (d_vec_t_it it=coord_radii_vec.begin(); it!=coord_radii_vec.end();){
+    for (std::vector<double>::iterator it=coord_radii_vec.begin(); it!=coord_radii_vec.end();){
         double x,y,z,w;
         x=*it++;
         y=*it++;
@@ -102,6 +102,10 @@ void make_skin_surface(double shrink_factor, int nr_atoms, d_vec_t &coord_radii_
         w=*it++;
         l.push_front(Weighted_point(Bare_point(x,y,z),w));
     }
+
+    int *length_vert = (int*)malloc(sizeof(int));
+    int *length_face = (int*)malloc(sizeof(int));
+    length->reserve(2);
     
     //create the skin surface
     Skin_surface_3 skin_surface(l.begin(), l.end(), shrinkfactor);
@@ -114,7 +118,12 @@ void make_skin_surface(double shrink_factor, int nr_atoms, d_vec_t &coord_radii_
     //into 2 vectors and get their respective lengths
     
     //fill variables
-    get_polyhedron(skin_surface, p, ivec, dvec, length_vert, length_face);
+    get_polyhedron(skin_surface, p, *ivec, *dvec, length_vert, length_face);
+    length->push_back(*length_vert);
+    length->push_back(*length_face);
+
+    free(length_vert);
+    free(length_face);
 
 }
 
