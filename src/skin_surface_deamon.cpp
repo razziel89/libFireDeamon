@@ -87,7 +87,7 @@ typedef Weighted_point::Point                               Bare_point;
 typedef CGAL::Polyhedron_3<K,
   CGAL::Skin_surface_polyhedral_items_3<Skin_surface_3> >   Polyhedron;
 
-void make_skin_surface(double shrink_factor, int nr_atoms, std::vector<double> coord_radii_vec, std::vector<int> *ivec, std::vector<double> *dvec, std::vector<int> *length) {
+void make_skin_surface(double shrink_factor, int nr_atoms, std::vector<double> coord_radii_vec, std::vector<int> *ivec, std::vector<double> *dvec, std::vector<int> *length, int nr_refinements) {
     //declare variables for computation
     FT shrinkfactor = shrink_factor;
     std::list<Weighted_point> l;
@@ -95,12 +95,12 @@ void make_skin_surface(double shrink_factor, int nr_atoms, std::vector<double> c
 
     //read in centers of points from the input variables
     for (std::vector<double>::iterator it=coord_radii_vec.begin(); it!=coord_radii_vec.end();){
-        double x,y,z,w;
+        double x,y,z,r;
         x=*it++;
         y=*it++;
         z=*it++;
-        w=*it++;
-        l.push_front(Weighted_point(Bare_point(x,y,z),w));
+        r=*it++;
+        l.push_front(Weighted_point(Bare_point(x,y,z),r*r));
     }
 
     int *length_vert = (int*)malloc(sizeof(int));
@@ -111,8 +111,10 @@ void make_skin_surface(double shrink_factor, int nr_atoms, std::vector<double> c
     Skin_surface_3 skin_surface(l.begin(), l.end(), shrinkfactor);
     CGAL::mesh_skin_surface_3(skin_surface, p);
 
-    //subdivide, i.e., refine it
-    CGAL::subdivide_skin_surface_mesh_3(skin_surface, p);
+    //subdivide, i.e., refine it if so desired
+    if (nr_refinements>0){
+        CGAL::subdivide_skin_surface_mesh_3(skin_surface, p, nr_refinements);
+    }
     
     //extract data from the generated skin_surface and the polyhedron
     //into 2 vectors and get their respective lengths
