@@ -24,6 +24,7 @@ OBJDIR=objdir
 LIBDIR=lib
 INCDIR=include
 SRCDIR=src
+TESTDIR=test
 PYTHONDIR=bindings
 
 PYTHONLIB=
@@ -211,6 +212,7 @@ SRCDIR    := $SRCDIR
 OBJDIR    := $OBJDIR
 LIBDIR    := $LIBDIR
 INCDIR    := $INCDIR
+TESTDIR   := $TESTDIR
 
 GXX       := $GXX
 AR        := $AR
@@ -238,3 +240,9 @@ fi
 cat >> $output << EOF
 USEPYTHON     := $USEPYTHON
 EOF
+
+for dir in $OBJDIR $LIBDIR $INCDIR $SRCDIR $PYTHONDIR $TESTDIR
+do
+    [ ! -d $dir ] && mkdir -p $dir
+done
+exit 0
