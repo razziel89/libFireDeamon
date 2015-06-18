@@ -54,18 +54,19 @@ mainlib_test1 : $(TEST1OBJ)
 	$(GXX) -I$(CGALINC) -I$(INCDIR) -L$(CGALLIB) $(LDFLAGS) -o $(TESTDIR)/test1.exe $(TEST1OBJ)
 	@$(GXX) -I$(CGALINC) -I$(INCDIR) -L$(CGALLIB) $(LDFLAGS) -o $(TESTDIR)/test1.exe $(TEST1OBJ)
 	@printf "Executing first test file"
-	test/test1.exe && echo "success" || echo "failed"
+	test/test1.exe
 	@test/test1.exe && echo "success" || echo "failed"
 .PHONY : mainlib_test2
 mainlib_test2 : $(TEST2OBJ) mainlib
 	$(GXX) -I$(INCDIR) -L$(LIBDIR) -lFireDeamon -o $(TESTDIR)/test2.exe $(TEST2OBJ)
 	@$(GXX) -I$(INCDIR) -L$(LIBDIR) -lFireDeamon -o $(TESTDIR)/test2.exe $(TEST2OBJ)
 	@printf "Executing second test file"
-	test/test2.exe && echo "success" || echo "failed"
+	test/test2.exe
 	@test/test2.exe && echo "success" || echo "failed"
 .PHONY : python_test
 python_test : bindings
-	@export PYTHONPATH=$(TESTDIR):${PYTHONPATH} && $(PYTHON) $(TESTDIR)/test.py
+	bash $(TESTDIR)/test.py.sh $(LIBDIR) $(PYTHON)
+	@bash $(TESTDIR)/test.py.sh $(LIBDIR) $(PYTHON) && echo "success" || echo "failed"
 #-----------------------------------------------------
 #       INSTALLATION AND UNINSTALLATION RULES 
 #-----------------------------------------------------
@@ -101,8 +102,8 @@ python_install :
 
 .PHONY : python_uninstall 
 python_uninstall : clean_bindings
-	rm -rf $(PYTHON_DEST_DIR)/FireDeamon.py $(PYTHON_DEST_DIR)/_FireDeamon.so
-	@rm -rf $(PYTHON_DEST_DIR)/FireDeamon.py $(PYTHON_DEST_DIR)/_FireDeamon.so
+	rm -rf $(PYTHON_DEST_DIR)/FireDeamon.py $(PYTHON_DEST_DIR)/FireDeamon.pyc $(PYTHON_DEST_DIR)/_FireDeamon.so
+	@rm -rf $(PYTHON_DEST_DIR)/FireDeamon.py $(PYTHON_DEST_DIR)/FireDeamon.pyc $(PYTHON_DEST_DIR)/_FireDeamon.so
 #-----------------------------------------------------
 #              BUILD RULES FOR LANGUAGE BINDINGS
 #-----------------------------------------------------
@@ -114,10 +115,8 @@ bindings : $(MAINOBJ) $(SWIGRUN)
 #-----------------------------------------------------
 python_bindings : $(PYTHONBINDOBJ)
 	@echo "Linking shared python library..."
-	$(GXX) -shared -fPIC -I$(CGALINC) -I$(PYTHONINC) -I$(INCDIR) -L$(PYTHONLIB) -L$(CGALLIB) \
-		$(LDFLAGS) $(PYTHONLDFLAGS) -o $(PYTHONDIR)/_FireDeamon.so $(MAINOBJ) $(PYTHONBINDOBJ)
-	@$(GXX) -shared -fPIC -I$(CGALINC) -I$(PYTHONINC) -I$(INCDIR) -L$(PYTHONLIB) -L$(CGALLIB) \
-		$(LDFLAGS) $(PYTHONLDFLAGS) -o $(PYTHONDIR)/_FireDeamon.so $(MAINOBJ) $(PYTHONBINDOBJ)
+	$(GXX) -shared -fPIC -I$(CGALINC) -I$(PYTHONINC) -I$(INCDIR) -L$(PYTHONLIB) -L$(CGALLIB) $(LDFLAGS) $(PYTHONLDFLAGS) -o $(PYTHONDIR)/_FireDeamon.so $(MAINOBJ) $(PYTHONBINDOBJ)
+	@$(GXX) -shared -fPIC -I$(CGALINC) -I$(PYTHONINC) -I$(INCDIR) -L$(PYTHONLIB) -L$(CGALLIB) $(LDFLAGS) $(PYTHONLDFLAGS) -o $(PYTHONDIR)/_FireDeamon.so $(MAINOBJ) $(PYTHONBINDOBJ)
 
 .PHONY : python_swig
 python_swig :
