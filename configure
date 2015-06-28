@@ -67,6 +67,13 @@ Flags:
                         Deafault: first in PATH
 --python                will use the specified python interpreter.
                         Deafault: first in PATH
+
+The environment variables OTHERINC, OTHERLIB and LDFLAGS are respected.
+This means that you should fill them BEFORE executing this configure
+script.
+OTHERINC contains flags for include directories (e.g. -IAddIncDir)
+OTHERLIB contains flags for library directory (e.g. -LAddLibDir)
+LDFLAGS contains flags for libking additional libraries (e.g. -lAdd)
 EOF
 }
 
@@ -220,7 +227,10 @@ AR        := $AR
 CGALLIB   := $CGALLIB
 CGALINC   := $CGALINC
 
-LDFLAGS   := -lCGAL
+OTHERINC  := $OTHERINC
+OTHERLIB  := $OTHERLIB
+
+LDFLAGS   := $LDFLAGS -lmpfr -lgmp -lboost_thread -lCGAL
 
 EOF
 if [ "$USEPYTHON" == "true" ]

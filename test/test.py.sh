@@ -1,6 +1,8 @@
 #!/bin/bash
+set -x
 libdir="$1"
 python="$2"
+export PYTHONPATH=$(readlink -f $libdir):$PYTHONPATH
 thisdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 if [ ! "$libdir" -o ! "$python" ]
 then
@@ -35,3 +37,4 @@ then
 fi
 $python $thisdir/test.py >&/dev/null
 exit $?
+set +x

@@ -51,22 +51,22 @@ test: $(TEST)
 mainlib_test : mainlib_test1 mainlib_test2
 .PHONY : mainlib_test1
 mainlib_test1 : $(TEST1OBJ)
-	$(GXX) -I$(CGALINC) -I$(INCDIR) -L$(CGALLIB) $(LDFLAGS) -o $(TESTDIR)/test1.exe $(TEST1OBJ)
-	@$(GXX) -I$(CGALINC) -I$(INCDIR) -L$(CGALLIB) $(LDFLAGS) -o $(TESTDIR)/test1.exe $(TEST1OBJ)
+	$(GXX) -I$(OTHERINC) -I$(CGALINC) -I$(INCDIR) $(TEST1OBJ) -L$(OTHERLIB) -L$(CGALLIB) $(LDFLAGS) -o $(TESTDIR)/test1.exe
+	@$(GXX) -I$(OTHERINC) -I$(CGALINC) -I$(INCDIR) $(TEST1OBJ) -L$(OTHERLIB) -L$(CGALLIB) $(LDFLAGS) -o $(TESTDIR)/test1.exe
 	@printf "Executing first test file"
 	test/test1.exe
 	@test/test1.exe && echo "success" || echo "failed"
 .PHONY : mainlib_test2
 mainlib_test2 : $(TEST2OBJ) mainlib
-	$(GXX) -I$(INCDIR) -L$(LIBDIR) -lFireDeamon -o $(TESTDIR)/test2.exe $(TEST2OBJ)
-	@$(GXX) -I$(INCDIR) -L$(LIBDIR) -lFireDeamon -o $(TESTDIR)/test2.exe $(TEST2OBJ)
+	$(GXX) -I$(INCDIR) $(TEST2OBJ) -L$(LIBDIR) -L$(CGALLIB) $(LDFLAGS) -lFireDeamon -o $(TESTDIR)/test2.exe
+	@$(GXX) -I$(INCDIR) $(TEST2OBJ) -L$(LIBDIR) -L$(CGALLIB) $(LDFLAGS) -lFireDeamon -o $(TESTDIR)/test2.exe
 	@printf "Executing second test file"
 	test/test2.exe
 	@test/test2.exe && echo "success" || echo "failed"
 .PHONY : python_test
 python_test : bindings
-	bash $(TESTDIR)/test.py.sh $(LIBDIR) $(PYTHON)
-	@bash $(TESTDIR)/test.py.sh $(LIBDIR) $(PYTHON) && echo "success" || echo "failed"
+	bash $(TESTDIR)/test.py.sh $(PYTHONDIR) $(PYTHON)
+	@bash $(TESTDIR)/test.py.sh $(PYTHONDIR) $(PYTHON) && echo "success" || echo "failed"
 #-----------------------------------------------------
 #       INSTALLATION AND UNINSTALLATION RULES 
 #-----------------------------------------------------
@@ -115,8 +115,8 @@ bindings : $(MAINOBJ) $(SWIGRUN)
 #-----------------------------------------------------
 python_bindings : $(PYTHONBINDOBJ)
 	@echo "Linking shared python library..."
-	$(GXX) -shared -fPIC -I$(CGALINC) -I$(PYTHONINC) -I$(INCDIR) -L$(PYTHONLIB) -L$(CGALLIB) $(LDFLAGS) $(PYTHONLDFLAGS) -o $(PYTHONDIR)/_FireDeamon.so $(MAINOBJ) $(PYTHONBINDOBJ)
-	@$(GXX) -shared -fPIC -I$(CGALINC) -I$(PYTHONINC) -I$(INCDIR) -L$(PYTHONLIB) -L$(CGALLIB) $(LDFLAGS) $(PYTHONLDFLAGS) -o $(PYTHONDIR)/_FireDeamon.so $(MAINOBJ) $(PYTHONBINDOBJ)
+	$(GXX) -shared -fPIC -I$(CGALINC) -I$(PYTHONINC) -I$(INCDIR) $(MAINOBJ) $(PYTHONBINDOBJ) -L$(PYTHONLIB) -L$(CGALLIB) $(LDFLAGS) $(PYTHONLDFLAGS) -o $(PYTHONDIR)/_FireDeamon.so
+	@$(GXX) -shared -fPIC -I$(CGALINC) -I$(PYTHONINC) -I$(INCDIR) $(MAINOBJ) $(PYTHONBINDOBJ) -L$(PYTHONLIB) -L$(CGALLIB) $(LDFLAGS) $(PYTHONLDFLAGS) -o $(PYTHONDIR)/_FireDeamon.so
 
 .PHONY : python_swig
 python_swig :
@@ -128,8 +128,8 @@ python_swig :
 .PHONY : mainlib 
 mainlib : $(MAINOBJ)
 	@echo "Linking shared library..."
-	$(GXX) -shared -fPIC -I$(CGALINC) -I$(INCDIR) -L$(CGALLIB) $(LDFLAGS) -o $(LIBDIR)/libFireDeamon.so $(MAINOBJ)
-	@$(GXX) -shared -fPIC -I$(CGALINC) -I$(INCDIR) -L$(CGALLIB) $(LDFLAGS) -o $(LIBDIR)/libFireDeamon.so $(MAINOBJ)
+	$(GXX) -shared -fPIC -I$(CGALINC) -I$(INCDIR) $(MAINOBJ) -L$(CGALLIB) $(LDFLAGS) -o $(LIBDIR)/libFireDeamon.so
+	@$(GXX) -shared -fPIC -I$(CGALINC) -I$(INCDIR) $(MAINOBJ) -L$(CGALLIB) $(LDFLAGS) -o $(LIBDIR)/libFireDeamon.so
 	@echo "Linking static library..."
 	$(AR) rcs $(LIBDIR)/libFireDeamon.a $(MAINOBJ)
 	@$(AR) rcs $(LIBDIR)/libFireDeamon.a $(MAINOBJ)
