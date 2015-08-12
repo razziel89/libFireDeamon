@@ -5,8 +5,8 @@ include make.vars
 #-----------------------------------------------------
 #         SOURCE FOR MAIN C++ LIBRARY
 #-----------------------------------------------------
-MAINSRC  := $(SRCDIR)/skin_surface_deamon.cpp
-MAINOBJ  := $(OBJDIR)/skin_surface_deamon.o
+MAINSRC  := $(SRCDIR)/skin_surface_deamon.cpp $(SRCDIR)/electrostatic_potential.cpp
+MAINOBJ  := $(OBJDIR)/skin_surface_deamon.o $(OBJDIR)/electrostatic_potential.o
 #-----------------------------------------------------
 #         SOURCE FOR TEST FILES
 #-----------------------------------------------------
@@ -16,6 +16,12 @@ TEST1OBJ  := $(TESTDIR)/test1.o
 #Second Test
 TEST2SRC  := $(TESTDIR)/test1.cpp
 TEST2OBJ  := $(TESTDIR)/test1.o
+#Third Test
+TEST3SRC  := $(TESTDIR)/test3.cpp
+TEST3OBJ  := $(TESTDIR)/test3.o
+#Fourth Test
+TEST4SRC  := $(TESTDIR)/test4.cpp
+TEST4OBJ  := $(TESTDIR)/test4.o
 #-----------------------------------------------------
 #     DEFAULT VARIABLES WITHOUT BINDINGS
 #-----------------------------------------------------
@@ -48,7 +54,7 @@ default : mainlib bindings
 .PHONY : test
 test: $(TEST)
 .PHONY : mainlib_test
-mainlib_test : mainlib_test1 mainlib_test2
+mainlib_test : mainlib_test1 mainlib_test2 mainlib_test3 mainlib_test4
 .PHONY : mainlib_test1
 mainlib_test1 : $(TEST1OBJ)
 	$(GXX) $(TEST1OBJ) $(OTHERLIB) -L$(CGALLIB) $(LDFLAGS) -o $(TESTDIR)/test1.exe
@@ -60,9 +66,24 @@ mainlib_test1 : $(TEST1OBJ)
 mainlib_test2 : $(TEST2OBJ) mainlib
 	$(GXX) $(TEST2OBJ) $(OTHERLIB) -L$(LIBDIR) -L$(CGALLIB) $(LDFLAGS) -lFireDeamon -o $(TESTDIR)/test2.exe
 	@$(GXX) $(TEST2OBJ) $(OTHERLIB) -L$(LIBDIR) -L$(CGALLIB) $(LDFLAGS) -lFireDeamon -o $(TESTDIR)/test2.exe
-	@printf "Executing second test file"
+	@printf "Executing second test file. Have you done 'make install' first?"
 	test/test2.exe
 	@test/test2.exe && echo "success" || echo "failed"
+.PHONY : mainlib_test3
+#mainlib_test3 : $(TEST3OBJ) mainlib
+mainlib_test3 : $(TEST3OBJ)
+	$(GXX) $(TEST3OBJ) $(OTHERLIB) -L$(CGALLIB) $(LDFLAGS) -o $(TESTDIR)/test3.exe
+	@$(GXX) $(TEST3OBJ) $(OTHERLIB) -L$(CGALLIB) $(LDFLAGS) -o $(TESTDIR)/test3.exe
+	@printf "Executing third test file"
+	test/test3.exe
+	@test/test3.exe && echo "success" || echo "failed"
+.PHONY : mainlib_test4
+mainlib_test4 : $(TEST4OBJ) mainlib
+	$(GXX) $(TEST4OBJ) $(OTHERLIB) -L$(LIBDIR) -L$(CGALLIB) $(LDFLAGS) -lFireDeamon -o $(TESTDIR)/test4.exe
+	@$(GXX) $(TEST4OBJ) $(OTHERLIB) -L$(LIBDIR) -L$(CGALLIB) $(LDFLAGS) -lFireDeamon -o $(TESTDIR)/test4.exe
+	@printf "Executing fourth test file. Have you done 'make install' first?"
+	test/test4.exe
+	@test/test4.exe && echo "success" || echo "failed"
 .PHONY : python_test
 python_test : bindings
 	bash $(TESTDIR)/test.py.sh $(PYTHONDIR) $(PYTHON)

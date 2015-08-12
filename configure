@@ -230,7 +230,7 @@ CGALINC   := $CGALINC
 OTHERINC  := $OTHERINC
 OTHERLIB  := $OTHERLIB
 
-LDFLAGS   := $LDFLAGS -lmpfr -lgmp -lboost_thread -lCGAL
+LDFLAGS   := $LDFLAGS -lmpfr -lgmp -lboost_thread -lCGAL -lpthread
 
 EOF
 if [ "$USEPYTHON" == "true" ]
