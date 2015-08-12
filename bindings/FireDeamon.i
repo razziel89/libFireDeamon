@@ -77,7 +77,7 @@ def SkinSurfacePy(shrink_factor,coordinates,radii,refinesteps=1):
 
 from itertools import chain as iterchain
 
-def ElectrostaticPotentialPy(points, charges, coordinates):
+def ElectrostaticPotentialPy(points, charges, coordinates, prog_report=True):
     """
     High level function that wraps the computation of the electrostatic potential via
     multithreaded C++ code.
@@ -87,6 +87,8 @@ def ElectrostaticPotentialPy(points, charges, coordinates):
     charges: a list of charges at the coordinates
     coordinates: a list of 3-element elements containing the Cartesian coordinates
                  at which the previously given charges are localized
+    prog_report: whether or not to get progress reports during the computation
+                 (since it can take long)
     """
     if len(charges)!=len(coordinates):
         raise LengthDisagreementError("Lengths of coordinate list and charges list are not equal.")
@@ -94,10 +96,10 @@ def ElectrostaticPotentialPy(points, charges, coordinates):
     charges_coordinates_vec=VectorDouble([cc for cc in _generate_three_one(coordinates,charges)]);
     points_vec=VectorDouble(list(iterchain.from_iterable(points)))
 
-    potential_vec=VectorDouble();
+    potential_vec=VectorDouble()
     potential_vec.reserve(len(points))
-    
-    electrostatic_potential(len(points), len(charges), points_vec, charges_coordinates_vec, potential_vec);
+
+    electrostatic_potential(prog_report, len(points), len(charges), points_vec, charges_coordinates_vec, potential_vec);
     
     potential=[p for p in potential_vec]
 

@@ -21,6 +21,7 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <stdexcept>
 #include <assert.h>
+#include <stdio.h>
 #include <math.h>
 
 //BEGINNING of class definitions
@@ -31,7 +32,7 @@ class SubPotData {
     public:
 
         SubPotData();
-        SubPotData(int l_pnts, int l_ccos, int l_pots, double* points, double* charges_coordinates, double* potential);
+        SubPotData(int progress, int sub_nr, int l_pnts, int l_ccos, int l_pots, double* points, double* charges_coordinates, double* potential);
         ~SubPotData();
         double* GetPnts();
         double* GetCCos();
@@ -39,6 +40,8 @@ class SubPotData {
         int GetNrPnts();
         int GetNrCCos();
         int GetNrPots();
+        int GetSubNr();
+        int GetProgress();
 
     protected:
 
@@ -48,6 +51,8 @@ class SubPotData {
         int m_nr_pnts;
         int m_nr_ccos;
         int m_nr_pots;
+        int m_sub_nr;
+        int m_progress;
 
 };
 
@@ -58,12 +63,16 @@ SubPotData::SubPotData(){
     m_nr_pnts  = 0;
     m_nr_ccos  = 0;
     m_nr_pots  = 0;
+    m_sub_nr   = 0;
+    m_progress = 0;
 }
 
-SubPotData::SubPotData(int l_pnts, int l_ccos, int l_pots, double* points, double* charges_coordinates, double* potential){
+SubPotData::SubPotData(int progress, int sub_nr, int l_pnts, int l_ccos, int l_pots, double* points, double* charges_coordinates, double* potential){
     m_nr_pnts = l_pnts;
     m_nr_ccos = l_ccos;
     m_nr_pots = l_pots;
+    m_sub_nr = sub_nr;
+    m_progress = progress;
     m_pnts = points;
     m_ccos = charges_coordinates;
     m_pots = potential;
@@ -89,13 +98,19 @@ int SubPotData::GetNrCCos(){
 int SubPotData::GetNrPots(){
     return m_nr_pots;
 }
+int SubPotData::GetSubNr(){
+    return m_sub_nr;
+}
+int SubPotData::GetProgress(){
+    return m_progress;
+}
 
 class PotData : public SubPotData {
 
     public:
 
         PotData();
-        PotData(int nr_threads, std::vector<double> *points, std::vector<double> *charges_coordinates, std::vector<double> *potential);
+        PotData(int progress, int nr_subs, std::vector<double> *points, std::vector<double> *charges_coordinates, std::vector<double> *potential);
         ~PotData();
         SubPotData* GetSubPotData(int index);
         void TransferPotential(std::vector<double> *pot);
@@ -107,11 +122,12 @@ class PotData : public SubPotData {
 
 };
 
-PotData::PotData(int nr_subs, std::vector<double> *points, std::vector<double> *charges_coordinates, std::vector<double> *potential){
+PotData::PotData(int progress, int nr_subs, std::vector<double> *points, std::vector<double> *charges_coordinates, std::vector<double> *potential){
     m_nr_subs = nr_subs;
     m_nr_pnts = points->size();
     m_nr_ccos = charges_coordinates->size();
     m_nr_pots = potential->capacity(); //this has not yet been filled with values but has to be reserved already
+    m_progress = progress;
     //do a simple sanity check
     if (m_nr_pnts!=m_nr_pots*3){
         throw std::invalid_argument( "Points and potential do not have the same number of elements." );
@@ -145,7 +161,8 @@ PotData::PotData(int nr_subs, std::vector<double> *points, std::vector<double> *
     for (int sub=0; sub<m_nr_subs; ++sub){
         const int here_elements = min_nr_elements_per_sub + ((too_many>0) ? 1 : 0);
         subdata.push_back(
-                SubPotData(here_elements, m_nr_ccos, here_elements,
+                SubPotData(m_progress, sub+1,
+                           here_elements, m_nr_ccos, here_elements,
                            m_pnts+3*start,  m_ccos,    m_pots+start)
                 );
         start += here_elements;
@@ -176,9 +193,8 @@ SubPotData* PotData::GetSubPotData(int index){
 
 void PotData::TransferPotential(std::vector<double> *pot){
     double* temp = m_pots;
-    std::vector<double>::iterator it = pot->begin();
-    for (int i=0; i<m_nr_pots; ++it, ++temp, ++i){
-        *it = *temp;
+    for (int i=0; i<m_nr_pots; ++temp, ++i){
+        pot->push_back(*temp);
     }
 }
 //END of class definitions
@@ -188,39 +204,77 @@ void* _potentialThread(void* data){
     double *pnts = dat->GetPnts();
     double *ccos = dat->GetCCos();
     double *pots = dat->GetPots();
-    int nr_pnts = dat->GetNrPnts();
-    int nr_ccos = dat->GetNrCCos();
-    int nr_pots = dat->GetNrPots();
+    const int nr_pnts = dat->GetNrPnts();
+    const int nr_ccos = dat->GetNrCCos();
+    const int nr_pots = dat->GetNrPots();
+    const int progress = dat->GetProgress();
+    const int sub_nr = dat->GetSubNr();
 
     double* p = pots;
     double* pc = pnts;
-    for(int ip=0; ip<nr_pots; ++ip, ++p){
-        double xpc = *pc++;
-        double ypc = *pc++;
-        double zpc = *pc++;
-        double sum = 0.0;
-        double* c = ccos;
-        for(int ic=0; ic<nr_ccos; ic+=4){
-            double norm = 0.0;
-            norm += (*c-xpc)*(*c-xpc); ++c;
-            norm += (*c-ypc)*(*c-ypc); ++c;
-            norm += (*c-zpc)*(*c-zpc); ++c;
-            sum += *c/(sqrt(norm));
-            ++c;
+    if ( progress > 0 ){
+        printf("Thread: %2d | Progress: %5.2f% | Nr. computations per progress report: %li\n",sub_nr,0.0,nr_ccos*progress);
+        for(int ip=0; ip<nr_pots;){
+            for (int prog=0; prog<progress && ip<nr_pots; ++prog, ++ip, ++p){
+                double xpc = *pc++;
+                double ypc = *pc++;
+                double zpc = *pc++;
+                double sum = 0.0;
+                double* c = ccos;
+                for(int ic=0; ic<nr_ccos; ic+=4){
+                    double norm = 0.0;
+                    norm += (*c-xpc)*(*c-xpc); ++c;
+                    norm += (*c-ypc)*(*c-ypc); ++c;
+                    norm += (*c-zpc)*(*c-zpc); ++c;
+                    sum += *c/(sqrt(norm));
+                    ++c;
+                }
+                *p = sum;
+            }
+            printf("Thread: %2d | Progress: %5.2f%\n",sub_nr,100.0*ip/nr_pots);
         }
-        *p = sum;
+    }
+    else {
+        for(int ip=0; ip<nr_pots; ++ip, ++p){
+            double xpc = *pc++;
+            double ypc = *pc++;
+            double zpc = *pc++;
+            double sum = 0.0;
+            double* c = ccos;
+            for(int ic=0; ic<nr_ccos; ic+=4){
+                double norm = 0.0;
+                norm += (*c-xpc)*(*c-xpc); ++c;
+                norm += (*c-ypc)*(*c-ypc); ++c;
+                norm += (*c-zpc)*(*c-zpc); ++c;
+                sum += *c/(sqrt(norm));
+                ++c;
+            }
+            *p = sum;
+        }
     }
 
     pthread_exit(NULL);
 }
 
-void electrostatic_potential (int num_points, int num_charges, std::vector<double> points, std::vector<double> charges_coordinates, std::vector<double> *potential)
+void electrostatic_potential (bool progress_reports, int num_points, int num_charges, std::vector<double> points, std::vector<double> charges_coordinates, std::vector<double> *potential)
 {
-    int num_threads = 4;
+    int progress = 0;
+    if (progress_reports){
+        progress = num_points/250;
+        printf("Starting: multi threaded computation of electrostatic potential.\n");
+        fflush(stdout);
+    }
+    int num_threads = 1;
+    {
+        char const* tmp = getenv( "OMP_NUM_THREADS" );
+        if ( tmp != NULL ) {
+            num_threads = atoi(tmp);
+        }
+    }
     PotData *data;
     try
     {
-        data = new PotData(num_threads, &points, &charges_coordinates, potential);
+        data = new PotData(progress, num_threads, &points, &charges_coordinates, potential);
     }
     catch( const std::invalid_argument& e ) {
         throw;
@@ -236,5 +290,4 @@ void electrostatic_potential (int num_points, int num_charges, std::vector<doubl
     }
     data->TransferPotential(potential);
     delete data;
-    pthread_exit(NULL);
 }

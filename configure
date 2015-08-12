@@ -11,7 +11,6 @@ messages about libraries not found or similar things. Instead, it only uses
 the proviced flags to generate a file called "make.vars" which contains
 important variables for the Makefile. If libraries/headers cannot be found,
 you will get these error messages during the make process.
-
 EOF
 
 # Output file name
@@ -42,7 +41,8 @@ USEPYTHON=true
 function helptext {
 cat << EOF
 Will generate a file called "make.vars" which contains
-local configuration parameters.
+local configuration parameters. Heavy optimization will be used
+(-O3 flag) because of the huge speedup it provides.
 
 Usage:
 configure --prefix PREFIX -I INCLUDEDIR -L LIBDIR [FLAGS]
@@ -221,7 +221,7 @@ LIBDIR    := $LIBDIR
 INCDIR    := $INCDIR
 TESTDIR   := $TESTDIR
 
-GXX       := $GXX
+GXX       := $GXX -O3
 AR        := $AR
 
 CGALLIB   := $CGALLIB

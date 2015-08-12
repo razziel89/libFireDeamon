@@ -178,9 +178,8 @@ SubPotData* PotData::GetSubPotData(int index){
 
 void PotData::TransferPotential(std::vector<double> *pot){
     double* temp = m_pots;
-    std::vector<double>::iterator it = pot->begin();
-    for (int i=0; i<m_nr_pots; ++it, ++temp, ++i){
-        *it = *temp;
+    for (int i=0; i<m_nr_pots; ++temp, ++i){
+        pot->push_back(*temp);
     }
 }
 //END of class definitions
@@ -231,17 +230,13 @@ void electrostatic_potential (int num_points, int num_charges, std::vector<doubl
     int rc;
     for( int i=0; i < num_threads; ++i ){
         rc = pthread_create(&threads[i], NULL, _potentialThread, (void *)data->GetSubPotData(i));
-        if (rc){
-            std::cerr << "Error:unable to create thread," << rc << std::endl;
-            exit(-1);
-        }
+        assert(rc==0);
     }
     for( int i=0; i < num_threads; ++i ){
         pthread_join(threads[i], NULL);
     }
     data->TransferPotential(potential);
     delete data;
-    pthread_exit(NULL);
 }
 
 int main () {
