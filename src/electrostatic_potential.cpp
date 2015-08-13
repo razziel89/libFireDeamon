@@ -23,6 +23,25 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <assert.h>
 #include <stdio.h>
 #include <math.h>
+#include <signal.h>
+#include <time.h>
+
+pthread_t* threads;
+pthread_mutex_t mutex;
+int nr_threads = 0;
+
+void signal_callback_handler(int signum)
+{
+    fprintf(stderr, "\nCaught signal %d\n", signum);
+    for ( int thread_count=0; thread_count<nr_threads; ++thread_count ){
+        int rc = pthread_cancel(*(threads+thread_count));
+        if(rc){
+            fprintf(stderr, "Cancellation of thread number %d out of %d could not be initialized.\n", thread_count+1, nr_threads);
+        }
+    }
+    delete[] threads;
+    exit(signum);
+}
 
 //BEGINNING of class definitions
 //this class holds all the data that will be worked on
@@ -32,7 +51,7 @@ class SubPotData {
     public:
 
         SubPotData();
-        SubPotData(int progress, int sub_nr, int l_pnts, int l_ccos, int l_pots, double* points, double* charges_coordinates, double* potential);
+        SubPotData(bool progress_reports, int sub_nr, int l_pnts, int l_ccos, int l_pots, double* points, double* charges_coordinates, double* potential, pthread_mutex_t* mutex, int* progress_bar);
         ~SubPotData();
         double* GetPnts();
         double* GetCCos();
@@ -41,7 +60,9 @@ class SubPotData {
         int GetNrCCos();
         int GetNrPots();
         int GetSubNr();
-        int GetProgress();
+        int* GetProgressBar();
+        bool GetProgressReports();
+        pthread_mutex_t* GetMutex();
 
     protected:
 
@@ -52,27 +73,33 @@ class SubPotData {
         int m_nr_ccos;
         int m_nr_pots;
         int m_sub_nr;
-        int m_progress;
+        int* m_progress_bar;
+        pthread_mutex_t* m_mut;
+        bool m_progress_reports;
 
 };
 
 SubPotData::SubPotData(){
-    m_pnts     = NULL;
-    m_ccos     = NULL;
-    m_pots     = NULL;
-    m_nr_pnts  = 0;
-    m_nr_ccos  = 0;
-    m_nr_pots  = 0;
-    m_sub_nr   = 0;
-    m_progress = 0;
+    m_pnts            = NULL;
+    m_ccos            = NULL;
+    m_pots            = NULL;
+    m_nr_pnts         = 0;
+    m_nr_ccos         = 0;
+    m_nr_pots         = 0;
+    m_sub_nr          = 0;
+    m_progress_bar    = NULL;
+    m_mut             = NULL;
+    m_progress_reports= false;
 }
 
-SubPotData::SubPotData(int progress, int sub_nr, int l_pnts, int l_ccos, int l_pots, double* points, double* charges_coordinates, double* potential){
+SubPotData::SubPotData(bool progress_reports, int sub_nr, int l_pnts, int l_ccos, int l_pots, double* points, double* charges_coordinates, double* potential, pthread_mutex_t* mutex, int* progress_bar){
+    m_progress_reports = progress_reports;
+    m_mut              = mutex;
     m_nr_pnts = l_pnts;
     m_nr_ccos = l_ccos;
     m_nr_pots = l_pots;
     m_sub_nr = sub_nr;
-    m_progress = progress;
+    m_progress_bar = progress_bar;
     m_pnts = points;
     m_ccos = charges_coordinates;
     m_pots = potential;
@@ -101,8 +128,14 @@ int SubPotData::GetNrPots(){
 int SubPotData::GetSubNr(){
     return m_sub_nr;
 }
-int SubPotData::GetProgress(){
-    return m_progress;
+int* SubPotData::GetProgressBar(){
+    return m_progress_bar;
+}
+bool SubPotData::GetProgressReports(){
+    return m_progress_reports;
+}
+pthread_mutex_t* SubPotData::GetMutex(){
+    return m_mut;
 }
 
 class PotData : public SubPotData {
@@ -110,7 +143,7 @@ class PotData : public SubPotData {
     public:
 
         PotData();
-        PotData(int progress, int nr_subs, std::vector<double> *points, std::vector<double> *charges_coordinates, std::vector<double> *potential);
+        PotData(bool progress_reports, int nr_subs, std::vector<double> *points, std::vector<double> *charges_coordinates, std::vector<double> *potential, pthread_mutex_t* mutex, int* progress_bar);
         ~PotData();
         SubPotData* GetSubPotData(int index);
         void TransferPotential(std::vector<double> *pot);
@@ -122,12 +155,14 @@ class PotData : public SubPotData {
 
 };
 
-PotData::PotData(int progress, int nr_subs, std::vector<double> *points, std::vector<double> *charges_coordinates, std::vector<double> *potential){
+PotData::PotData(bool progress_reports, int nr_subs, std::vector<double> *points, std::vector<double> *charges_coordinates, std::vector<double> *potential, pthread_mutex_t* mutex, int* progress_bar){
     m_nr_subs = nr_subs;
     m_nr_pnts = points->size();
     m_nr_ccos = charges_coordinates->size();
     m_nr_pots = potential->capacity(); //this has not yet been filled with values but has to be reserved already
-    m_progress = progress;
+    m_progress_bar = progress_bar;
+    m_mut = mutex;
+    m_progress_reports = progress_reports;
     //do a simple sanity check
     if (m_nr_pnts!=m_nr_pots*3){
         throw std::invalid_argument( "Points and potential do not have the same number of elements." );
@@ -161,9 +196,10 @@ PotData::PotData(int progress, int nr_subs, std::vector<double> *points, std::ve
     for (int sub=0; sub<m_nr_subs; ++sub){
         const int here_elements = min_nr_elements_per_sub + ((too_many>0) ? 1 : 0);
         subdata.push_back(
-                SubPotData(m_progress, sub+1,
+                SubPotData(m_progress_reports, sub+1,
                            here_elements, m_nr_ccos, here_elements,
-                           m_pnts+3*start,  m_ccos,    m_pots+start)
+                           m_pnts+3*start,  m_ccos,    m_pots+start,
+                           m_mut, m_progress_bar)
                 );
         start += here_elements;
         too_many -=1;
@@ -200,6 +236,11 @@ void PotData::TransferPotential(std::vector<double> *pot){
 //END of class definitions
 
 void* _potentialThread(void* data){
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,NULL);
+    struct timespec req = {0};
+    req.tv_sec = 0;
+    req.tv_nsec = 1L;
     SubPotData* dat = (SubPotData*) data;
     double *pnts = dat->GetPnts();
     double *ccos = dat->GetCCos();
@@ -207,13 +248,15 @@ void* _potentialThread(void* data){
     const int nr_pnts = dat->GetNrPnts();
     const int nr_ccos = dat->GetNrCCos();
     const int nr_pots = dat->GetNrPots();
-    const int progress = dat->GetProgress();
     const int sub_nr = dat->GetSubNr();
+    const int progress = 25;
+    const bool progress_reports = dat->GetProgressReports();
+    int* progress_bar = dat->GetProgressBar();
+    pthread_mutex_t* mut = dat->GetMutex();
 
     double* p = pots;
     double* pc = pnts;
-    if ( progress > 0 ){
-        printf("Thread: %2d | Progress: %5.2f% | Nr. computations per progress report: %li\n",sub_nr,0.0,nr_ccos*progress);
+    if ( progress_reports ){
         for(int ip=0; ip<nr_pots;){
             for (int prog=0; prog<progress && ip<nr_pots; ++prog, ++ip, ++p){
                 double xpc = *pc++;
@@ -231,7 +274,12 @@ void* _potentialThread(void* data){
                 }
                 *p = sum;
             }
-            printf("Thread: %2d | Progress: %5.2f%\n",sub_nr,100.0*ip/nr_pots);
+            nanosleep(&req, (struct timespec *)NULL);
+            pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,NULL);
+            pthread_mutex_lock(mut);
+            *progress_bar += progress;
+            pthread_mutex_unlock(mut);
+            pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
         }
     }
     else {
@@ -250,19 +298,24 @@ void* _potentialThread(void* data){
                 ++c;
             }
             *p = sum;
+            nanosleep(&req, (struct timespec *)NULL);
         }
     }
-
     pthread_exit(NULL);
 }
 
 void electrostatic_potential (bool progress_reports, int num_points, int num_charges, std::vector<double> points, std::vector<double> charges_coordinates, std::vector<double> *potential)
 {
-    int progress = 0;
+    int rc;
+    int progress_bar = 0;
     if (progress_reports){
-        progress = num_points/250;
         printf("Starting: multi threaded computation of electrostatic potential.\n");
         fflush(stdout);
+        rc = pthread_mutex_init(&mutex, NULL);
+        if (rc){
+            fprintf(stderr, "Failed to initialize mutex, will disable progress reports.\n");
+            progress_reports = false;
+        }
     }
     int num_threads = 1;
     {
@@ -271,23 +324,53 @@ void electrostatic_potential (bool progress_reports, int num_points, int num_cha
             num_threads = atoi(tmp);
         }
     }
+    nr_threads = num_threads;
+    threads = new pthread_t[num_threads];
     PotData *data;
     try
     {
-        data = new PotData(progress, num_threads, &points, &charges_coordinates, potential);
+        data = new PotData(progress_reports, num_threads, &points, &charges_coordinates, potential, &mutex, &progress_bar);
     }
     catch( const std::invalid_argument& e ) {
         throw;
     }
-    pthread_t threads[num_threads];
-    int rc;
+    signal(SIGINT, signal_callback_handler);
     for( int i=0; i < num_threads; ++i ){
-        rc = pthread_create(&threads[i], NULL, _potentialThread, (void *)data->GetSubPotData(i));
+        rc = pthread_create(threads+i, NULL, _potentialThread, (void *)data->GetSubPotData(i));
         assert(rc==0);
     }
+    if ( progress_reports ){
+        bool looping = true;
+        int here_progress_bar = 0;
+        fprintf(stdout, "Progress: %6.2f% | Total: %d/%d",0.0, 0, num_points);
+        fflush(stdout);
+        while (looping) {
+            sleep(1);
+            pthread_mutex_lock(&mutex);
+            here_progress_bar = progress_bar;
+            pthread_mutex_unlock(&mutex);
+            printf("%c[2K\r", 27);
+            fprintf(stdout,"Progress: %6.2f% | Total: %d/%d",here_progress_bar*100.0/num_points, here_progress_bar, num_points);
+            fflush(stdout);
+            if ( here_progress_bar >= num_points ){
+                looping = false;
+            }
+            fprintf(stdout,"\n");
+            fflush(stdout);
+        }
+    }
     for( int i=0; i < num_threads; ++i ){
-        pthread_join(threads[i], NULL);
+        pthread_join(*(threads+i), NULL);
     }
     data->TransferPotential(potential);
+    delete[] threads;
     delete data;
+    rc = pthread_mutex_trylock(&mutex);
+    if (rc){
+        fprintf(stderr, "The mutex could not be acquired, terminating abnormally.\n");
+    }
+    else{
+        pthread_mutex_unlock(&mutex);
+        pthread_mutex_destroy(&mutex);
+    }
 }
