@@ -350,14 +350,19 @@ void electrostatic_potential (bool progress_reports, int num_points, int num_cha
             here_progress_bar = progress_bar;
             pthread_mutex_unlock(&mutex);
             printf("%c[2K\r", 27);
-            fprintf(stdout,"Progress: %6.2f% | Total: %d/%d",here_progress_bar*100.0/num_points, here_progress_bar, num_points);
-            fflush(stdout);
             if ( here_progress_bar >= num_points ){
+                //print the correct information at the end
+                fprintf(stdout,"Progress: %6.2f% | Total: %d/%d",100.0, num_points, num_points);
                 looping = false;
             }
-            fprintf(stdout,"\n");
+            else{
+                //print intermittend information
+                fprintf(stdout,"Progress: %6.2f% | Total: %d/%d",here_progress_bar*100.0/num_points, here_progress_bar, num_points);
+            }
             fflush(stdout);
         }
+        fprintf(stdout,"\n");
+        fflush(stdout);
     }
     for( int i=0; i < num_threads; ++i ){
         pthread_join(*(threads+i), NULL);
