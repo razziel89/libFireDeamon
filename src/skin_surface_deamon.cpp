@@ -52,7 +52,7 @@ void get_polyhedron(SkinSurface &skin,
     *nr_facets     = p.size_of_facets   ();
 //    int nr_halfedges  = p.size_of_halfedges()
     
-    //resize vectors properly
+    //reserve appropriate amount of memory
     ivec.reserve(3 * *nr_facets  );
     dvec.reserve(3 * *nr_vertices);
 

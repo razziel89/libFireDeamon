@@ -5,8 +5,10 @@ include make.vars
 #-----------------------------------------------------
 #         SOURCE FOR MAIN C++ LIBRARY
 #-----------------------------------------------------
-MAINSRC  := $(SRCDIR)/skin_surface_deamon.cpp $(SRCDIR)/electrostatic_potential.cpp
-MAINOBJ  := $(OBJDIR)/skin_surface_deamon.o $(OBJDIR)/electrostatic_potential.o
+MAINSRC  := $(SRCDIR)/skin_surface_deamon.cpp $(SRCDIR)/electrostatic_potential.cpp $(SRCDIR)/parallel_generic.cpp \
+	$(SRCDIR)/irregular_grid_interpolation.cpp
+MAINOBJ  := $(OBJDIR)/skin_surface_deamon.o $(OBJDIR)/electrostatic_potential.o $(OBJDIR)/parallel_generic.o \
+	$(OBJDIR)/irregular_grid_interpolation.o
 #-----------------------------------------------------
 #         SOURCE FOR TEST FILES
 #-----------------------------------------------------
@@ -141,8 +143,8 @@ python_bindings : $(PYTHONBINDOBJ)
 
 .PHONY : python_swig
 python_swig :
-	$(SWIG)  -classic -c++ -I$(INCDIR) -I$(SWIGINC) -python -o $(PYTHONDIR)/FireDeamon_wrap.cxx $(PYTHONDIR)/FireDeamon.i
-	@$(SWIG) -classic -c++ -I$(INCDIR) -I$(SWIGINC) -python -o $(PYTHONDIR)/FireDeamon_wrap.cxx $(PYTHONDIR)/FireDeamon.i
+	$(SWIG)  -classic -c++ -I$(INCDIR) -I$(SWIGINC)/python -python -o $(PYTHONDIR)/FireDeamon_wrap.cxx $(PYTHONDIR)/FireDeamon.i
+	@$(SWIG) -classic -c++ -I$(INCDIR) -I$(SWIGINC)/python -python -o $(PYTHONDIR)/FireDeamon_wrap.cxx $(PYTHONDIR)/FireDeamon.i
 #-----------------------------------------------------
 #              BUILD RULES FOR C++ LIBRARY
 #-----------------------------------------------------

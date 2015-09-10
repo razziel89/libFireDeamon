@@ -11,7 +11,9 @@ namespace std {
 
 %{
 #include "skin_surface_deamon.h"
+#include "parallel_generic.h"
 #include "electrostatic_potential.h"
+#include "irregular_grid_interpolation.h"
 %}
 
 %pythoncode %{
@@ -22,6 +24,9 @@ class ShrinkFactorError(Exception):
     pass
 
 class NumberRefinementsError(Exception):
+    pass
+
+class WrongInterpolationTypeError(Exception):
     pass
 
 def _generate_three_one(coordinates,radii):
@@ -108,7 +113,53 @@ def ElectrostaticPotentialPy(points, charges, coordinates, prog_report=True):
     del potential_vec
     
     return potential
+
+def InterpolationPy(coordinates, vals, points, int_type='distance', prog_report=True, distance_exponent=1.0, distance_function=2):
+    """
+    High level function that wraps the interpolation of arbitrary data
+    on an irregular grid via multithreaded C++ code.
+    
+    coordinates: a list of 3-element elements containing the Cartesian coordinates
+                 at which the given values are localized
+    vals: a list of values
+    points: a list of 3-element elements containing the Cartesian coordinates
+            at which to interpolate
+    int_type: type of interpolation. Possible values are: 'nearest', 'distance' (for weighted inverse distance)
+    prog_report: whether or not to get progress reports during the computation
+                 (since it can take long)
+    distance_exponent: for type 'distance', exponent for norm
+    distance_function: for type 'distance', 2 equals Eukledian norm, 3 equals the three norm. Must be >0 and <4.
+    """
+    if len(coordinates)!=len(vals):
+        raise LengthDisagreementError("Lengths of coordinate list and vals list are not equal.")
+
+    if int_type=='nearest':
+        interpolation_type=1
+    elif int_type=='distance':
+        interpolation_type=2
+    else:
+        raise WrongInterpolationTypeError("Supported interpolation types are: 'nearest' and 'distance'.")
+
+    vals_vec=VectorDouble(vals);
+    points_vec=VectorDouble(list(iterchain.from_iterable(points)))
+    coordinates_vec=VectorDouble(list(iterchain.from_iterable(coordinates)))
+
+    interpolation_vec=VectorDouble()
+    interpolation_vec.reserve(len(points))
+    
+    generic_interpolation(prog_report, len(coordinates), len(vals), len(points), coordinates_vec, vals_vec, points_vec, interpolation_vec, interpolation_type, float(distance_exponent), distance_function)
+
+    interpolation=[i for i in interpolation_vec]
+
+    del points_vec
+    del coordinates_vec
+    del vals_vec
+    del interpolation_vec
+    
+    return interpolation 
 %}
 
 %include "skin_surface_deamon.h"
+%include "parallel_generic.h"
 %include "electrostatic_potential.h"
+%include "irregular_grid_interpolation.h"

@@ -236,7 +236,7 @@ EOF
 if [ "$USEPYTHON" == "true" ]
 then cat >> $output << EOF
 SWIG      := $SWIG
-SWIGINC   := $SWIGINC
+SWIGINC   := $SWIGINC/python
 
 PYTHONDIR     := $PYTHONDIR
 PYTHONLIB     := $PYTHONLIB
