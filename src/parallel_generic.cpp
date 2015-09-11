@@ -59,15 +59,6 @@ void signal_callback_handler(int signum){
 
 void init_parallel_generic(bool* progress_reports, PG* globals){
     int rc;
-    if (*progress_reports){
-        printf("Starting: multi threaded computation\n");
-        fflush(stdout);
-        rc = pthread_mutex_init(&(globals->mutex), NULL);
-        if (rc){
-            fprintf(stderr, "Failed to initialize mutex, will disable progress reports.\n");
-            *progress_reports = false;
-        }
-    }
     int num_threads = 1;
     {
         char const* tmp = getenv( "OMP_NUM_THREADS" );
@@ -78,6 +69,20 @@ void init_parallel_generic(bool* progress_reports, PG* globals){
     globals->nr_threads = num_threads;
     globals->threads = new pthread_t[num_threads];
     globals->progress_bar = 0;
+    if (*progress_reports){
+        if (globals->nr_threads>1){
+            printf("Starting multi threaded computation with %d threads.\n",globals->nr_threads);
+        }
+        else{
+            printf("Starting single threaded computation.\n");
+        }
+        fflush(stdout);
+        rc = pthread_mutex_init(&(globals->mutex), NULL);
+        if (rc){
+            fprintf(stderr, "Failed to initialize mutex, will disable progress reports.\n");
+            *progress_reports = false;
+        }
+    }
 }
 
 void finalize_parallel_generic(bool progress_reports, PG* globals){

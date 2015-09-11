@@ -122,8 +122,9 @@ void* _inverseDistanceWeightingInterpolationThread(void* data){
     double *pnts   = dat->GetData(1);
     double *vals   = dat->GetData(2);
     double *config = dat->GetData(3);
-    double distance_exponent =      config[0];
-    int    distance_function = (int)config[1];
+    const double distance_exponent =      config[0];
+    const int    distance_function = (int)config[1];
+    const double combined_exponent = -distance_exponent*1.0/distance_function;
     double *interp = dat->GetDataOutput();
     const int nr_inpnts = dat->GetNr(0);
     const int nr_pnts   = dat->GetNr(1);
@@ -168,13 +169,18 @@ void* _inverseDistanceWeightingInterpolationThread(void* data){
                         temp *= t;
                     }
                     weight += temp;
-                    weight = pow(weight,-distance_exponent*1.0/distance_function);
+                    //weight = pow(weight,1.0/distance_function);
+                    //weight = 1.0/pow(weight,distance_exponent);
+                    //weight = pow(weight,-distance_exponent*1.0/distance_function);
+                    weight = pow(weight,combined_exponent);
                     sum_weights += (long double)weight;
                     sum_weiths_times_value += (long double)(weight * (*v));
                     ++v;
                 }
                 *p = (double)(sum_weiths_times_value/sum_weights);
+//                fprintf(stdout,"Exp: %f, Func: %d, Weight: %Lf, Weight*Val: %Lf, Quot: %Lf, DiffL %f\n",distance_exponent,distance_function,sum_weights,sum_weiths_times_value,sum_weiths_times_value/sum_weights,((double)(sum_weiths_times_value/sum_weights))-min_dist_val);
             }
+//            fflush(stdout);
             //the nanosleep function serves as a possible point where Ctrl-C
             //can interrupt the programme
             nanosleep(&req, (struct timespec *)NULL);
@@ -249,6 +255,9 @@ void generic_interpolation(bool progress_reports, int num_points, int num_values
     std::vector<double> config;
     switch (interpolation_type){
         case 1:
+            if (progress_reports){
+                fprintf(stdout,"Using nearest-neighbour interpolation.\n");
+            }
             interp_func = _nearestInterpolationThread;
             try
             {
@@ -259,7 +268,25 @@ void generic_interpolation(bool progress_reports, int num_points, int num_values
             }
             break;
         case 2:
-            assert( distance_exponent >= 0.0 && distance_exponent <= 10 && distance_function >= 1 && distance_function <= 4);
+            assert( distance_exponent >= 0.0 && distance_function >= 1);
+            if (progress_reports){
+                fprintf(stdout,"Using inverse distance weighting with p=%f and the ",distance_exponent);
+                switch (distance_function%10){
+                    case 1:
+                        fprintf(stdout,"%dst",distance_function);
+                        break;
+                    case 2:
+                        fprintf(stdout,"%dnd",distance_function);
+                        break;
+                    case 3:
+                        fprintf(stdout,"%drd",distance_function);
+                        break;
+                    default:
+                        fprintf(stdout,"%dth",distance_function);
+                        break;
+                }
+                fprintf(stdout," root.\n");
+            }
             input.reserve(input.size()+1);
             config.reserve(2);
             config.push_back(distance_exponent);
@@ -278,6 +305,7 @@ void generic_interpolation(bool progress_reports, int num_points, int num_values
             throw std::invalid_argument( "Supported interpolationmethods: 1: nearest neighbour. Choose one of them." );
             break;
     }
+    fflush(stdout);
     //perform computation
     do_parallel_generic<double>(interp_func, &globals, progress_reports, num_interpolation_points, data);
     //transfer output data

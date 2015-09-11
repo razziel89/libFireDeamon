@@ -322,7 +322,7 @@ void do_parallel_generic(void *(*thread_func)(void*), PG* globals, bool progress
             pthread_mutex_lock(&(globals->mutex));
             here_progress_bar = globals->progress_bar;
             pthread_mutex_unlock(&(globals->mutex));
-            printf("%c[2K\r", 27);
+            fprintf(stdout,"%c[2K\r", 27);
             if ( here_progress_bar >= nr_calcs){
                 fprintf(stdout,"Progress: %6.2f% | Total: %d/%d",100.0, nr_calcs, nr_calcs);
                 looping = false;
