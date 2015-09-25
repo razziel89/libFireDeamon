@@ -27,6 +27,7 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <math.h>
 #include <signal.h>
 #include <time.h>
+#include <unistd.h>
 
 //PG stands for ParallelGlobals
 class PG{
