@@ -116,17 +116,17 @@ main_uninstall : clean_mainlib
 .PHONY : python_install 
 python_install :
 	@echo "Will install in $(PYTHON_DEST_DIR)"
-	mkdir -p $(PYTHON_DEST_DIR)
-	@mkdir -p $(PYTHON_DEST_DIR)
-	cp $(PYTHONDIR)/FireDeamon.py $(PYTHON_DEST_DIR)/FireDeamon.py
-	@cp $(PYTHONDIR)/FireDeamon.py $(PYTHON_DEST_DIR)/FireDeamon.py
-	cp $(PYTHONDIR)/_FireDeamon.so $(PYTHON_DEST_DIR)/_FireDeamon.so
-	@cp $(PYTHONDIR)/_FireDeamon.so $(PYTHON_DEST_DIR)/_FireDeamon.so
+	mkdir -p $(PYTHON_DEST_DIR)/FireDeamon
+	@mkdir -p $(PYTHON_DEST_DIR)/FireDeamon
+	cp $(PYTHONDIR)/FireDeamon.py $(PYTHON_DEST_DIR)/FireDeamon/__init__.py
+	@cp $(PYTHONDIR)/FireDeamon.py $(PYTHON_DEST_DIR)/FireDeamon/__init__.py
+	cp $(PYTHONDIR)/_FireDeamon.so $(PYTHON_DEST_DIR)/FireDeamon/_FireDeamon.so
+	@cp $(PYTHONDIR)/_FireDeamon.so $(PYTHON_DEST_DIR)/FireDeamon/_FireDeamon.so
 
 .PHONY : python_uninstall 
 python_uninstall : clean_bindings
-	rm -rf $(PYTHON_DEST_DIR)/FireDeamon.py $(PYTHON_DEST_DIR)/FireDeamon.pyc $(PYTHON_DEST_DIR)/_FireDeamon.so
-	@rm -rf $(PYTHON_DEST_DIR)/FireDeamon.py $(PYTHON_DEST_DIR)/FireDeamon.pyc $(PYTHON_DEST_DIR)/_FireDeamon.so
+	rm -rf $(PYTHON_DEST_DIR)/FireDeamon/__init__.py $(PYTHON_DEST_DIR)/FireDeamon/__init__.pyc $(PYTHON_DEST_DIR)/FireDeamon/_FireDeamon.so
+	@rm -rf $(PYTHON_DEST_DIR)/FireDeamon/__init__.py $(PYTHON_DEST_DIR)/FireDeamon/__init__.pyc $(PYTHON_DEST_DIR)/FireDeamon/_FireDeamon.so
 #-----------------------------------------------------
 #              BUILD RULES FOR LANGUAGE BINDINGS
 #-----------------------------------------------------
