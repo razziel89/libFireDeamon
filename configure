@@ -67,6 +67,10 @@ Flags:
                         Deafault: first in PATH
 --python                will use the specified python interpreter.
                         Deafault: first in PATH
+--rounding-type         On some systems, the compiled programme will return
+                        an error due to incorrect rounding. Declare
+                        the type of compiler you use and the appropriate
+                        rounding flag will be used. Can be gnu or intel.
 
 The environment variables OTHERINC, OTHERLIB and LDFLAGS are respected.
 This means that you should fill them BEFORE executing this configure
@@ -153,6 +157,17 @@ do
             nospace "$1"
             PYTHON="$1"
         ;;
+        --rounding-type)
+            shift
+            case ${1,,} in
+                gcc|gnu|g++|gpp)
+                    rounding="-frounding-math"
+                    ;;
+                intel)
+                    rounding="-fp-model strict"
+                    ;;
+            esac
+        ;;
         *)
             helptext
             echo "Command line option $1 not known, aborting and printing help text."
@@ -231,6 +246,7 @@ OTHERINC  := $OTHERINC
 OTHERLIB  := $OTHERLIB
 
 LDFLAGS   := $LDFLAGS -lmpfr -lgmp -lboost_thread -lCGAL -lpthread
+CPPFLAGS  := $CPPFLAGS $rounding
 
 EOF
 if [ "$USEPYTHON" == "true" ]

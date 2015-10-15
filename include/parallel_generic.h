@@ -316,7 +316,7 @@ void do_parallel_generic(void *(*thread_func)(void*), PG* globals, bool progress
     if ( progress_reports ){
         bool looping = true;
         int here_progress_bar = 0;
-        fprintf(stdout, "Progress: %6.2f% | Total: %d/%d",0.0, 0, nr_calcs);
+        fprintf(stdout, "Progress: %6.2f%% | Total: %d/%d", 0.0 , 0, nr_calcs);
         fflush(stdout);
         while (looping) {
             sleep(1);
@@ -325,11 +325,11 @@ void do_parallel_generic(void *(*thread_func)(void*), PG* globals, bool progress
             pthread_mutex_unlock(&(globals->mutex));
             fprintf(stdout,"%c[2K\r", 27);
             if ( here_progress_bar >= nr_calcs){
-                fprintf(stdout,"Progress: %6.2f% | Total: %d/%d",100.0, nr_calcs, nr_calcs);
+                fprintf(stdout,"Progress: %6.2f%% | Total: %d/%d", 100.0, nr_calcs, nr_calcs);
                 looping = false;
             }
             else{
-                fprintf(stdout,"Progress: %6.2f% | Total: %d/%d",here_progress_bar*100.0/nr_calcs, here_progress_bar, nr_calcs);
+                fprintf(stdout,"Progress: %6.2f%% | Total: %d/%d",here_progress_bar*100.0/nr_calcs, here_progress_bar, nr_calcs);
             }
             fflush(stdout);
         }

@@ -184,19 +184,19 @@ clean_mainlib :
 $(OBJDIR)/%.o : $(SRCDIR)/%.cpp
 	@printf "Compiling %-25s > %-25s\n" $< $@
 	@mkdir -p $(dir $@)
-	$(GXX)	-c -fPIC $(OTHERINC) -I$(CGALINC) -I$(INCDIR) $< -o $@
-	@$(GXX) -c -fPIC $(OTHERINC) -I$(CGALINC) -I$(INCDIR) $< -o $@
+	$(GXX)	-c -fPIC $(CPPFLAGS) $(OTHERINC) -I$(CGALINC) -I$(INCDIR) $< -o $@
+	@$(GXX) -c -fPIC $(CPPFLAGS) $(OTHERINC) -I$(CGALINC) -I$(INCDIR) $< -o $@
 
 # Make compilation rules for cxx files of bindings 
 $(PYTHONDIR)/%.o : $(PYTHONDIR)/%.cxx
 	@printf "Compiling %-25s > %-25s\n" $< $@
 	@mkdir -p $(dir $@)
-	$(GXX)	-c -fPIC $(OTHERINC) -I$(PYTHONINC) -I$(INCDIR) $< -o $@
-	@$(GXX) -c -fPIC $(OTHERINC) -I$(PYTHONINC) -I$(INCDIR) $< -o $@
+	$(GXX)	-c -fPIC $(CPPFLAGS) $(OTHERINC) -I$(PYTHONINC) -I$(INCDIR) $< -o $@
+	@$(GXX) -c -fPIC $(CPPFLAGS) $(OTHERINC) -I$(PYTHONINC) -I$(INCDIR) $< -o $@
 
 # Make compilation rules for cpp files for test executables
 $(TESTDIR)/%.o : $(TESTDIR)/%.cpp
 	@printf "Compiling %-25s > %-25s\n" $< $@
 	@mkdir -p $(dir $@)
-	$(GXX)	-c -fPIC $(OTHERINC) -I$(CGALINC) -I$(INCDIR) $< -o $@
-	@$(GXX) -c -fPIC $(OTHERINC) -I$(CGALINC) -I$(INCDIR) $< -o $@
+	$(GXX)	-c -fPIC $(CPPFLAGS) $(OTHERINC) -I$(CGALINC) -I$(INCDIR) $< -o $@
+	@$(GXX) -c -fPIC $(CPPFLAGS) $(OTHERINC) -I$(CGALINC) -I$(INCDIR) $< -o $@
