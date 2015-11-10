@@ -16,11 +16,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 ***********/
-#ifndef MAKE_SKIN_SURFACE_HEADER_H
-#define MAKE_SKIN_SURFACE_HEADER_H
+#ifndef ELECTRON_DENSITY_H 
+#define ELECTRON_DENSITY_H
 
 #include <vector>
 
-void make_skin_surface(double shrink_factor, std::vector<double> coord_radii_vec, std::vector<int> *ivec, std::vector<double> *dvec, std::vector<int> *length, int nr_refinements);
+void electron_density(bool progress_reports, int num_gridpoints, std::vector<double> prim_centers, std::vector<double> prim_exponents, std::vector<double> prim_coefficients, std::vector<double> prim_angular, std::vector<double> density_grid, std::vector<double>  mo_coefficients, std::vector<double> *density);
 
-#endif //MAKE_SKIN_SURFACE_HEADER_H
+#endif //ELECTRON_DENSITY_H

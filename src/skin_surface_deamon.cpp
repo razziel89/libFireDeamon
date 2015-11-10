@@ -69,7 +69,7 @@ void get_polyhedron(SkinSurface &skin,
     for(Facet_iterator fi = p.facets_begin(); fi != p.facets_end(); ++fi) {
         HFC hc = fi->facet_begin();
         HFC hc_end = hc;
-        std::size_t n = circulator_size( hc);
+        //std::size_t n = circulator_size( hc);
         do {
             Vertex_handle vh = (*hc).vertex();
             ivec.push_back(index[vh]);
@@ -87,7 +87,7 @@ typedef Weighted_point::Point                               Bare_point;
 typedef CGAL::Polyhedron_3<K,
   CGAL::Skin_surface_polyhedral_items_3<Skin_surface_3> >   Polyhedron;
 
-void make_skin_surface(double shrink_factor, int nr_atoms, std::vector<double> coord_radii_vec, std::vector<int> *ivec, std::vector<double> *dvec, std::vector<int> *length, int nr_refinements) {
+void make_skin_surface(double shrink_factor, std::vector<double> coord_radii_vec, std::vector<int> *ivec, std::vector<double> *dvec, std::vector<int> *length, int nr_refinements) {
     //declare variables for computation
     FT shrinkfactor = shrink_factor;
     std::list<Weighted_point> l;

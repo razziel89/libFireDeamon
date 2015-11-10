@@ -14,6 +14,7 @@ namespace std {
 #include "parallel_generic.h"
 #include "electrostatic_potential.h"
 #include "irregular_grid_interpolation.h"
+#include "electron_density.h"
 %}
 
 %pythoncode %{
@@ -67,7 +68,7 @@ def SkinSurfacePy(shrink_factor,coordinates,radii,refinesteps=1):
     index_vec=VectorInt();
     length_vec=VectorInt();
     
-    make_skin_surface(shrink_factor,nr_atoms,coord_radii_vec,index_vec,vertex_vec,length_vec,refinesteps)
+    make_skin_surface(shrink_factor,coord_radii_vec,index_vec,vertex_vec,length_vec,refinesteps)
     nr_indices=length_vec.pop()
     nr_vertices=length_vec.pop()
     del length_vec
@@ -104,7 +105,7 @@ def ElectrostaticPotentialPy(points, charges, coordinates, prog_report=True):
     potential_vec=VectorDouble()
     potential_vec.reserve(len(points))
 
-    electrostatic_potential(prog_report, len(points), len(charges), points_vec, charges_coordinates_vec, potential_vec);
+    electrostatic_potential(prog_report, len(points), points_vec, charges_coordinates_vec, potential_vec);
     
     potential=[p for p in potential_vec]
 
@@ -158,7 +159,7 @@ def InterpolationPy(coordinates, vals, points, config=None, prog_report=True):
     interpolation_vec=VectorDouble()
     interpolation_vec.reserve(len(points))
     
-    generic_interpolation(prog_report, len(coordinates), len(vals), len(points), coordinates_vec, vals_vec, points_vec, interpolation_vec, interpolation_type, distance_exponent, distance_function)
+    generic_interpolation(prog_report, len(points), coordinates_vec, vals_vec, points_vec, interpolation_vec, interpolation_type, distance_exponent, distance_function)
 
     interpolation=[i for i in interpolation_vec]
 
@@ -168,9 +169,105 @@ def InterpolationPy(coordinates, vals, points, config=None, prog_report=True):
     del interpolation_vec
     
     return interpolation 
+
+def InitializeElectronDensityPy(grid,basis,scale=1.0):
+    """
+    Create data structures suitable for efficiently computing
+    the elctron density on an arbitrary grid. Call this first
+    and then ElectronDensityPy(coefficients_list,data) where data
+    is what this function returns.
+
+    grid: list of [float,float,float]
+        The Cartesian coordinates of the grid
+    basis: a list of [A,L,Prim]
+           with
+           A: a list of 3 floats
+                The center of the contracted Cartesian Gaussian function
+           L: a list of 3 ints
+                The polynomial exponents of the contracted Cartesian Gaussian
+           Prim: a list of [alpha,pre]
+                with
+                alpha: float
+                    The exponential factor of the primitive Gaussian function
+                pre: float
+                    The contraction coefficient of the primitive Gaussian function
+    scale: float
+        Divide each coordinate by this value (coordinate transformation).
+    """
+    import numpy as np
+    vec_density_grid      = VectorDouble([p/scale for gpoint in grid for p in gpoint])
+    density_indices       = np.array([ bc for b,bc in zip(basis,xrange(len(basis))) for prim in xrange(len(b[2])) ])
+    vec_prim_centers      = VectorDouble([ p for b in basis for prim in b[2] for p in b[0] ])
+    vec_prim_angular      = VectorDouble([ a for b in basis for prim in b[2] for a in b[1] ])
+    vec_prim_exponents    = VectorDouble([ prim[0] for b in basis for prim in b[2] ])
+    vec_prim_coefficients = VectorDouble([ prim[1] for b in basis for prim in b[2] ])
+
+    return vec_prim_centers, vec_prim_exponents, vec_prim_coefficients, vec_prim_angular, vec_density_grid, density_indices
+
+def ElectronDensityPy(coefficients_list,data,volume=1.0,prog_report=True,detailed_prog=False):
+
+    import numpy as np
+
+    if not prog_report and detailed_prog:
+        detailed_prog = False
+
+    if not detailed_prog:
+        CURSOR_UP_ONE = '\x1b[1A'
+        ERASE_LINE = '\x1b[2K'
+    else:
+        CURSOR_UP_ONE = ''
+        ERASE_LINE = ''
+
+    vec_prim_centers, vec_prim_exponents, vec_prim_coefficients, vec_prim_angular, vec_density_grid, density_indices = data
+
+    if not (vec_density_grid.size())%3 == 0:
+        raise ValueError("Number of values in vector for density grid is not divisible by 3.")
+
+    nr_gridpoints = int(vec_density_grid.size()/3)
+
+    density = np.zeros((nr_gridpoints,),dtype=float)
+
+    #np_coeffs = np.array(coefficients_list)
+
+    maxrcount = len(coefficients_list)
+
+    if prog_report:
+        print "  %4d/%d"%(0,maxrcount)+CURSOR_UP_ONE
+        rcount = 0
+
+    #for coefficients in np_coeffs:
+    for coefficients in coefficients_list:
+
+        vec_mo_coefficients = VectorDouble(list(np.array(coefficients)[density_indices]))
+
+        density_vec = VectorDouble()
+        density_vec.reserve(nr_gridpoints)
+
+        electron_density(detailed_prog, nr_gridpoints, vec_prim_centers, vec_prim_exponents, vec_prim_coefficients, vec_prim_angular, vec_density_grid, vec_mo_coefficients, density_vec);
+
+        density += np.array([d for d in density_vec])
+
+        del density_vec
+        del vec_mo_coefficients
+
+        if prog_report:
+            rcount+=1
+            reportstring = "  %4d/%d"%(rcount,maxrcount)
+            print ERASE_LINE+reportstring+CURSOR_UP_ONE
+
+    if prog_report:
+        print
+
+    density/=volume
+
+    density[density<1E-30]=0.0 #cut very small values away
+    
+    return density
+
 %}
 
 %include "skin_surface_deamon.h"
 %include "parallel_generic.h"
 %include "electrostatic_potential.h"
 %include "irregular_grid_interpolation.h"
+%include "electron_density.h"

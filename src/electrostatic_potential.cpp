@@ -25,21 +25,20 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <math.h>
 #include <time.h>
 #include <parallel_generic.h>
+#include <electrostatic_potential.h>
 
 void* _potentialThread(void* data){
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,NULL);
-    struct timespec req = {0};
-    req.tv_sec = 0;
-    req.tv_nsec = 1L;
+    struct timespec req = {0/*req.tv_sec*/, 1L/*req.tv_nsec*/};
+    //req.tv_sec = 0;
+    //req.tv_nsec = 1L;
     GPSubData<double>* dat = (GPSubData<double>*) data;
     double *pnts = dat->GetData(0);
     double *ccos = dat->GetData(1);
     double *pots = dat->GetDataOutput();
-    const int nr_pnts = dat->GetNr(0);
     const int nr_ccos = dat->GetNr(1);
     const int nr_pots = dat->GetNrOutput();
-    const int sub_nr = dat->GetSubNr();
     const int progress = 25;
     const bool progress_reports = dat->GetProgressReports();
     int* progress_bar = dat->GetProgressBar();
@@ -98,7 +97,7 @@ void* _potentialThread(void* data){
     pthread_exit(NULL);
 }
 
-void electrostatic_potential (bool progress_reports, int num_points, int num_charges, std::vector<double> points, std::vector<double> charges_coordinates, std::vector<double> *potential)
+void electrostatic_potential (bool progress_reports, int num_points, std::vector<double> points, std::vector<double> charges_coordinates, std::vector<double> *potential)
 {
     //initialize everything
     PG globals; 

@@ -6,9 +6,9 @@ include make.vars
 #         SOURCE FOR MAIN C++ LIBRARY
 #-----------------------------------------------------
 MAINSRC  := $(SRCDIR)/skin_surface_deamon.cpp $(SRCDIR)/electrostatic_potential.cpp $(SRCDIR)/parallel_generic.cpp \
-	$(SRCDIR)/irregular_grid_interpolation.cpp
+	$(SRCDIR)/irregular_grid_interpolation.cpp $(SRCDIR)/electron_density.cpp
 MAINOBJ  := $(OBJDIR)/skin_surface_deamon.o $(OBJDIR)/electrostatic_potential.o $(OBJDIR)/parallel_generic.o \
-	$(OBJDIR)/irregular_grid_interpolation.o
+	$(OBJDIR)/irregular_grid_interpolation.o $(OBJDIR)/electron_density.o
 #-----------------------------------------------------
 #         SOURCE FOR TEST FILES
 #-----------------------------------------------------
@@ -184,19 +184,19 @@ clean_mainlib :
 $(OBJDIR)/%.o : $(SRCDIR)/%.cpp
 	@printf "Compiling %-25s > %-25s\n" $< $@
 	@mkdir -p $(dir $@)
-	$(GXX)	-c -fPIC $(CPPFLAGS) $(OTHERINC) -I$(CGALINC) -I$(INCDIR) $< -o $@
-	@$(GXX) -c -fPIC $(CPPFLAGS) $(OTHERINC) -I$(CGALINC) -I$(INCDIR) $< -o $@
+	$(GXX)  -std=c++0x -pedantic -Wall -Wextra -c -fPIC $(CPPFLAGS) $(OTHERINC) -I$(CGALINC) -I$(INCDIR) $< -o $@
+	@$(GXX) -std=c++0x -pedantic -Wall -Wextra -c -fPIC $(CPPFLAGS) $(OTHERINC) -I$(CGALINC) -I$(INCDIR) $< -o $@
 
 # Make compilation rules for cxx files of bindings 
 $(PYTHONDIR)/%.o : $(PYTHONDIR)/%.cxx
 	@printf "Compiling %-25s > %-25s\n" $< $@
 	@mkdir -p $(dir $@)
-	$(GXX)	-c -fPIC $(CPPFLAGS) $(OTHERINC) -I$(PYTHONINC) -I$(INCDIR) $< -o $@
-	@$(GXX) -c -fPIC $(CPPFLAGS) $(OTHERINC) -I$(PYTHONINC) -I$(INCDIR) $< -o $@
+	$(GXX)  -std=c++0x -pedantic -Wall -Wextra -c -fPIC $(CPPFLAGS) $(OTHERINC) -I$(PYTHONINC) -I$(INCDIR) $< -o $@
+	@$(GXX) -std=c++0x -pedantic -Wall -Wextra -c -fPIC $(CPPFLAGS) $(OTHERINC) -I$(PYTHONINC) -I$(INCDIR) $< -o $@
 
 # Make compilation rules for cpp files for test executables
 $(TESTDIR)/%.o : $(TESTDIR)/%.cpp
 	@printf "Compiling %-25s > %-25s\n" $< $@
 	@mkdir -p $(dir $@)
-	$(GXX)	-c -fPIC $(CPPFLAGS) $(OTHERINC) -I$(CGALINC) -I$(INCDIR) $< -o $@
-	@$(GXX) -c -fPIC $(CPPFLAGS) $(OTHERINC) -I$(CGALINC) -I$(INCDIR) $< -o $@
+	$(GXX)  -std=c++0x -pedantic -Wall -Wextra -c -fPIC $(CPPFLAGS) $(OTHERINC) -I$(CGALINC) -I$(INCDIR) $< -o $@
+	@$(GXX) -std=c++0x -pedantic -Wall -Wextra -c -fPIC $(CPPFLAGS) $(OTHERINC) -I$(CGALINC) -I$(INCDIR) $< -o $@
