@@ -156,7 +156,7 @@ class GPData: public GPSubData<T> {
     public:
 
         GPData();
-        GPData(bool progress_reports, int nr_subs, std::vector< std::vector<T> > &input, std::vector<T> *output, pthread_mutex_t* mutex, int* progress_bar, int split_index, int split_factor);
+        GPData(bool progress_reports, int nr_subs, std::vector< std::vector<T> > &input, std::vector<T> *output, pthread_mutex_t* mutex, int* progress_bar, int split_index, int split_factor, bool interlace);
         ~GPData();
         GPSubData<T>* GetSubData(int i);
         void TransferOutput(bool empty_check = true);
@@ -166,6 +166,7 @@ class GPData: public GPSubData<T> {
         int m_nr_subs;
         int m_split_index;
         int m_split_factor;
+        bool m_interlace;
         std::vector< GPSubData<T> > subdata;
         std::vector<T>* m_output_vector;
         using GPSubData<T>::m_data;
@@ -180,10 +181,11 @@ class GPData: public GPSubData<T> {
 };
 
 template <typename T>
-GPData<T>::GPData(bool progress_reports, int nr_subs, std::vector< std::vector<T> > &input, std::vector<T> *output, pthread_mutex_t* mutex, int* progress_bar, int split_index, int split_factor){
+GPData<T>::GPData(bool progress_reports, int nr_subs, std::vector< std::vector<T> > &input, std::vector<T> *output, pthread_mutex_t* mutex, int* progress_bar, int split_index, int split_factor, bool interlace){
     m_nr_subs = nr_subs;
     m_lengths.reserve(input.size());
     m_data.reserve(input.size());
+    m_interlace = interlace;
     for(typename std::vector< std::vector<T> >::const_iterator it = input.begin(); it != input.end(); ++it) {
         m_lengths.push_back(it->size());
     }
@@ -213,12 +215,27 @@ GPData<T>::GPData(bool progress_reports, int nr_subs, std::vector< std::vector<T
     {
         typename std::vector<T*>::iterator T_it = m_data.begin();
         typename std::vector< std::vector<T> >::iterator input_it = input.begin();
-        for(; T_it != m_data.end(); ++T_it, ++input_it) {
+        for(int count=0; T_it != m_data.end(); ++T_it, ++input_it, ++count) {
             T* temp = *T_it;
-            typename std::vector<T>::iterator it = input_it->begin();
-            for (; it!=input_it->end(); ++it, ++temp){
-                *temp = *it;
-            } 
+            if (m_interlace && count==m_split_index){
+                //rearrange the data depending on the number of threads
+                //to equalize load
+                for (int copy_start=0; copy_start<m_nr_subs; ++copy_start){
+                    typename std::vector<T>::iterator it = input_it->begin();
+                    for (int c=0; it!=input_it->end(); ++it, ++c){
+                        if ( (int(c/m_split_factor))%m_nr_subs == copy_start){
+                            *temp = *it;
+                            ++temp;
+                        }
+                    } 
+                }
+            }
+            else{//just copy everything over
+                typename std::vector<T>::iterator it = input_it->begin();
+                for (; it!=input_it->end(); ++it, ++temp){
+                    *temp = *it;
+                } 
+            }
         }
     }
     //create sub data
@@ -275,6 +292,7 @@ GPData<T>::GPData(){//parent constructor is called automatically if no arguments
     m_nr_subs = 0;
     m_split_index = 0;
     m_split_factor = 1;
+    m_interlace = false;
     subdata.reserve(0);
 }
 
@@ -286,12 +304,31 @@ GPSubData<T>* GPData<T>::GetSubData(int i){
 
 template <typename T>
 void GPData<T>::TransferOutput(bool empty_check){
-    T* temp = m_output;
     if (empty_check && m_output_vector->size() > 0){
         throw std::length_error( "Output vector should be empty but it is not." );
     }
-    for (int i=0; i<m_len_output; ++temp, ++i){
-        m_output_vector->push_back(*temp);
+    if (m_interlace){//deinterlace the output data
+        T** temp = (T**)malloc(m_nr_subs*sizeof(T*));
+        const int min_nr_elements_per_sub = m_len_output/m_nr_subs;
+        int too_many = m_len_output%m_nr_subs;
+        int start = 0;
+        for (int sub=0; sub<m_nr_subs; ++sub){
+            temp[sub] = m_output+(start);
+            const int here_elements = min_nr_elements_per_sub + ((too_many>0) ? 1 : 0);
+            start += here_elements;
+            too_many -=1;
+        }
+        for (int i=0; i<m_len_output; ++i){
+            m_output_vector->push_back(*(temp[i%m_nr_subs]));
+            ++(temp[i%m_nr_subs]);
+        }
+        free(temp);
+    }
+    else{
+        T* temp = m_output;
+        for (int i=0; i<m_len_output; ++temp, ++i){
+            m_output_vector->push_back(*temp);
+        }
     }
     //fprintf(stderr,"\nLengths: %d,   %d\n",m_output_vector->size(), m_len_output);fflush(stderr);
 }

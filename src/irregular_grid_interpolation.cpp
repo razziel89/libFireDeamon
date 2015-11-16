@@ -256,7 +256,7 @@ void generic_interpolation(bool progress_reports, int num_interpolation_points, 
             interp_func = _nearestInterpolationThread;
             try
             {
-                data = new GPData<double>(progress_reports, globals.nr_threads, input, interpolation, &(globals.mutex), &(globals.progress_bar), split_col, split_factor);
+                data = new GPData<double>(progress_reports, globals.nr_threads, input, interpolation, &(globals.mutex), &(globals.progress_bar), split_col, split_factor, false);
             }
             catch( const std::invalid_argument& e ) {
                 throw;
@@ -290,7 +290,7 @@ void generic_interpolation(bool progress_reports, int num_interpolation_points, 
             interp_func = _inverseDistanceWeightingInterpolationThread;
             try
             {
-                data = new GPData<double>(progress_reports, globals.nr_threads, input, interpolation, &(globals.mutex), &(globals.progress_bar), split_col, split_factor);
+                data = new GPData<double>(progress_reports, globals.nr_threads, input, interpolation, &(globals.mutex), &(globals.progress_bar), split_col, split_factor, false);
             }
             catch( const std::invalid_argument& e ) {
                 throw;

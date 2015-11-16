@@ -204,7 +204,26 @@ def InitializeElectronDensityPy(grid,basis,scale=1.0):
 
     return vec_prim_centers, vec_prim_exponents, vec_prim_coefficients, vec_prim_angular, vec_density_grid, density_indices
 
-def ElectronDensityPy(coefficients_list,data,volume=1.0,prog_report=True,detailed_prog=False):
+def ElectronDensityPy(coefficients_list,data,volume=1.0,prog_report=True,detailed_prog=False, cutoff=-1.0):
+    """
+    Calculate the electron density due to some molecular orbitals on a grid.
+
+    coefficients_list: list of lists of floats
+        The coefficients of the molecular orbitals.
+    data: what InitializeElectronDensityPy returned
+
+    volume: float
+        Scale the whole density by the inverse of this value.
+    prog_report: bool
+        Whether or not ti give progress reports over MOs.
+    detailed_prog:
+        Whether or not ti give progress reports while a MO
+        is being treated.
+    cutoff: float in units of the grid
+        No density will be computed if the difference between the
+        gridpoint and the center of the basis function is larger
+        than this value.
+    """
 
     import numpy as np
 
@@ -243,7 +262,7 @@ def ElectronDensityPy(coefficients_list,data,volume=1.0,prog_report=True,detaile
         density_vec = VectorDouble()
         density_vec.reserve(nr_gridpoints)
 
-        electron_density(detailed_prog, nr_gridpoints, vec_prim_centers, vec_prim_exponents, vec_prim_coefficients, vec_prim_angular, vec_density_grid, vec_mo_coefficients, density_vec);
+        electron_density(detailed_prog, nr_gridpoints, vec_prim_centers, vec_prim_exponents, vec_prim_coefficients, vec_prim_angular, vec_density_grid, vec_mo_coefficients, density_vec, cutoff);
 
         density += np.array([d for d in density_vec])
 
@@ -258,7 +277,7 @@ def ElectronDensityPy(coefficients_list,data,volume=1.0,prog_report=True,detaile
     if prog_report:
         print
 
-    density/=volume
+    density*=1.0/volume
 
     density[density<1E-30]=0.0 #cut very small values away
     

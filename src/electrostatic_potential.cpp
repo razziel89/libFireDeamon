@@ -115,7 +115,7 @@ void electrostatic_potential (bool progress_reports, int num_points, std::vector
     GPData<double> *data;
     try
     {
-        data = new GPData<double>(progress_reports, globals.nr_threads, input, potential, &(globals.mutex), &(globals.progress_bar), split_col, split_factor);
+        data = new GPData<double>(progress_reports, globals.nr_threads, input, potential, &(globals.mutex), &(globals.progress_bar), split_col, split_factor, false);
     }
     catch( const std::invalid_argument& e ) {
         throw;
