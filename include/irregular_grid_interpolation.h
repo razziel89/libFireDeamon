@@ -21,6 +21,6 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-void generic_interpolation(bool progress_reports, int num_interpolation_points, std::vector<double> points, std::vector<double> values, std::vector<double> interpolation_points, std::vector<double> *interpolation, int interpolation_type, double distance_exponent, int distance_function);
+void generic_interpolation(bool progress_reports, int num_interpolation_points, std::vector<double> points, std::vector<double> values, std::vector<double> interpolation_points, std::vector<double> *interpolation, int interpolation_type, double distance_exponent, int distance_function, double cutoff=-1.0);
 
 #endif //H_IRREGULAR_GRID_INTERPOLATION_DEAMON_

@@ -140,15 +140,18 @@ def InterpolationPy(coordinates, vals, points, config=None, prog_report=True):
         interpolation_type=1
         distance_exponent=1.0
         distance_function=1
+        cutoff=-1.0
     else:
         if config['method']=='nearest':
             interpolation_type=1
             distance_exponent=1.0
             distance_function=1
+            cutoff=-1.0
         elif config['method']=='distance':
             interpolation_type=2
             distance_exponent=float(config['exponent'])
             distance_function=int(config['function'])
+            cutoff=float(config['cutoff'])
         else:
             raise WrongInterpolationTypeError("Supported interpolation types are: 'nearest' and 'distance'.")
 
@@ -159,7 +162,7 @@ def InterpolationPy(coordinates, vals, points, config=None, prog_report=True):
     interpolation_vec=VectorDouble()
     interpolation_vec.reserve(len(points))
     
-    generic_interpolation(prog_report, len(points), coordinates_vec, vals_vec, points_vec, interpolation_vec, interpolation_type, distance_exponent, distance_function)
+    generic_interpolation(prog_report, len(points), coordinates_vec, vals_vec, points_vec, interpolation_vec, interpolation_type, distance_exponent, distance_function, cutoff)
 
     interpolation=[i for i in interpolation_vec]
 

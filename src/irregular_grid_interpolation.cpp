@@ -32,8 +32,6 @@ void* _nearestInterpolationThread(void* data){
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,NULL);
     struct timespec req = {0/*req.tv_sec*/, 1L/*req.tv_nsec*/};
-    //req.tv_sec = 0;
-    //req.tv_nsec = 1L;
     GPSubData<double>* dat = (GPSubData<double>*) data;
     double *inpnts = dat->GetData(0); //interpolation points
     double *pnts   = dat->GetData(1);
@@ -48,32 +46,33 @@ void* _nearestInterpolationThread(void* data){
 
     double* p  = interp;
     double* pc = inpnts;
-    if ( progress_reports ){
-        for(int ip=0; ip<nr_interp;){
-            for (int prog=0; prog<progress && ip<nr_interp; ++prog, ++ip, ++p){
-                double min_dist_squ = std::numeric_limits<double>::max();
-                double min_dist_val = 0.0;
-                double xpc = *pc++;
-                double ypc = *pc++;
-                double zpc = *pc++;
-                double* c  = pnts;
-                double* v  = vals;
-                for(int ic=0; ic<nr_pnts; ic+=3){
-                    double normsquared = 0.0;
-                    normsquared += (*c-xpc)*(*c-xpc); ++c;
-                    normsquared += (*c-ypc)*(*c-ypc); ++c;
-                    normsquared += (*c-zpc)*(*c-zpc); ++c;
-                    if ( normsquared < min_dist_squ ){
-                        min_dist_squ = normsquared;
-                        min_dist_val = *v;
-                    }
-                    ++v;
+    for(int ip=0; ip<nr_interp;){
+        for (int prog=0; prog<progress && ip<nr_interp; ++prog, ++ip, ++p){
+            double min_dist_squ = std::numeric_limits<double>::max();
+            double min_dist_val = 0.0;
+            double xpc = *(pc+0);
+            double ypc = *(pc+1);
+            double zpc = *(pc+2);
+            double* c  = pnts;
+            double* v  = vals;
+            for(int ic=0; ic<nr_pnts; ic+=3){
+                double dx = (*(c+0)-xpc);
+                double dy = (*(c+1)-ypc);
+                double dz = (*(c+2)-zpc);
+                double normsquared = dx*dx + dy*dy + dz*dz;
+                if ( normsquared < min_dist_squ ){
+                    min_dist_squ = normsquared;
+                    min_dist_val = *v;
                 }
-                *p = min_dist_val;
+                ++v; c+=3;
             }
-            //the nanosleep function serves as a possible point where Ctrl-C
-            //can interrupt the programme
-            nanosleep(&req, (struct timespec *)NULL);
+            *p = min_dist_val;
+            pc += 3;
+        }
+        //the nanosleep function serves as a possible point where Ctrl-C
+        //can interrupt the programme
+        nanosleep(&req, (struct timespec *)NULL);
+        if ( progress_reports ){
             //the programme should not be cancelled while the mutex is locked
             pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,NULL);
             pthread_mutex_lock(mut);
@@ -82,39 +81,13 @@ void* _nearestInterpolationThread(void* data){
             pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
         }
     }
-    else {
-        for(int ip=0; ip<nr_interp; ++ip, ++p){
-            double min_dist_squ = std::numeric_limits<double>::max();
-            double min_dist_val = 0.0;
-            double xpc = *pc++;
-            double ypc = *pc++;
-            double zpc = *pc++;
-            double* c  = pnts;
-            double* v  = vals;
-            for(int ic=0; ic<nr_pnts; ic+=3){
-                double normsquared = 0.0;
-                normsquared += (*c-xpc)*(*c-xpc); ++c;
-                normsquared += (*c-ypc)*(*c-ypc); ++c;
-                normsquared += (*c-zpc)*(*c-zpc); ++c;
-                if ( normsquared < min_dist_squ ){
-                    min_dist_squ = normsquared;
-                    min_dist_val = *v;
-                }
-                ++v;
-            }
-            *p = min_dist_val;
-            nanosleep(&req, (struct timespec *)NULL);
-        }
-    }
     pthread_exit(NULL);
 }
 
-void* _inverseDistanceWeightingInterpolationThread(void* data){
+void* _inverseDistanceWeightingInterpolationNoCutoffThread(void* data){
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,NULL);
     struct timespec req = {0/*req.tv_sec*/, 1L/*req.tv_nsec*/};
-    //req.tv_sec = 0;
-    //req.tv_nsec = 1L;
     GPSubData<double>* dat = (GPSubData<double>*) data;
     double *inpnts = dat->GetData(0); //interpolation points
     double *pnts   = dat->GetData(1);
@@ -133,52 +106,43 @@ void* _inverseDistanceWeightingInterpolationThread(void* data){
     
     double* p  = interp;
     double* pc = inpnts;
-    if ( progress_reports ){
-        for(int ip=0; ip<nr_interp;){
-            for (int prog=0; prog<progress && ip<nr_interp; ++prog, ++ip, ++p){
-                long double sum_weights = 0.0L;
-                long double sum_weiths_times_value = 0.0L;
-                double xpc = *pc++;
-                double ypc = *pc++;
-                double zpc = *pc++;
-                double* c  = pnts;
-                double* v  = vals;
-                for(int ic=0; ic<nr_pnts; ic+=3){
-                    double weight = 0.0;
-                    double t, temp;
-                    t = fabs(*c-xpc); ++c;
-                    temp = t;
-                    for (int j=1; j<distance_function; ++j){
-                        temp *= t;
-                    }
-                    weight += temp;
-                    t = fabs(*c-ypc); ++c;
-                    temp = t;
-                    for (int j=1; j<distance_function; ++j){
-                        temp *= t;
-                    }
-                    weight += temp;
-                    t = fabs(*c-zpc); ++c;
-                    temp = t;
-                    for (int j=1; j<distance_function; ++j){
-                        temp *= t;
-                    }
-                    weight += temp;
-                    //weight = pow(weight,1.0/distance_function);
-                    //weight = 1.0/pow(weight,distance_exponent);
-                    //weight = pow(weight,-distance_exponent*1.0/distance_function);
-                    weight = pow(weight,combined_exponent);
-                    sum_weights += (long double)weight;
-                    sum_weiths_times_value += (long double)(weight * (*v));
-                    ++v;
+    for(int ip=0; ip<nr_interp;){
+        for (int prog=0; prog<progress && ip<nr_interp; ++prog, ++ip, ++p){
+            long double sum_weights = 0.0L;
+            long double sum_weiths_times_value = 0.0L;
+            double xpc = *(pc+0);
+            double ypc = *(pc+1);
+            double zpc = *(pc+2);
+            double* c  = pnts;
+            double* v  = vals;
+            for(int ic=0; ic<nr_pnts; ic+=3){
+                double dx = *(c+0)-xpc;
+                double dy = *(c+1)-ypc;
+                double dz = *(c+2)-zpc;
+                double tx, ty, tz, ttx, tty, ttz;
+                tx = ((dx>0) ? dx : -dx); 
+                ty = ((dy>0) ? dy : -dy); 
+                tz = ((dz>0) ? dz : -dz); 
+                ttx = tx;
+                tty = ty;
+                ttz = tz;
+                for (int j=1; j<distance_function; ++j){
+                    ttx *= tx;
+                    tty *= ty;
+                    ttz *= tz;
                 }
-                *p = (double)(sum_weiths_times_value/sum_weights);
-//                fprintf(stdout,"Exp: %f, Func: %d, Weight: %Lf, Weight*Val: %Lf, Quot: %Lf, DiffL %f\n",distance_exponent,distance_function,sum_weights,sum_weiths_times_value,sum_weiths_times_value/sum_weights,((double)(sum_weiths_times_value/sum_weights))-min_dist_val);
+                double weight = pow(ttx + tty + ttz, combined_exponent);
+                sum_weights += (long double)weight;
+                sum_weiths_times_value += (long double)(weight * (*v));
+                ++v; c+=3;
             }
-//            fflush(stdout);
-            //the nanosleep function serves as a possible point where Ctrl-C
-            //can interrupt the programme
-            nanosleep(&req, (struct timespec *)NULL);
+            *p = (double)(sum_weiths_times_value/sum_weights);
+            pc+=3;
+        }
+        //the nanosleep function serves as a possible point where Ctrl-C
+        //can interrupt the programme
+        nanosleep(&req, (struct timespec *)NULL);
+        if ( progress_reports ){
             //the programme should not be cancelled while the mutex is locked
             pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,NULL);
             pthread_mutex_lock(mut);
@@ -187,63 +151,107 @@ void* _inverseDistanceWeightingInterpolationThread(void* data){
             pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
         }
     }
-    else {
-        for(int ip=0; ip<nr_interp; ++ip, ++p){
+    pthread_exit(NULL);
+}
+
+void* _inverseDistanceWeightingInterpolationCutoffThread(void* data){
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,NULL);
+    struct timespec req = {0/*req.tv_sec*/, 1L/*req.tv_nsec*/};
+    GPSubData<double>* dat = (GPSubData<double>*) data;
+    double *inpnts = dat->GetData(0); //interpolation points
+    double *pnts   = dat->GetData(1);
+    double *vals   = dat->GetData(2);
+    double *cutoff = dat->GetData(3);
+    double *config = dat->GetData(4);
+    double cutoff_2 = (*cutoff)*(*cutoff);
+    const double distance_exponent =      config[0];
+    const int    distance_function = (int)config[1];
+    const double combined_exponent = -distance_exponent*1.0/distance_function;
+    double *interp = dat->GetDataOutput();
+    const int nr_pnts   = dat->GetNr(1);
+    const int nr_interp = dat->GetNrOutput();
+    const int progress = 25;
+    const bool progress_reports = dat->GetProgressReports();
+    int* progress_bar = dat->GetProgressBar();
+    pthread_mutex_t* mut = dat->GetMutex();
+    
+    double* p  = interp;
+    double* pc = inpnts;
+    for(int ip=0; ip<nr_interp;){
+        for (int prog=0; prog<progress && ip<nr_interp; ++prog, ++ip, ++p){
             long double sum_weights = 0.0L;
             long double sum_weiths_times_value = 0.0L;
-            double xpc = *pc++;
-            double ypc = *pc++;
-            double zpc = *pc++;
+            double xpc = *(pc+0);
+            double ypc = *(pc+1);
+            double zpc = *(pc+2);
             double* c  = pnts;
             double* v  = vals;
             for(int ic=0; ic<nr_pnts; ic+=3){
-                double weight = 0.0;
-                double t, temp;
-                t = fabs(*c-xpc); ++c;
-                temp = t;
-                for (int j=1; j<distance_function; ++j){
-                    temp *= t;
+                double dx = *(c+0)-xpc;
+                double dy = *(c+1)-ypc;
+                double dz = *(c+2)-zpc;
+                if ( dx*dx + dy*dy + dz*dz < cutoff_2 ){
+                    double tx, ty, tz, ttx, tty, ttz;
+                    tx = ((dx>0) ? dx : -dx); 
+                    ty = ((dy>0) ? dy : -dy); 
+                    tz = ((dz>0) ? dz : -dz); 
+                    ttx = tx;
+                    tty = ty;
+                    ttz = tz;
+                    for (int j=1; j<distance_function; ++j){
+                        ttx *= tx;
+                        tty *= ty;
+                        ttz *= tz;
+                    }
+                    double weight = pow(ttx + tty + ttz, combined_exponent);
+                    sum_weights += (long double)weight;
+                    sum_weiths_times_value += (long double)(weight * (*v));
                 }
-                weight += temp;
-                t = fabs(*c-ypc); ++c;
-                temp = t;
-                for (int j=1; j<distance_function; ++j){
-                    temp *= t;
-                }
-                weight += temp;
-                t = fabs(*c-zpc); ++c;
-                temp = t;
-                for (int j=1; j<distance_function; ++j){
-                    temp *= t;
-                }
-                weight += temp;
-                weight = pow(weight,distance_exponent*1.0/distance_function);
-                sum_weights += (long double)weight;
-                sum_weiths_times_value += (long double)(weight* (*v));
-                ++v;
+                ++v; c+=3;
             }
             *p = (double)(sum_weiths_times_value/sum_weights);
-            nanosleep(&req, (struct timespec *)NULL);
+            pc+=3;
+        }
+        //the nanosleep function serves as a possible point where Ctrl-C
+        //can interrupt the programme
+        nanosleep(&req, (struct timespec *)NULL);
+        if ( progress_reports ){
+            //the programme should not be cancelled while the mutex is locked
+            pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,NULL);
+            pthread_mutex_lock(mut);
+            *progress_bar += progress;
+            pthread_mutex_unlock(mut);
+            pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
         }
     }
     pthread_exit(NULL);
 }
 
-void generic_interpolation(bool progress_reports, int num_interpolation_points, std::vector<double> points, std::vector<double> values, std::vector<double> interpolation_points, std::vector<double> *interpolation, int interpolation_type, double distance_exponent, int distance_function)
+void generic_interpolation(bool progress_reports, int num_interpolation_points, std::vector<double> points, std::vector<double> values, std::vector<double> interpolation_points, std::vector<double> *interpolation, int interpolation_type, double distance_exponent, int distance_function, double cutoff)
 {
     void* (*interp_func)(void*);
     //initialize everything
     PG globals; 
     init_parallel_generic(&progress_reports, &globals);
+   
+    //check whether a cutoff shall be considered
+    bool use_cutoff = (cutoff > 0.0);
 
     //reserve data structures and fill them with input
     std::vector< std::vector<double> > input;
-    input.reserve(3);
+    input.reserve(3+(use_cutoff ? 1 : 0));
     const int split_col = 0;
     const int split_factor = 3;
     input.push_back(interpolation_points);
     input.push_back(points);
     input.push_back(values);
+
+    std::vector<double> vec_cutoff;
+    if (use_cutoff){
+        vec_cutoff.push_back(cutoff);
+        input.push_back(vec_cutoff);
+    }
     
     //fill class that holds data for each thread
     GPData<double> *data;
@@ -287,7 +295,12 @@ void generic_interpolation(bool progress_reports, int num_interpolation_points, 
             config.push_back(distance_exponent);
             config.push_back(distance_function);
             input.push_back(config);
-            interp_func = _inverseDistanceWeightingInterpolationThread;
+            if (use_cutoff){
+                interp_func = _inverseDistanceWeightingInterpolationCutoffThread;
+            }
+            else{
+                interp_func = _inverseDistanceWeightingInterpolationNoCutoffThread;
+            }
             try
             {
                 data = new GPData<double>(progress_reports, globals.nr_threads, input, interpolation, &(globals.mutex), &(globals.progress_bar), split_col, split_factor, false);
