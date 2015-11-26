@@ -33,7 +33,7 @@ void* _potentialThread(void* data){
     struct timespec req = {0/*req.tv_sec*/, 1L/*req.tv_nsec*/};
     //req.tv_sec = 0;
     //req.tv_nsec = 1L;
-    GPSubData<double>* dat = (GPSubData<double>*) data;
+    GPSubData<double,double>* dat = (GPSubData<double,double>*) data;
     double *pnts = dat->GetData(0);
     double *ccos = dat->GetData(1);
     double *pots = dat->GetDataOutput();
@@ -112,16 +112,16 @@ void electrostatic_potential (bool progress_reports, int num_points, std::vector
     input.push_back(charges_coordinates);
     
     //fill class that holds data for each thread
-    GPData<double> *data;
+    GPData<double,double> *data;
     try
     {
-        data = new GPData<double>(progress_reports, globals.nr_threads, input, potential, &(globals.mutex), &(globals.progress_bar), split_col, split_factor, false);
+        data = new GPData<double,double>(progress_reports, globals.nr_threads, input, potential, &(globals.mutex), &(globals.progress_bar), split_col, split_factor, 1, false);
     }
     catch( const std::invalid_argument& e ) {
         throw;
     }
     //perform computation
-    do_parallel_generic<double>(_potentialThread, &globals, progress_reports, num_points, data);
+    do_parallel_generic<double,double>(_potentialThread, &globals, progress_reports, num_points, data);
     //transfer output data
     data->TransferOutput();
     //clean up

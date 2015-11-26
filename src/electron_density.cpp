@@ -33,7 +33,7 @@ void* _electronDensityThreadCutoff(void* data){
     struct timespec req = {0/*req.tv_sec*/, 1L/*req.tv_nsec*/};
     //req.tv_sec = 0;
     //req.tv_nsec = 1L;
-    GPSubData<double>* dat = (GPSubData<double>*) data;
+    GPSubData<double,double>* dat = (GPSubData<double,double>*) data;
 
     double *grdpnts  = dat->GetData(0); //gridpoints
     double *prm_cent = dat->GetData(1); //centers of primitives
@@ -108,7 +108,7 @@ void* _electronDensityThreadNoCutoff(void* data){
     struct timespec req = {0/*req.tv_sec*/, 1L/*req.tv_nsec*/};
     //req.tv_sec = 0;
     //req.tv_nsec = 1L;
-    GPSubData<double>* dat = (GPSubData<double>*) data;
+    GPSubData<double,double>* dat = (GPSubData<double,double>*) data;
 
     double *grdpnts  = dat->GetData(0); //gridpoints
     double *prm_cent = dat->GetData(1); //centers of primitives
@@ -201,10 +201,10 @@ void electron_density(bool progress_reports, int num_gridpoints, std::vector<dou
     }
     
     //fill class that holds data for each thread
-    GPData<double> *data;
+    GPData<double,double> *data;
     try
     {
-        data = new GPData<double>(progress_reports, globals.nr_threads, input, density, &(globals.mutex), &(globals.progress_bar), split_col, split_factor, /*interlace=*/true);
+        data = new GPData<double,double>(progress_reports, globals.nr_threads, input, density, &(globals.mutex), &(globals.progress_bar), split_col, split_factor, 1, /*interlace=*/true);
     }
     catch( const std::invalid_argument& e ) {
         throw;
@@ -212,10 +212,10 @@ void electron_density(bool progress_reports, int num_gridpoints, std::vector<dou
     fflush(stdout);
     //perform computation
     if (use_cutoff){
-        do_parallel_generic<double>(_electronDensityThreadCutoff, &globals, progress_reports, num_gridpoints, data);
+        do_parallel_generic<double,double>(_electronDensityThreadCutoff, &globals, progress_reports, num_gridpoints, data);
     }
     else{
-        do_parallel_generic<double>(_electronDensityThreadNoCutoff, &globals, progress_reports, num_gridpoints, data);
+        do_parallel_generic<double,double>(_electronDensityThreadNoCutoff, &globals, progress_reports, num_gridpoints, data);
     }
     //transfer output data
     data->TransferOutput();

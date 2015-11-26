@@ -32,7 +32,7 @@ void* _nearestInterpolationThread(void* data){
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,NULL);
     struct timespec req = {0/*req.tv_sec*/, 1L/*req.tv_nsec*/};
-    GPSubData<double>* dat = (GPSubData<double>*) data;
+    GPSubData<double,double>* dat = (GPSubData<double,double>*) data;
     double *inpnts = dat->GetData(0); //interpolation points
     double *pnts   = dat->GetData(1);
     double *vals   = dat->GetData(2);
@@ -88,7 +88,7 @@ void* _inverseDistanceWeightingInterpolationNoCutoffThread(void* data){
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,NULL);
     struct timespec req = {0/*req.tv_sec*/, 1L/*req.tv_nsec*/};
-    GPSubData<double>* dat = (GPSubData<double>*) data;
+    GPSubData<double,double>* dat = (GPSubData<double,double>*) data;
     double *inpnts = dat->GetData(0); //interpolation points
     double *pnts   = dat->GetData(1);
     double *vals   = dat->GetData(2);
@@ -158,7 +158,7 @@ void* _inverseDistanceWeightingInterpolationCutoffThread(void* data){
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,NULL);
     struct timespec req = {0/*req.tv_sec*/, 1L/*req.tv_nsec*/};
-    GPSubData<double>* dat = (GPSubData<double>*) data;
+    GPSubData<double,double>* dat = (GPSubData<double,double>*) data;
     double *inpnts = dat->GetData(0); //interpolation points
     double *pnts   = dat->GetData(1);
     double *vals   = dat->GetData(2);
@@ -254,7 +254,7 @@ void generic_interpolation(bool progress_reports, int num_interpolation_points, 
     }
     
     //fill class that holds data for each thread
-    GPData<double> *data;
+    GPData<double,double> *data;
     std::vector<double> config;
     switch (interpolation_type){
         case 1:
@@ -264,7 +264,7 @@ void generic_interpolation(bool progress_reports, int num_interpolation_points, 
             interp_func = _nearestInterpolationThread;
             try
             {
-                data = new GPData<double>(progress_reports, globals.nr_threads, input, interpolation, &(globals.mutex), &(globals.progress_bar), split_col, split_factor, false);
+                data = new GPData<double,double>(progress_reports, globals.nr_threads, input, interpolation, &(globals.mutex), &(globals.progress_bar), split_col, split_factor, 1, false);
             }
             catch( const std::invalid_argument& e ) {
                 throw;
@@ -303,19 +303,19 @@ void generic_interpolation(bool progress_reports, int num_interpolation_points, 
             }
             try
             {
-                data = new GPData<double>(progress_reports, globals.nr_threads, input, interpolation, &(globals.mutex), &(globals.progress_bar), split_col, split_factor, false);
+                data = new GPData<double,double>(progress_reports, globals.nr_threads, input, interpolation, &(globals.mutex), &(globals.progress_bar), split_col, split_factor, 1, false);
             }
             catch( const std::invalid_argument& e ) {
                 throw;
             }
             break;
         default:
-            throw std::invalid_argument( "Supported interpolationmethods: 1: nearest neighbour. Choose one of them." );
+            throw std::invalid_argument( "Supported interpolation methods: 1: nearest neighbour, 2: inverse distance. Choose one of them." );
             break;
     }
     fflush(stdout);
     //perform computation
-    do_parallel_generic<double>(interp_func, &globals, progress_reports, num_interpolation_points, data);
+    do_parallel_generic<double,double>(interp_func, &globals, progress_reports, num_interpolation_points, data);
     //transfer output data
     data->TransferOutput();
     //clean up
