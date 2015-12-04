@@ -24,6 +24,7 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include <tuple>
 #include <parallel_generic.h>
 #include <electrostatic_potential.h>
 
@@ -33,11 +34,12 @@ void* _potentialThread(void* data){
     struct timespec req = {0/*req.tv_sec*/, 1L/*req.tv_nsec*/};
     //req.tv_sec = 0;
     //req.tv_nsec = 1L;
-    GPSubData<double,double>* dat = (GPSubData<double,double>*) data;
-    double *pnts = dat->GetData(0);
-    double *ccos = dat->GetData(1);
+    GPSubData<double,double,double>* dat;
+    dat = static_cast<GPSubData<double,double,double>*>(data);
+    double *pnts = dat->GetData<0>();
+    double *ccos = dat->GetData<1>();
     double *pots = dat->GetDataOutput();
-    const int nr_ccos = dat->GetNr(1);
+    const int nr_ccos = dat->GetNr<1>();
     const int nr_pots = dat->GetNrOutput();
     const int progress = 25;
     const bool progress_reports = dat->GetProgressReports();
@@ -104,24 +106,22 @@ void electrostatic_potential (bool progress_reports, int num_points, std::vector
     init_parallel_generic(&progress_reports, &globals);
 
     //reserve data structures and fill them with input
-    std::vector< std::vector<double> > input;
-    input.reserve(2);
-    const int split_col = 0;
+    tuple_of_vectors<double,double> input;
+    //std::tuple< std::vector<double>, std::vector<double> > input;
+    input = std::make_tuple(points,charges_coordinates);
     const int split_factor = 3;
-    input.push_back(points);
-    input.push_back(charges_coordinates);
     
     //fill class that holds data for each thread
-    GPData<double,double> *data;
+    GPData<double,double,double> *data;
     try
     {
-        data = new GPData<double,double>(progress_reports, globals.nr_threads, input, potential, &(globals.mutex), &(globals.progress_bar), split_col, split_factor, 1, false);
+        data = new GPData<double,double,double>(progress_reports, globals.nr_threads, input, potential, &(globals.mutex), &(globals.progress_bar), split_factor, 1, false);
     }
     catch( const std::invalid_argument& e ) {
         throw;
     }
     //perform computation
-    do_parallel_generic<double,double>(_potentialThread, &globals, progress_reports, num_points, data);
+    do_parallel_generic<double,double,double>(_potentialThread, &globals, progress_reports, num_points, data);
     //transfer output data
     data->TransferOutput();
     //clean up

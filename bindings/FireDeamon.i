@@ -11,7 +11,6 @@ namespace std {
 
 %{
 #include "skin_surface_deamon.h"
-#include "parallel_generic.h"
 #include "electrostatic_potential.h"
 #include "irregular_grid_interpolation.h"
 #include "irregular_grid_local_minima.h"
@@ -139,18 +138,18 @@ def InterpolationPy(coordinates, vals, points, config=None, prog_report=True):
 
     if config is None: #default to narest neighbour interpolation
         interpolation_type=1
-        distance_exponent=1.0
+        distance_exponent=1
         distance_function=1
         cutoff=-1.0
     else:
         if config['method']=='nearest':
             interpolation_type=1
-            distance_exponent=1.0
+            distance_exponent=1
             distance_function=1
             cutoff=-1.0
         elif config['method']=='distance':
             interpolation_type=2
-            distance_exponent=float(config['exponent'])
+            distance_exponent=int(config['exponent'])
             distance_function=int(config['function'])
             cutoff=float(config['cutoff'])
         else:
@@ -453,7 +452,6 @@ def LocalMinimaPy(neighbour_list, values, degeneration, nr_neighbours, prog_repo
 %}
 
 %include "skin_surface_deamon.h"
-%include "parallel_generic.h"
 %include "electrostatic_potential.h"
 %include "irregular_grid_interpolation.h"
 %include "irregular_grid_local_minima.h"

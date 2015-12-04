@@ -19,6 +19,7 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdlib>
 #include <pthread.h>
 #include <vector>
+#include <tuple>
 #include <limits>
 #include <stdexcept>
 #include <assert.h>
@@ -32,12 +33,13 @@ void* _nearestInterpolationThread(void* data){
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,NULL);
     struct timespec req = {0/*req.tv_sec*/, 1L/*req.tv_nsec*/};
-    GPSubData<double,double>* dat = (GPSubData<double,double>*) data;
-    double *inpnts = dat->GetData(0); //interpolation points
-    double *pnts   = dat->GetData(1);
-    double *vals   = dat->GetData(2);
+    GPSubData<double,double,double,double,double,int>* dat;
+    dat = static_cast<GPSubData<double,double,double,double,double,int>*>(data);
+    double *inpnts = dat->GetData<0>(); //interpolation points
+    double *pnts   = dat->GetData<1>();
+    double *vals   = dat->GetData<2>();
     double *interp = dat->GetDataOutput();
-    const int nr_pnts   = dat->GetNr(1);
+    const int nr_pnts   = dat->GetNr<1>();
     const int nr_interp = dat->GetNrOutput();
     const int progress = 250;
     const bool progress_reports = dat->GetProgressReports();
@@ -88,16 +90,17 @@ void* _inverseDistanceWeightingInterpolationNoCutoffThread(void* data){
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,NULL);
     struct timespec req = {0/*req.tv_sec*/, 1L/*req.tv_nsec*/};
-    GPSubData<double,double>* dat = (GPSubData<double,double>*) data;
-    double *inpnts = dat->GetData(0); //interpolation points
-    double *pnts   = dat->GetData(1);
-    double *vals   = dat->GetData(2);
-    double *config = dat->GetData(3);
-    const double distance_exponent =      config[0];
-    const int    distance_function = (int)config[1];
+    GPSubData<double,double,double,double,double,int>* dat;
+    dat = static_cast<GPSubData<double,double,double,double,double,int>*>(data);
+    double *inpnts = dat->GetData<0>(); //interpolation points
+    double *pnts   = dat->GetData<1>();
+    double *vals   = dat->GetData<2>();
+    int    *config = dat->GetData<4>();
+    const int distance_exponent = config[0];
+    const int distance_function = config[1];
     const double combined_exponent = -distance_exponent*1.0/distance_function;
     double *interp = dat->GetDataOutput();
-    const int nr_pnts   = dat->GetNr(1);
+    const int nr_pnts   = dat->GetNr<1>();
     const int nr_interp = dat->GetNrOutput();
     const int progress = 25;
     const bool progress_reports = dat->GetProgressReports();
@@ -158,18 +161,19 @@ void* _inverseDistanceWeightingInterpolationCutoffThread(void* data){
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,NULL);
     struct timespec req = {0/*req.tv_sec*/, 1L/*req.tv_nsec*/};
-    GPSubData<double,double>* dat = (GPSubData<double,double>*) data;
-    double *inpnts = dat->GetData(0); //interpolation points
-    double *pnts   = dat->GetData(1);
-    double *vals   = dat->GetData(2);
-    double *cutoff = dat->GetData(3);
-    double *config = dat->GetData(4);
+    GPSubData<double,double,double,double,double,int>* dat;
+    dat = static_cast<GPSubData<double,double,double,double,double,int>*>(data);
+    double *inpnts = dat->GetData<0>(); //interpolation points
+    double *pnts   = dat->GetData<1>();
+    double *vals   = dat->GetData<2>();
+    double *cutoff = dat->GetData<3>();
+    int    *config = dat->GetData<4>();
     double cutoff_2 = (*cutoff)*(*cutoff);
-    const double distance_exponent =      config[0];
-    const int    distance_function = (int)config[1];
+    const int distance_exponent = config[0];
+    const int distance_function = config[1];
     const double combined_exponent = -distance_exponent*1.0/distance_function;
     double *interp = dat->GetDataOutput();
-    const int nr_pnts   = dat->GetNr(1);
+    const int nr_pnts   = dat->GetNr<1>();
     const int nr_interp = dat->GetNrOutput();
     const int progress = 25;
     const bool progress_reports = dat->GetProgressReports();
@@ -228,34 +232,36 @@ void* _inverseDistanceWeightingInterpolationCutoffThread(void* data){
     pthread_exit(NULL);
 }
 
-void generic_interpolation(bool progress_reports, int num_interpolation_points, std::vector<double> points, std::vector<double> values, std::vector<double> interpolation_points, std::vector<double> *interpolation, int interpolation_type, double distance_exponent, int distance_function, double cutoff)
+void generic_interpolation(bool progress_reports, int num_interpolation_points, std::vector<double> points, std::vector<double> values, std::vector<double> interpolation_points, std::vector<double> *interpolation, int interpolation_type, int distance_exponent, int distance_function, double cutoff)
 {
     void* (*interp_func)(void*);
     //initialize everything
     PG globals; 
     init_parallel_generic(&progress_reports, &globals);
    
+    //reserve data structures and fill them with input
+    const int split_factor = 3;
+
     //check whether a cutoff shall be considered
     bool use_cutoff = (cutoff > 0.0);
-
-    //reserve data structures and fill them with input
-    std::vector< std::vector<double> > input;
-    input.reserve(3+(use_cutoff ? 1 : 0));
-    const int split_col = 0;
-    const int split_factor = 3;
-    input.push_back(interpolation_points);
-    input.push_back(points);
-    input.push_back(values);
-
     std::vector<double> vec_cutoff;
-    if (use_cutoff){
-        vec_cutoff.push_back(cutoff);
-        input.push_back(vec_cutoff);
+    vec_cutoff.push_back(cutoff);
+
+    std::vector<int> config;
+    if (interpolation_type == 2){
+        config.reserve(2);
+        config.push_back(distance_exponent);
+        config.push_back(distance_function);
     }
+    else{
+        config.reserve(0);
+    }
+
+    tuple_of_vectors<double,double,double,double,int> input;
+    input = std::make_tuple(interpolation_points,points,values,vec_cutoff,config);
     
     //fill class that holds data for each thread
-    GPData<double,double> *data;
-    std::vector<double> config;
+    GPData<double,double,double,double,double,int> *data;
     switch (interpolation_type){
         case 1:
             if (progress_reports){
@@ -264,7 +270,7 @@ void generic_interpolation(bool progress_reports, int num_interpolation_points, 
             interp_func = _nearestInterpolationThread;
             try
             {
-                data = new GPData<double,double>(progress_reports, globals.nr_threads, input, interpolation, &(globals.mutex), &(globals.progress_bar), split_col, split_factor, 1, false);
+                data = new GPData<double,double,double,double,double,int>(progress_reports, globals.nr_threads, input, interpolation, &(globals.mutex), &(globals.progress_bar), split_factor, 1, false);
             }
             catch( const std::invalid_argument& e ) {
                 throw;
@@ -273,7 +279,7 @@ void generic_interpolation(bool progress_reports, int num_interpolation_points, 
         case 2:
             assert( distance_exponent >= 0.0 && distance_function >= 1);
             if (progress_reports){
-                fprintf(stdout,"Using inverse distance weighting with p=%f and the ",distance_exponent);
+                fprintf(stdout,"Using inverse distance weighting with p=%d and the ",distance_exponent);
                 switch (distance_function%10){
                     case 1:
                         fprintf(stdout,"%dst",distance_function);
@@ -290,11 +296,6 @@ void generic_interpolation(bool progress_reports, int num_interpolation_points, 
                 }
                 fprintf(stdout," root.\n");
             }
-            input.reserve(input.size()+1);
-            config.reserve(2);
-            config.push_back(distance_exponent);
-            config.push_back(distance_function);
-            input.push_back(config);
             if (use_cutoff){
                 interp_func = _inverseDistanceWeightingInterpolationCutoffThread;
             }
@@ -303,7 +304,7 @@ void generic_interpolation(bool progress_reports, int num_interpolation_points, 
             }
             try
             {
-                data = new GPData<double,double>(progress_reports, globals.nr_threads, input, interpolation, &(globals.mutex), &(globals.progress_bar), split_col, split_factor, 1, false);
+                data = new GPData<double,double,double,double,double,int>(progress_reports, globals.nr_threads, input, interpolation, &(globals.mutex), &(globals.progress_bar), split_factor, 1, false);
             }
             catch( const std::invalid_argument& e ) {
                 throw;
@@ -315,7 +316,7 @@ void generic_interpolation(bool progress_reports, int num_interpolation_points, 
     }
     fflush(stdout);
     //perform computation
-    do_parallel_generic<double,double>(interp_func, &globals, progress_reports, num_interpolation_points, data);
+    do_parallel_generic<double,double,double,double,double,int>(interp_func, &globals, progress_reports, num_interpolation_points, data);
     //transfer output data
     data->TransferOutput();
     //clean up

@@ -19,6 +19,7 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdlib>
 #include <pthread.h>
 #include <vector>
+#include <tuple>
 #include <limits>
 #include <stdexcept>
 #include <assert.h>
@@ -32,10 +33,6 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 
 bool sort_by_first(std::pair<double,int> p1, std::pair<double,int> p2){
     return p1.first < p2.first;
-}
-
-bool IsTrue(bool b){
-    return b;
 }
 
 double get_average(int nr_values, std::vector<int>::iterator it, std::vector<double> values){
@@ -62,27 +59,29 @@ void* _nearestNeighboursThreadEukledian(void* data){
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,NULL);
     struct timespec req = {0/*req.tv_sec*/, 1L/*req.tv_nsec*/};
-    GPSubData<int,double>* dat = (GPSubData<int,double>*) data;
-    double *grdpnts     = dat->GetData(0); //gridpoints that were split over threads
-    double *all_grdpnts = dat->GetData(1); //the entire grid
-    double *config      = dat->GetData(3);
-    int max_nr_neigh = (int)*(config+0);
-    int nr_neigh     = (int)*(config+1);
-    bool sort_it     = *(config+2)>0.5 ? true : false;
+    GPSubData<int,double,double,double,int>* dat;
+    dat = static_cast<GPSubData<int,double,double,double,int>*>(data);
+    double *grdpnts     = dat->GetData<0>(); //gridpoints that were split over threads
+    double *all_grdpnts = dat->GetData<1>(); //the entire grid
+    double* cutoff_in   = dat->GetData<2>();
+    double cutoff_used  = (*cutoff_in)*(*cutoff_in); //eukledian distance only needs the square
 
-    double* cutoff_in  = dat->GetData(2);
-    double cutoff_used = (*cutoff_in)*(*cutoff_in); //eukledian distance only needs the square
+    int *config      = dat->GetData<3>();
+    int max_nr_neigh =  *(config+0);
+    int nr_neigh     =  *(config+1);
+    bool sort_it     = (*(config+2) == 1);
 
     int *neigh_list  = dat->GetDataOutput();
     const int nr_pnts    = dat->GetNrOutput();
-    const int nr_grdpnts = dat->GetNr(1)/3; //three doubles belong to one point
+    const int nr_grdpnts = dat->GetNr<1>()/3; //three doubles belong to one point
     const int progress = 250;
     const bool progress_reports = dat->GetProgressReports();
     int* progress_bar = dat->GetProgressBar();
     pthread_mutex_t* mut = dat->GetMutex();
 
-    std::pair<double,int>* tbs; //tbs means "to be sorted" and will be sorted by distance
-    tbs = (std::pair<double,int>*)malloc(max_nr_neigh*sizeof(std::pair<double,int>));
+    typedef std::pair<double,int> here_pair;
+    here_pair* tbs; //tbs means "to be sorted" and will be sorted by distance
+    tbs = (here_pair*)malloc(max_nr_neigh*sizeof(here_pair));
 
     double* p = grdpnts;
     int* nr   = neigh_list;
@@ -139,32 +138,38 @@ void* _nearestNeighboursThreadManhattanMultiple(void* data){
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,NULL);
     struct timespec req = {0/*req.tv_sec*/, 1L/*req.tv_nsec*/};
-    GPSubData<int,double>* dat = (GPSubData<int,double>*) data;
-    double *grdpnts     = dat->GetData(0); //gridpoints that were split over threads
-    double *all_grdpnts = dat->GetData(1); //the entire grid
-    double *config      = dat->GetData(3);
-    int max_nr_neigh = (int)*(config+0);
-    int nr_neigh     = (int)*(config+1);
-    bool sort_it     = *(config+2)>0.5 ? true : false;
-    double* cutoff_in  = dat->GetData(2);
+    GPSubData<int,double,double,double,int>* dat;
+    dat = static_cast<GPSubData<int,double,double,double,int>*>(data);
+    double *grdpnts     = dat->GetData<0>(); //gridpoints that were split over threads
+    double *all_grdpnts = dat->GetData<1>(); //the entire grid
+
+    double* cutoff_in  = dat->GetData<2>();
     double cutoff_used[3];
     //manhattan distance uses three different values
     cutoff_used[0] = *(cutoff_in+0);
     cutoff_used[1] = *(cutoff_in+1);
     cutoff_used[2] = *(cutoff_in+2);
+    //this gets the absolute value faster than using abs
     cutoff_used[0] = cutoff_used[0] > 0 ? cutoff_used[0] : -cutoff_used[0];
     cutoff_used[1] = cutoff_used[1] > 0 ? cutoff_used[1] : -cutoff_used[1];
     cutoff_used[2] = cutoff_used[2] > 0 ? cutoff_used[2] : -cutoff_used[2];
+
+    int *config      = dat->GetData<3>();
+    int max_nr_neigh =  *(config+0);
+    int nr_neigh     =  *(config+1);
+    bool sort_it     = (*(config+2) == 1);
+
     int *neigh_list  = dat->GetDataOutput();
     const int nr_pnts    = dat->GetNrOutput();
-    const int nr_grdpnts = dat->GetNr(1)/3; //three doubles belong to one point
+    const int nr_grdpnts = dat->GetNr<1>()/3; //three doubles belong to one point
     const int progress = 250;
     const bool progress_reports = dat->GetProgressReports();
     int* progress_bar = dat->GetProgressBar();
     pthread_mutex_t* mut = dat->GetMutex();
 
-    std::pair<double,int>* tbs; //tbs means "to be sorted" and will be sorted by distance
-    tbs = (std::pair<double,int>*)malloc(max_nr_neigh*sizeof(std::pair<double,int>));
+    typedef std::pair<double,int> here_pair;
+    here_pair* tbs; //tbs means "to be sorted" and will be sorted by distance
+    tbs = (here_pair*)malloc(max_nr_neigh*sizeof(here_pair));
 
     double* p = grdpnts;
     int* nr   = neigh_list;
@@ -224,26 +229,28 @@ void* _nearestNeighboursThreadManhattanCombined(void* data){
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,NULL);
     struct timespec req = {0/*req.tv_sec*/, 1L/*req.tv_nsec*/};
-    GPSubData<int,double>* dat = (GPSubData<int,double>*) data;
-    double *grdpnts     = dat->GetData(0); //gridpoints that were split over threads
-    double *all_grdpnts = dat->GetData(1); //the entire grid
-    double *config      = dat->GetData(3);
-    int max_nr_neigh = (int)*(config+0);
-    int nr_neigh     = (int)*(config+1);
-    bool sort_it     = *(config+2)>0.5 ? true : false;
-    double* cutoff_in  = dat->GetData(2);
+    GPSubData<int,double,double,double,int>* dat;
+    dat = static_cast<GPSubData<int,double,double,double,int>*>(data);
+    double *grdpnts     = dat->GetData<0>(); //gridpoints that were split over threads
+    double *all_grdpnts = dat->GetData<1>(); //the entire grid
+    int *config         = dat->GetData<3>();
+    int max_nr_neigh =  *(config+0);
+    int nr_neigh     =  *(config+1);
+    bool sort_it     = (*(config+2) == 1);
+    double* cutoff_in  = dat->GetData<2>();
     double cutoff_used = (*cutoff_in);
     cutoff_used = cutoff_used > 0 ? cutoff_used : -cutoff_used;
     int *neigh_list  = dat->GetDataOutput();
     const int nr_pnts    = dat->GetNrOutput();
-    const int nr_grdpnts = dat->GetNr(1)/3; //three doubles belong to one point
+    const int nr_grdpnts = dat->GetNr<1>()/3; //three doubles belong to one point
     const int progress = 250;
     const bool progress_reports = dat->GetProgressReports();
     int* progress_bar = dat->GetProgressBar();
     pthread_mutex_t* mut = dat->GetMutex();
 
-    std::pair<double,int>* tbs; //tbs means "to be sorted" and will be sorted by distance
-    tbs = (std::pair<double,int>*)malloc(max_nr_neigh*sizeof(std::pair<double,int>));
+    typedef std::pair<double,int> here_pair;
+    here_pair* tbs; //tbs means "to be sorted" and will be sorted by distance
+    tbs = (here_pair*)malloc(max_nr_neigh*sizeof(here_pair));
 
     double* p = grdpnts;
     int* nr   = neigh_list;
@@ -305,28 +312,25 @@ void make_neighbour_list(bool progress_reports, int nr_gridpoints, int max_nr_ne
     PG globals; 
     init_parallel_generic(&progress_reports, &globals);
    
-    //reserve data structures and fill them with input
-    std::vector< std::vector<double> > input;
-    input.reserve(4);
-
     std::vector<double> vec_cutoff;
-    vec_cutoff.reserve(1);
-
     void* (*neighbour_func)(void*);
 
     switch (cutoff_type){
         case 1:
             neighbour_func = _nearestNeighboursThreadEukledian;
+            vec_cutoff.reserve(1);
             vec_cutoff.push_back(distance_cutoff.at(0));
             break;
         case 2:
             neighbour_func = _nearestNeighboursThreadManhattanMultiple;
+            vec_cutoff.reserve(3);
             vec_cutoff.push_back(distance_cutoff.at(0));
             vec_cutoff.push_back(distance_cutoff.at(1));
             vec_cutoff.push_back(distance_cutoff.at(2));
             break;
         case 3:
             neighbour_func = _nearestNeighboursThreadManhattanCombined;
+            vec_cutoff.reserve(1);
             vec_cutoff.push_back(distance_cutoff.at(0));
             break;
         default:
@@ -334,32 +338,30 @@ void make_neighbour_list(bool progress_reports, int nr_gridpoints, int max_nr_ne
             break;
     }
 
-    std::vector<double> vec_config;
-    vec_config.reserve(2);
-    vec_config.push_back((double)max_nr_neighbours);
-    vec_config.push_back((double)nr_neighbours);
-    vec_config.push_back(sort_it ? 1.0 : 0.0);
+    std::vector<int> vec_config;
+    vec_config.reserve(3);
+    vec_config.push_back(max_nr_neighbours);
+    vec_config.push_back(nr_neighbours);
+    vec_config.push_back(sort_it ? 1 : 0);
 
-    input.push_back(points);//this grid will be split over threads
-    input.push_back(points);//this is the grid to check against nearest neighbours with
-    input.push_back(vec_cutoff);
-    input.push_back(vec_config);
+    //reserve data structures and fill them with input
+    tuple_of_vectors<double,double,double,int> input;
+    input = std::make_tuple(points,points,vec_cutoff,vec_config);
     
-    const int split_col = 0;
     const int split_factor_in = 3;
     const int split_factor_out = nr_neighbours+1;
 
     //fill class that holds data for each thread
-    GPData<int,double> *data;
+    GPData<int,double,double,double,int> *data;
     try
     {
-        data = new GPData<int,double>(progress_reports, globals.nr_threads, input, neighbour_list, &(globals.mutex), &(globals.progress_bar), split_col, split_factor_in, split_factor_out, true);
+        data = new GPData<int,double,double,double,int>(progress_reports, globals.nr_threads, input, neighbour_list, &(globals.mutex), &(globals.progress_bar), split_factor_in, split_factor_out, true);
     }
     catch( const std::invalid_argument& e ) {
         throw;
     }
     //perform computation
-    do_parallel_generic<int,double>(neighbour_func, &globals, progress_reports, nr_gridpoints, data);
+    do_parallel_generic<int,double,double,double,int>(neighbour_func, &globals, progress_reports, nr_gridpoints, data);
     //transfer output data
     data->TransferOutput();
     //clean up
@@ -430,7 +432,7 @@ void local_minima_from_neighbour_list(bool progress_reports, int nr_neighbours, 
         printf("Prog: %.2f\n",100.0);
         fflush(stdout);
     }
-    int nr_minima = std::count_if(is_min_vec.begin(), is_min_vec.end(), IsTrue);
+    int nr_minima = std::count_if(is_min_vec.begin(), is_min_vec.end(), [] (bool b) -> bool {return b;} );
 
     minima->reserve(nr_minima);
 

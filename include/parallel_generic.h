@@ -21,6 +21,7 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdlib>
 #include <pthread.h>
 #include <vector>
+#include <tuple>
 #include <stdexcept>
 #include <assert.h>
 #include <stdio.h>
@@ -28,6 +29,12 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <signal.h>
 #include <time.h>
 #include <unistd.h>
+#include <iterate_over_tuple.h>
+#include <deamon_functors.h>
+
+//an alias template that is a tuple of vectors
+template <typename... Ts>
+using tuple_of_vectors = std::tuple<std::vector<Ts>...>;
 
 //PG stands for ParallelGlobals
 class PG{
@@ -46,16 +53,19 @@ extern PG* pg_global;
 void signal_callback_handler(int signum);
 
 //GPSubData stands for GenericParallelSubData
-template <typename Tout, typename Tin>
+//some bits taken from http://stackoverflow.com/questions/27941661/generating-one-class-member-per-variadic-template-argument
+template <typename Tout, typename... Tins>
 class GPSubData{
 
     public:
 
         GPSubData();
-        GPSubData(bool progress_reports, int sub_nr, std::vector<int> &len_data, std::vector<Tin*> &data, int len_output, Tout* output, pthread_mutex_t* mutex, int* progress_bar);
+        GPSubData(bool progress_reports, int sub_nr, std::vector<int> &len_data, std::tuple<Tins*...> &data, int len_output, Tout* output, pthread_mutex_t* mutex, int* progress_bar);
         ~GPSubData();
-        Tin* GetData(int i);
-        int GetNr(int i);
+        template <unsigned int N>
+        typename std::tuple_element<N,std::tuple<Tins*...>>::type GetData();
+        template <unsigned int N>
+        int GetNr();
         Tout* GetDataOutput();
         int GetNrOutput();
         int GetSubNr();
@@ -65,21 +75,23 @@ class GPSubData{
 
     protected:
 
-        std::vector<Tin*> m_data;
+        std::tuple<Tins*...> m_data;
         std::vector<int> m_lengths;
         Tout* m_output;
         int m_len_output;
         int m_sub_nr;
+        int m_nr_types;
         int* m_progress_bar;
         pthread_mutex_t* m_mut;
         bool m_progress_reports;
 
 };
 
-template <typename Tout, typename Tin>
-GPSubData<Tout,Tin>::GPSubData(){
-    m_data.reserve(0);
+template <typename Tout, typename... Tins>
+GPSubData<Tout,Tins...>::GPSubData(){
     m_lengths.reserve(0);
+    m_nr_types        = sizeof...(Tins);
+    for_each_in_tuple(&m_data,set_to_NULL_functor());
     m_output          = NULL;
     m_len_output      = 0;
     m_sub_nr          = 0;
@@ -88,8 +100,8 @@ GPSubData<Tout,Tin>::GPSubData(){
     m_progress_reports= false;
 }
 
-template <typename Tout, typename Tin>
-GPSubData<Tout,Tin>::GPSubData(bool progress_reports, int sub_nr, std::vector<int> &lengths, std::vector<Tin*> &data, int len_output, Tout* output, pthread_mutex_t* mutex, int* progress_bar){
+template <typename Tout, typename... Tins>
+GPSubData<Tout,Tins...>::GPSubData(bool progress_reports, int sub_nr, std::vector<int> &lengths, std::tuple<Tins*...> &data, int len_output, Tout* output, pthread_mutex_t* mutex, int* progress_bar){
     m_progress_reports = progress_reports;
     m_mut              = mutex;
     m_progress_bar = progress_bar;
@@ -100,152 +112,120 @@ GPSubData<Tout,Tin>::GPSubData(bool progress_reports, int sub_nr, std::vector<in
     for(std::vector<int>::const_iterator it = lengths.begin(); it != lengths.end(); ++it) {
         m_lengths.push_back(*it);
     }
-    m_data.reserve(data.size());
-    for(typename std::vector<Tin*>::const_iterator it = data.begin(); it != data.end(); ++it) {
-        m_data.push_back(*it);
-    }
+    m_data = data;
 }
 
-template <typename Tout, typename Tin>
-GPSubData<Tout,Tin>::~GPSubData(){}
+template <typename Tout, typename... Tins>
+GPSubData<Tout,Tins...>::~GPSubData(){}
 
-template <typename Tout, typename Tin>
-Tin* GPSubData<Tout,Tin>::GetData(int i){
-    return m_data.at(i);
+template <typename Tout, typename... Tins>
+    template <unsigned int N>
+typename std::tuple_element<N,std::tuple<Tins*...>>::type GPSubData<Tout,Tins...>::GetData(){
+    return std::get<N>(m_data);
 }
 
-template <typename Tout, typename Tin>
-int GPSubData<Tout,Tin>::GetNr(int i){
-    return m_lengths.at(i);
+template <typename Tout, typename... Tins>
+    template <unsigned int N>
+int GPSubData<Tout,Tins...>::GetNr(){
+    return m_lengths.at(N);
 }
 
-template <typename Tout, typename Tin>
-int GPSubData<Tout,Tin>::GetSubNr(){
+template <typename Tout, typename... Tins>
+int GPSubData<Tout,Tins...>::GetSubNr(){
     return m_sub_nr;
 }
 
-template <typename Tout, typename Tin>
-int* GPSubData<Tout,Tin>::GetProgressBar(){
+template <typename Tout, typename... Tins>
+int* GPSubData<Tout,Tins...>::GetProgressBar(){
     return m_progress_bar;
 }
 
-template <typename Tout, typename Tin>
-bool GPSubData<Tout,Tin>::GetProgressReports(){
+template <typename Tout, typename... Tins>
+bool GPSubData<Tout,Tins...>::GetProgressReports(){
     return m_progress_reports;
 }
 
-template <typename Tout, typename Tin>
-pthread_mutex_t* GPSubData<Tout,Tin>::GetMutex(){
+template <typename Tout, typename... Tins>
+pthread_mutex_t* GPSubData<Tout,Tins...>::GetMutex(){
     return m_mut;
 }
 
-template <typename Tout, typename Tin>
-Tout* GPSubData<Tout,Tin>::GetDataOutput(){
+template <typename Tout, typename... Tins>
+Tout* GPSubData<Tout,Tins...>::GetDataOutput(){
     return m_output;
 }
 
-template <typename Tout, typename Tin>
-int GPSubData<Tout,Tin>::GetNrOutput(){
+template <typename Tout, typename... Tins>
+int GPSubData<Tout,Tins...>::GetNrOutput(){
     return m_len_output;
 }
 
-template <typename Tout, typename Tin>
-class GPData: public GPSubData<Tout,Tin> {
+template <typename Tout, typename Tsplit, typename... Tins>
+class GPData: public GPSubData<Tout, Tsplit, Tins...> {
 
     public:
 
         GPData();
-        GPData(bool progress_reports, int nr_subs, std::vector< std::vector<Tin> > &input, std::vector<Tout> *output, pthread_mutex_t* mutex, int* progress_bar, int split_index, int split_factor_in, int split_factor_out, bool interlace);
+        GPData(bool progress_reports, int nr_subs, std::tuple< std::vector<Tsplit>,std::vector<Tins>...> &input, std::vector<Tout> *output, pthread_mutex_t* mutex, int* progress_bar, int split_factor_in, int split_factor_out, bool interlace);
         ~GPData();
-        GPSubData<Tout,Tin>* GetSubData(int i);
+        GPSubData<Tout,Tsplit,Tins...>* GetSubData(int i);
         void TransferOutput(bool empty_check = true);
 
     private:
         
         int m_nr_subs;
-        int m_split_index;
         int m_split_factor_in;
         int m_split_factor_out;
         bool m_interlace;
-        std::vector< GPSubData<Tout,Tin> > subdata;
+        std::vector< GPSubData<Tout,Tsplit,Tins...> > subdata;
         std::vector<Tout>* m_output_vector;
-        using GPSubData<Tout,Tin>::m_data;
-        using GPSubData<Tout,Tin>::m_lengths;
-        using GPSubData<Tout,Tin>::m_output;
-        using GPSubData<Tout,Tin>::m_len_output;
-        using GPSubData<Tout,Tin>::m_sub_nr;
-        using GPSubData<Tout,Tin>::m_progress_bar;
-        using GPSubData<Tout,Tin>::m_mut;
-        using GPSubData<Tout,Tin>::m_progress_reports;
+        using GPSubData<Tout,Tsplit,Tins...>::m_data;
+        using GPSubData<Tout,Tsplit,Tins...>::m_lengths;
+        using GPSubData<Tout,Tsplit,Tins...>::m_output;
+        using GPSubData<Tout,Tsplit,Tins...>::m_len_output;
+        using GPSubData<Tout,Tsplit,Tins...>::m_sub_nr;
+        using GPSubData<Tout,Tsplit,Tins...>::m_progress_bar;
+        using GPSubData<Tout,Tsplit,Tins...>::m_mut;
+        using GPSubData<Tout,Tsplit,Tins...>::m_progress_reports;
 
 };
 
-template <typename Tout, typename Tin>
-GPData<Tout,Tin>::GPData(bool progress_reports, int nr_subs, std::vector< std::vector<Tin> > &input, std::vector<Tout> *output, pthread_mutex_t* mutex, int* progress_bar, int split_index, int split_factor_in, int split_factor_out, bool interlace){
+template <typename Tout, typename Tsplit, typename... Tins>
+GPData<Tout,Tsplit,Tins...>::GPData(bool progress_reports, int nr_subs, std::tuple< std::vector<Tsplit>, std::vector<Tins>...> &input, std::vector<Tout> *output, pthread_mutex_t* mutex, int* progress_bar, int split_factor_in, int split_factor_out, bool interlace){
     m_nr_subs = nr_subs>0 ? nr_subs : 1;
-    m_lengths.reserve(input.size());
-    m_data.reserve(input.size());
+    m_lengths.reserve(1 + sizeof...(Tins));
     //if there is only one thread, do not waste time with interlacing and
     //deinterlacing since that is not necessary
     m_interlace = m_nr_subs>1 ? interlace : false;
-    for(typename std::vector< std::vector<Tin> >::const_iterator it = input.begin(); it != input.end(); ++it) {
-        m_lengths.push_back(it->size());
-    }
+    for_each_in_tuple_vector(&input, &m_lengths, get_size_functor());
     m_len_output = output->capacity(); //this has not yet been filled with values but has to be reserved already
     m_progress_bar = progress_bar;
     m_mut = mutex;
     m_progress_reports = progress_reports;
-    m_split_factor_in = split_factor_in;
+    m_split_factor_in  = split_factor_in;
     m_split_factor_out = split_factor_out;
-    m_split_index = split_index;
     //do some sanity checking
     if (m_len_output%m_split_factor_out != 0){
         throw std::invalid_argument( "The number of elements in the output data is not divisible by the output split factor." );
     }
-    if (m_lengths[m_split_index]%m_split_factor_in != 0){
+    if (m_lengths[0]%m_split_factor_in != 0){
         throw std::invalid_argument( "The number of elements in the input data (split coloumn) is not divisible by the input split factor." );
     }
-    if (m_lengths[m_split_index]/m_split_factor_in != m_len_output/m_split_factor_out){
+    if (m_lengths[0]/m_split_factor_in != m_len_output/m_split_factor_out){
         throw std::invalid_argument( "The data to be split and the output data do not have the same number of elements considering the split factor." );
-    }
-    //allocate input data
-    {
-        std::vector<int>::iterator int_it = m_lengths.begin();
-        for(; int_it != m_lengths.end(); ++int_it/*, ++T_it*/) {
-            Tin* temp = (Tin*)malloc((*int_it)*sizeof(Tin));
-            m_data.push_back(temp);
-        }
     }
     //allocate output data
     m_output = (Tout*)malloc(m_len_output*sizeof(Tout));
     //remember the output vector
     m_output_vector = output;
-    //copy input data over
+    //copy input data over and allocate beforehand
     {
-        typename std::vector<Tin*>::iterator T_it = m_data.begin();
-        typename std::vector< std::vector<Tin> >::iterator input_it = input.begin();
-        for(int count=0; T_it != m_data.end(); ++T_it, ++input_it, ++count) {
-            Tin* temp = *T_it;
-            if (m_interlace && count==m_split_index){
-                //rearrange the data depending on the number of threads
-                //to equalize load
-                for (int copy_start=0; copy_start<m_nr_subs; ++copy_start){
-                    typename std::vector<Tin>::iterator it = input_it->begin();
-                    for (int c=0; it!=input_it->end(); ++it, ++c){
-                        if ( (int(c/m_split_factor_in))%m_nr_subs == copy_start){
-                            *temp = *it;
-                            ++temp;
-                        }
-                    } 
-                }
-            }
-            else{//just copy everything over
-                typename std::vector<Tin>::iterator it = input_it->begin();
-                for (; it!=input_it->end(); ++it, ++temp){
-                    *temp = *it;
-                } 
-            }
-        }
+        std::vector<std::tuple<unsigned int,size_t,void*>> sizes_pointers_vec;
+        sizes_pointers_vec.reserve(1 + sizeof...(Tins));
+
+        for_each_in_tuple_vector(&input, &sizes_pointers_vec, get_size_in_bytes_and_pointer_functor());
+
+        for_each_in_tuple_vector(&m_data, &sizes_pointers_vec, copy_functor_interlace(m_split_factor_in,m_nr_subs,m_interlace,0));
     }
     //create sub data
     subdata.reserve(m_nr_subs);
@@ -256,25 +236,29 @@ GPData<Tout,Tin>::GPData(bool progress_reports, int nr_subs, std::vector< std::v
         const int here_elements = min_nr_elements_per_sub + ((too_many>0) ? 1 : 0);
         std::vector<int> here_len_data;
         here_len_data.reserve(m_lengths.size());
-        typename std::vector<Tin*> here_data;
-        here_data.reserve(m_data.size());
+        //copy assignment
+        typename std::tuple<Tsplit*,Tins*...> here_data = m_data;
         {
             int count=0;
             std::vector<int>::iterator int_it = m_lengths.begin();
-            typename std::vector<Tin*>::iterator T_it = m_data.begin();
-            for(; int_it != m_lengths.end(); ++int_it, ++T_it, ++count) {
-                if (count==m_split_index){
+            //typename std::vector<Tin*>::iterator T_it = m_data.begin();
+            for(; int_it != m_lengths.end(); ++int_it/*, ++T_it*/, ++count) {
+                if (count==0){
                     here_len_data.push_back(here_elements);
-                    here_data.push_back((*T_it)+m_split_factor_in*start);
+                    //here_data.push_back((*T_it)+m_split_factor_in*start);
+                    //push the vector for the input stream which is being split over
+                    //threads forward by the necessary number of steps
+                    std::get<0>(here_data) += m_split_factor_in*start;
                 }
                 else{
                     here_len_data.push_back(*int_it);
-                    here_data.push_back(*T_it);
+                    //here_data.push_back(*T_it);
                 }
             }
         }
         subdata.push_back(
-                GPSubData<Tout,Tin>(progress_reports, sub+1, //general information about thread
+                GPSubData<Tout,Tsplit,Tins...>(
+                                    progress_reports, sub+1, //general information about thread
                                     here_len_data, here_data, //input data
                                     here_elements, m_output+m_split_factor_out*start, //output data
                                     m_mut, m_progress_bar) //information for parallelization
@@ -284,36 +268,32 @@ GPData<Tout,Tin>::GPData(bool progress_reports, int nr_subs, std::vector< std::v
     }
 }
 
-template <typename Tout, typename Tin>
-GPData<Tout,Tin>::~GPData(){
-    for(typename std::vector<Tin*>::iterator T_it = m_data.begin(); T_it != m_data.end(); ++T_it) {
-        if (*T_it!=NULL){
-            free(*T_it);
-        }
-    }
+template <typename Tout, typename Tsplit, typename... Tins>
+GPData<Tout,Tsplit,Tins...>::~GPData(){
+    for_each_in_tuple(&m_data,deallocate_functor());
     if (m_output!=NULL){
         free(m_output);
     }
 }
 
-template <typename Tout, typename Tin>
-GPData<Tout,Tin>::GPData(){//parent constructor is called automatically if no arguments given
+template <typename Tout, typename Tsplit, typename... Tins>
+GPData<Tout,Tsplit,Tins...>::GPData(){//parent constructor is called automatically if no arguments given
     m_nr_subs = 0;
-    m_split_index = 0;
     m_split_factor_in = 1;
     m_split_factor_out = 1;
     m_interlace = false;
     subdata.reserve(0);
+    m_output_vector.reserve(0);
 }
 
-template <typename Tout, typename Tin>
-GPSubData<Tout,Tin>* GPData<Tout,Tin>::GetSubData(int i){
+template <typename Tout, typename Tsplit, typename... Tins>
+GPSubData<Tout,Tsplit,Tins...>* GPData<Tout,Tsplit,Tins...>::GetSubData(int i){
     assert(i>=0 && i<m_nr_subs);
     return &(subdata[i]);
 }
 
-template <typename Tout, typename Tin>
-void GPData<Tout,Tin>::TransferOutput(bool empty_check){
+template <typename Tout, typename Tsplit, typename... Tins>
+void GPData<Tout,Tsplit,Tins...>::TransferOutput(bool empty_check){
     if (empty_check && m_output_vector->size() > 0){
         throw std::length_error( "Output vector should be empty but it is not." );
     }
@@ -348,8 +328,8 @@ void GPData<Tout,Tin>::TransferOutput(bool empty_check){
 
 void init_parallel_generic(bool* progress_reports, PG* globals);
 
-template <typename Tout, typename Tin>
-void do_parallel_generic(void *(*thread_func)(void*), PG* globals, bool progress_reports, int nr_calcs, GPData<Tout,Tin>* data){
+template <typename... Ts>
+void do_parallel_generic(void *(*thread_func)(void*), PG* globals, bool progress_reports, int nr_calcs, GPData<Ts...>* data){
     if (pg_global){
         throw std::logic_error( "Global data for parallel computation already filled." );
     }

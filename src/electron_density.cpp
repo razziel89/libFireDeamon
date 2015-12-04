@@ -19,6 +19,7 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdlib>
 #include <pthread.h>
 #include <vector>
+#include <tuple>
 #include <stdexcept>
 #include <assert.h>
 #include <stdio.h>
@@ -33,25 +34,21 @@ void* _electronDensityThreadCutoff(void* data){
     struct timespec req = {0/*req.tv_sec*/, 1L/*req.tv_nsec*/};
     //req.tv_sec = 0;
     //req.tv_nsec = 1L;
-    GPSubData<double,double>* dat = (GPSubData<double,double>*) data;
+    GPSubData<double,double,double,double,double,double,double,double>* dat;
+    dat = static_cast<GPSubData<double,double,double,double,double,double,double,double>*>(data);
 
-    double *grdpnts  = dat->GetData(0); //gridpoints
-    double *prm_cent = dat->GetData(1); //centers of primitives
-    double *prm_ang  = dat->GetData(2); //angular exponents of primitives
-    double *prm_exp  = dat->GetData(3); //exponents of primitives
-    double *prm_coef = dat->GetData(4); //contraction coefficients of primitives
-    double *mo_coef  = dat->GetData(5); //molecular orbital coefficients
-    double *cutoff   = dat->GetData(6); //the cutoff above which no density will be computed
+    double *grdpnts  = dat->GetData<0>(); //gridpoints
+    double *prm_cent = dat->GetData<1>(); //centers of primitives
+    double *prm_ang  = dat->GetData<2>(); //angular exponents of primitives
+    double *prm_exp  = dat->GetData<3>(); //exponents of primitives
+    double *prm_coef = dat->GetData<4>(); //contraction coefficients of primitives
+    double *mo_coef  = dat->GetData<5>(); //molecular orbital coefficients
+    double *cutoff   = dat->GetData<6>(); //the cutoff above which no density will be computed
     double cutoff_2  = (*cutoff)*(*cutoff); //only the square is needed
     double *dens     = dat->GetDataOutput();
 
-    //const int nr_grdpnts = dat->GetNr(0);
-    //const int nr_cent    = dat->GetNr(1);
-    //const int nr_ang     = dat->GetNr(2);
-    //const int nr_exp     = dat->GetNr(3);
-    const int nr_coef    = dat->GetNr(4);
-    const int nr_dens    = dat->GetNrOutput();
-    //const int sub_nr = dat->GetSubNr();
+    const int nr_coef  = dat->GetNr<4>();
+    const int nr_dens  = dat->GetNrOutput();
     const int progress = 5000;
     const bool progress_reports = dat->GetProgressReports();
     int* progress_bar = dat->GetProgressBar();
@@ -108,21 +105,18 @@ void* _electronDensityThreadNoCutoff(void* data){
     struct timespec req = {0/*req.tv_sec*/, 1L/*req.tv_nsec*/};
     //req.tv_sec = 0;
     //req.tv_nsec = 1L;
-    GPSubData<double,double>* dat = (GPSubData<double,double>*) data;
+    GPSubData<double,double,double,double,double,double,double,double>* dat;
+    dat = static_cast<GPSubData<double,double,double,double,double,double,double,double>*>(data);
 
-    double *grdpnts  = dat->GetData(0); //gridpoints
-    double *prm_cent = dat->GetData(1); //centers of primitives
-    double *prm_ang  = dat->GetData(2); //angular exponents of primitives
-    double *prm_exp  = dat->GetData(3); //exponents of primitives
-    double *prm_coef = dat->GetData(4); //contraction coefficients of primitives
-    double *mo_coef  = dat->GetData(5); //molecular orbital coefficients
+    double *grdpnts  = dat->GetData<0>(); //gridpoints
+    double *prm_cent = dat->GetData<1>(); //centers of primitives
+    double *prm_ang  = dat->GetData<2>(); //angular exponents of primitives
+    double *prm_exp  = dat->GetData<3>(); //exponents of primitives
+    double *prm_coef = dat->GetData<4>(); //contraction coefficients of primitives
+    double *mo_coef  = dat->GetData<5>(); //molecular orbital coefficients
     double *dens     = dat->GetDataOutput();
 
-    //const int nr_grdpnts = dat->GetNr(0);
-    //const int nr_cent    = dat->GetNr(1);
-    //const int nr_ang     = dat->GetNr(2);
-    //const int nr_exp     = dat->GetNr(3);
-    const int nr_coef    = dat->GetNr(4);
+    const int nr_coef    = dat->GetNr<4>();
     const int nr_dens    = dat->GetNrOutput();
     //const int sub_nr = dat->GetSubNr();
     const int progress = 5000;
@@ -181,30 +175,20 @@ void electron_density(bool progress_reports, int num_gridpoints, std::vector<dou
 
     //check whether a cutoff shall be considered
     bool use_cutoff = (cutoff > 0.0);
+    std::vector<double> vec_cutoff;
+    vec_cutoff.push_back(cutoff);
+
+    const int split_factor = 3;
 
     //reserve data structures and fill them with input
-    std::vector< std::vector<double> > input;
-    input.reserve(6+(use_cutoff ? 1 : 0));
-    const int split_col = 0;
-    const int split_factor = 3;
-    input.push_back(density_grid);
-    input.push_back(prim_centers);
-    input.push_back(prim_angular);
-    input.push_back(prim_exponents);
-    input.push_back(prim_coefficients);
-    input.push_back(mo_coefficients);
+    tuple_of_vectors<double,double,double,double,double,double,double> input;
+    input = std::make_tuple(density_grid,prim_centers,prim_angular,prim_exponents,prim_coefficients,mo_coefficients,vec_cutoff);
 
-    std::vector<double> vec_cutoff;
-    if (use_cutoff){
-        vec_cutoff.push_back(cutoff);
-        input.push_back(vec_cutoff);
-    }
-    
     //fill class that holds data for each thread
-    GPData<double,double> *data;
+    GPData<double,double,double,double,double,double,double,double> *data;
     try
     {
-        data = new GPData<double,double>(progress_reports, globals.nr_threads, input, density, &(globals.mutex), &(globals.progress_bar), split_col, split_factor, 1, /*interlace=*/true);
+        data = new GPData<double,double,double,double,double,double,double,double>(progress_reports, globals.nr_threads, input, density, &(globals.mutex), &(globals.progress_bar), split_factor, 1, /*interlace=*/true);
     }
     catch( const std::invalid_argument& e ) {
         throw;
@@ -212,10 +196,10 @@ void electron_density(bool progress_reports, int num_gridpoints, std::vector<dou
     fflush(stdout);
     //perform computation
     if (use_cutoff){
-        do_parallel_generic<double,double>(_electronDensityThreadCutoff, &globals, progress_reports, num_gridpoints, data);
+        do_parallel_generic<double,double,double,double,double,double,double,double>(_electronDensityThreadCutoff, &globals, progress_reports, num_gridpoints, data);
     }
     else{
-        do_parallel_generic<double,double>(_electronDensityThreadNoCutoff, &globals, progress_reports, num_gridpoints, data);
+        do_parallel_generic<double,double,double,double,double,double,double,double>(_electronDensityThreadNoCutoff, &globals, progress_reports, num_gridpoints, data);
     }
     //transfer output data
     data->TransferOutput();
