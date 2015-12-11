@@ -225,7 +225,7 @@ GPData<Tout,Tsplit,Tins...>::GPData(bool progress_reports, int nr_subs, std::tup
 
         for_each_in_tuple_vector(&input, &sizes_pointers_vec, get_size_in_bytes_and_pointer_functor());
 
-        for_each_in_tuple_vector(&m_data, &sizes_pointers_vec, copy_functor_interlace(m_split_factor_in,m_nr_subs,m_interlace,0));
+        for_each_in_tuple_vector(&m_data, &sizes_pointers_vec, copy_functor_interlace(m_split_factor_in,m_nr_subs,0,m_interlace));
     }
     //create sub data
     subdata.reserve(m_nr_subs);

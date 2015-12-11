@@ -28,8 +28,8 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 //add the sizes of each vector in a tuple to a vector
 struct get_size_functor
 {
-    template<typename T, typename R>
-    void operator () (T* t, R* r, int i)
+    template<typename T>
+    void operator () (std::vector<T>* t, std::vector<int>* r, int i)
     {
         r->push_back(t->size());
         (void) i; //suppress compiler warning
@@ -40,7 +40,7 @@ struct get_size_functor
 struct set_to_NULL_functor
 {
     template<typename T>
-    void operator () (T* t, int i)
+    void operator () (T** t, int i)
     {
         *t = NULL;
         (void) i; //suppress compiler warning
@@ -50,8 +50,8 @@ struct set_to_NULL_functor
 //add the sizes in bytes of the data of each vector in a tuple to a vector
 struct get_size_in_bytes_and_pointer_functor
 {
-    template<typename T, typename R>
-    void operator () (std::vector<T>* t, R* r, int i)
+    template<typename T>
+    void operator () (std::vector<T>* t, std::vector<std::tuple<unsigned int,size_t,void*>>* r, int i)
     {
         T* data = t->data(); //WARNING: the error "void value not ignored as it ought to be" means you cannot use bool as a type, sorry
         r->push_back( std::make_tuple( t->size(), sizeof(T), (void*)data ) );
@@ -62,41 +62,55 @@ struct get_size_in_bytes_and_pointer_functor
 //copy the data over
 struct copy_functor_interlace
 {
-    int m_increment; //how many values belong together
-    int m_nr_parts;  //in how many parts the data shall be split
+    unsigned int m_increment; //how many values belong together
+    unsigned int m_nr_parts;  //in how many parts the data shall be split
     int m_nr_interlace; //which data stream to itnerlace (if at all)
     int m_interlace; //whether or not to interlace the data stream defined by m_nr_interlace
 
     copy_functor_interlace(int b, int s, int ni, bool i){
-        m_increment    = b;
-        m_nr_parts     = s;
+        m_increment    = (unsigned int) b;
+        m_nr_parts     = (unsigned int) s;
         m_nr_interlace = ni;
         m_interlace    = i;
     }
 
-    template<typename T, typename R>
-    void operator () (T* t, R* r, int i)
+    template<typename T>
+    void operator () (T** t, std::vector<std::tuple<unsigned int,size_t,void*>>* r, int i)
     {
 
         //std::get<0>: number of elements in array
         //std::get<1>: size in bytes of data type
         //std::get<2>: pointers to the vectors data
 
-        size_t total_size = std::get<0>((*r)[i]) * std::get<1>((*r)[i]);
-        *t = (T)malloc(total_size);
+        unsigned int nr_elements = std::get<0>((*r)[i]);
+        size_t element_size = std::get<1>((*r)[i]);
+        size_t total_size = nr_elements*element_size;
+        *t = (T*)malloc(total_size);
 
         if (i == m_nr_interlace && m_interlace){
-            size_t size = std::get<1>((*r)[i]) * m_increment;
-            for (int part = 0; part < m_nr_parts; ++part){
-                T start_pointer = (T)std::get<2>((*r)[i]);
-                for (unsigned int dataset = 0; dataset < total_size/size; ++dataset){
-                    if (dataset%part == 0){
-                        memcpy( *t, start_pointer, size);
-                        *t += m_increment;
+            size_t size_dataset = element_size * m_increment;
+            T* dest_pointer = *t;
+            for (unsigned int part = 0; part < m_nr_parts; ++part){
+                T* src_pointer  = (T*)std::get<2>((*r)[i]);
+                for (unsigned int src_dataset = 0; src_dataset < nr_elements/m_increment; ++src_dataset, src_pointer+=m_increment){
+                    if (src_dataset%m_nr_parts == part){
+                        memcpy(dest_pointer, src_pointer, size_dataset);
+                        dest_pointer += m_increment;
                     }
-                    start_pointer += m_increment;
                 }
             }
+            //the commented out code block below performs interlacing without 
+            ////unsigned int dest_dataset = 0;
+            //T dest_pointer = *t;
+            //for (unsigned int part = 0; part < m_nr_parts; ++part){
+            //    T src_pointer  = (T)std::get<2>((*r)[i]);
+            //    for (unsigned int src_dataset = 0; src_dataset < nr_elements; ++src_dataset, ++src_pointer){
+            //        if ((src_dataset/m_increment)%m_nr_parts == part){
+            //            *dest_pointer = *src_pointer;
+            //            ++dest_pointer;
+            //        }
+            //    }
+            //}
         }
         else{
             memcpy( *t, std::get<2>((*r)[i]), total_size);
@@ -110,7 +124,7 @@ struct copy_functor_interlace
 struct deallocate_functor
 {
     template<typename T>
-    void operator () (T* t, int i)
+    void operator () (T** t, int i)
     {
         free(*t);
         //suppress compiler warnings about unused parameter
