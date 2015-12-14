@@ -259,7 +259,7 @@ PYTHONLIB     := $PYTHONLIB
 PYTHONINC     := $PYTHONINC
 PYTHON        := $PYTHON
 
-PYTHONLDFLAGS := -l$libpython
+PYTHONLDFLAGS := $LDFLAGS -l$libpython
 
 EOF
 fi

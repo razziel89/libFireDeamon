@@ -54,7 +54,11 @@ struct get_size_in_bytes_and_pointer_functor
     void operator () (std::vector<T>* t, std::vector<std::tuple<unsigned int,size_t,void*>>* r, int i)
     {
         T* data = t->data(); //WARNING: the error "void value not ignored as it ought to be" means you cannot use bool as a type, sorry
-        r->push_back( std::make_tuple( t->size(), sizeof(T), (void*)data ) );
+        unsigned int temp_vect_size = t->size();
+        size_t T_size = sizeof(T);
+        void* temp_void_ptr = (void*)data;
+        std::tuple<unsigned int,size_t,void*> temp_tuple = std::make_tuple(temp_vect_size, T_size, temp_void_ptr);
+        r->push_back( temp_tuple );
         (void) i; //suppress compiler warning
     }
 };
