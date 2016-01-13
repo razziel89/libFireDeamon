@@ -16,14 +16,16 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 ***********/
-#ifndef H_IRREGULAR_GRID_MINIMIZATION_DEAMON_
-#define H_IRREGULAR_GRID_MINIMIZATION_DEAMON_
+#ifndef H_ARBITRARY_GRID_MINIMIZATION_DEAMON_
+#define H_ARBITRARY_GRID_MINIMIZATION_DEAMON_
 
 #include <vector>
 
 //Generate a list of all neighbours within the given cutoff.
 //Make sure max_nr_neighbours is greater than the number of possible neighbours a point might have.
-void make_neighbour_list(bool progress_reports, int nr_gridpoints, int max_nr_neighbours, int nr_neighbours, int cutoff_type, std::vector<double> points, std::vector<double> distance_cutoff, std::vector<int>* neighbour_list, bool sort_it=true);
+void make_neighbour_list_irregular(bool progress_reports, int nr_gridpoints, int max_nr_neighbours, int nr_neighbours, int cutoff_type, std::vector<double> points, std::vector<double> distance_cutoff, std::vector<int>* neighbour_list, bool sort_it=true);
+//Also generate a neighbour list but for a regular 3D grid (defined by how many points in each direction)
+void make_neighbour_list_regular(bool progress_reports, int nr_gridpoints_x, int nr_gridpoints_y, int nr_gridpoints_z, int nr_neighbour_shells, std::vector<int>* neighbour_list);
 //A local minimum is defined as a point whose associated value is smaller than that of
 //all surrounding points (given the degeneration cutoff).
 //Setting a negative degeneration cutoff means that a point has to have an associated value at least
@@ -31,4 +33,4 @@ void make_neighbour_list(bool progress_reports, int nr_gridpoints, int max_nr_ne
 //to be considered a minimum
 void local_minima_from_neighbour_list(bool progress_reports, int nr_neighbours, int nr_values, std::vector<int> neighbour_list, std::vector<double> values, std::vector<int>* minima, std::vector<double> degeneration_cutoffs, bool use_upper_cutoff=false, bool use_lower_cutoff=false, double upper_cutoff=0.0, double lower_cutoff=0.0, int sort_it=0, std::vector<double>* depths=NULL);
 
-#endif //H_IRREGULAR_GRID_MINIMIZATION_DEAMON_
+#endif //H_ARBITRARY_GRID_MINIMIZATION_DEAMON_

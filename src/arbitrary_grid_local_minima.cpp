@@ -27,7 +27,7 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <math.h>
 #include <time.h>
 #include <parallel_generic.h>
-#include <irregular_grid_local_minima.h>
+#include <arbitrary_grid_local_minima.h>
 #include <utility>
 #include <algorithm>
 
@@ -306,7 +306,7 @@ void* _nearestNeighboursThreadManhattanCombined(void* data){
     pthread_exit(NULL);
 }
 
-void make_neighbour_list(bool progress_reports, int nr_gridpoints, int max_nr_neighbours, int nr_neighbours, int cutoff_type, std::vector<double> points, std::vector<double> distance_cutoff, std::vector<int>* neighbour_list, bool sort_it)
+void make_neighbour_list_irregular(bool progress_reports, int nr_gridpoints, int max_nr_neighbours, int nr_neighbours, int cutoff_type, std::vector<double> points, std::vector<double> distance_cutoff, std::vector<int>* neighbour_list, bool sort_it)
 {
     //initialize everything
     PG globals; 
@@ -370,6 +370,156 @@ void make_neighbour_list(bool progress_reports, int nr_gridpoints, int max_nr_ne
     pg_global = NULL;
 }
 
+class Slices {
+    private:
+        const int _nx, _ny, _nz, _nr;
+        int _sx, _sy, _sz;
+
+    public:
+
+        //constructor
+        Slices(int nx, int ny, int nz) 
+            : _nx(nx), _ny(ny), _nz(nz), _nr(nx*ny*nz), 
+            _sx(-1), _sy(-1), _sz(-1) {}
+
+        bool SetPoint(int index){
+            if (index < 0 || index > _nr){
+                return false;
+            }
+            _sz = index % _nz;
+            _sy = (index / _nz) % _ny;
+            _sx = ((index / _nz) / _ny) % _nx;
+            if (_sx < _nx && _sy < _ny && _sz < _nz){
+                return true;
+            }
+            else{
+                return false;
+            }
+        }
+
+        int GetNeighbourIndex(int dx,int dy,int dz){
+            //a point is never its own neighbour
+            if (dx == 0 && dy == 0 && dz == 0){
+                return -1;
+            }
+            int neigh_x, neigh_y, neigh_z;
+            neigh_x = _sx + dx;
+            if (neigh_x<0 || neigh_x>=_nx){
+                return -1;
+            }
+            neigh_y = _sy + dy;
+            if (neigh_y<0 || neigh_y>=_ny){
+                return -1;
+            }
+            neigh_z = _sz + dz;
+            if (neigh_z<0 || neigh_z>=_nz){
+                return -1;
+            }
+            //return the actual index of the neighbour
+            return (neigh_x*_ny + neigh_y)*_nz + neigh_z;
+        }
+
+};
+
+void make_neighbour_list_regular(bool progress_reports, int nr_gridpoints_x, int nr_gridpoints_y, int nr_gridpoints_z, int nr_neighbour_shells, std::vector<int>* neighbour_list)
+{
+    //x is slow, y is middle and z is fast index
+    //only one thread used because this is fast
+    
+    //initialize everything
+    if (nr_gridpoints_x < 0){
+        fprintf(stderr,"ERROR: nr_gridpoints_x must be non-negative.");
+        return;
+    }
+    if (nr_gridpoints_y < 0){
+        fprintf(stderr,"ERROR: nr_gridpoints_y must be non-negative.");
+        return;
+    }
+    if (nr_gridpoints_z < 0){
+        fprintf(stderr,"ERROR: nr_gridpoints_z must be non-negative.");
+        return;
+    }
+    if (nr_neighbour_shells < 0){
+        fprintf(stderr,"ERROR: nr_neighbour_shells must be non-negative.");
+        return;
+    }
+   
+    bool too_many = false;
+    if (nr_gridpoints_x > std::numeric_limits<int>::max() / nr_gridpoints_y){
+        too_many = true;
+    }
+    if (nr_gridpoints_x * nr_gridpoints_y > std::numeric_limits<int>::max() / nr_gridpoints_z){
+        too_many = true;
+    }
+    if (too_many){
+        fprintf(stderr,"ERROR: too many points in grid, cannot index them with integers.");
+        return;
+    }
+
+    int ng = nr_gridpoints_x * nr_gridpoints_y * nr_gridpoints_z; //number of total gridpoints
+
+    //determine how many neighbours are there at max in all shells. Compute as:
+    //nr_neigh_in_shells = ((2*(nr_neighbour_shells)+1)^3)-1, i.e., as a cube with the
+    //central point removed
+    unsigned int ni = (2*nr_neighbour_shells)+1; //nr_neigh_in_shells
+    ni *= ni * ni; //ni^3
+    --ni; //before this step, ni will always be >=1
+
+    neighbour_list->reserve(ng*(ni+1));
+    neighbour_list->assign( ng*(ni+1), -1 ); //assign -1 to all elements
+
+    std::vector<int>::iterator it, startit;
+    startit = neighbour_list->begin();
+
+    //this data structure is used to get the x, y and z indices from the overall index
+    Slices slices = Slices(nr_gridpoints_x, nr_gridpoints_y, nr_gridpoints_z);
+
+    if (progress_reports){
+        printf("Starting generation of neighbour list of regular grid.\n");
+        printf("Prog: %.2f\n",0.0);
+        fflush(stdout);
+    }
+    //loop over all points in the grid
+    for (int p=0; p<ng; ++p, startit += (ni+1)){
+        //start at the first element for this point
+        it = startit + 1;
+        //find the number of the slice in each direction, i.e., the x, y and z index from the overall one
+        if (!slices.SetPoint(p)){
+            fprintf(stderr,"ERROR treating point number %d, skipping.",p);
+            continue;
+        }
+        //this will count how many neighbours already have been found
+        int nr_neigh = 0;
+        //check whether has neighbour in all directions
+        for (int ix = -nr_neighbour_shells; ix <= nr_neighbour_shells; ++ix){
+            for (int iy = -nr_neighbour_shells; iy <= nr_neighbour_shells; ++iy){
+                for (int iz = -nr_neighbour_shells; iz <= nr_neighbour_shells; ++iz){
+                    int index;
+                    if ( ( index = slices.GetNeighbourIndex(ix,iy,iz) ) != -1){
+                        ++nr_neigh;
+                        *it = index;
+                        ++it;
+                    }
+                }//iz
+            }//iy
+        }//ix
+        //assign the actual number of neighbours to the appropriate place
+        *startit = nr_neigh;
+        if (progress_reports){
+            if (p%500 == 0){
+                fprintf(stdout,"%c[2K\r", 27);
+                printf("Prog: %.2f",100.0*p/ng);
+                fflush(stdout);
+            }
+        }
+    }
+    if (progress_reports){
+        fprintf(stdout,"%c[2K\r", 27);
+        printf("Prog: %.2f\n",100.0);
+        fflush(stdout);
+    }
+}
+
 void local_minima_from_neighbour_list(bool progress_reports, int nr_neighbours, int nr_values, std::vector<int> neighbour_list, std::vector<double> values, std::vector<int>* minima, std::vector<double> degeneration_cutoffs, bool use_upper_cutoff, bool use_lower_cutoff, double upper_cutoff, double lower_cutoff, int sort_it, std::vector<double>* depths){
 
     //the iterator over the neighbour list
@@ -422,9 +572,11 @@ void local_minima_from_neighbour_list(bool progress_reports, int nr_neighbours, 
         }
         is_min_vec.push_back(is_min);
         if (progress_reports){
-            fprintf(stdout,"%c[2K\r", 27);
-            printf("Prog: %.2f",100.0*val_count/nr_values);
-            fflush(stdout);
+            if (val_count%500 == 0){
+                fprintf(stdout,"%c[2K\r", 27);
+                printf("Prog: %.2f",100.0*val_count/nr_values);
+                fflush(stdout);
+            }
         }
     }
     if (progress_reports){

@@ -13,7 +13,7 @@ namespace std {
 #include "skin_surface_deamon.h"
 #include "electrostatic_potential.h"
 #include "irregular_grid_interpolation.h"
-#include "irregular_grid_local_minima.h"
+#include "arbitrary_grid_local_minima.h"
 #include "electron_density.h"
 %}
 
@@ -285,6 +285,13 @@ def ElectronDensityPy(coefficients_list,data,volume=1.0,prog_report=True,detaile
 
 def NeighbourListPy(grid, nr_neighbours, cutoff, max_nr_neighbours=None, prog_report=True, cutoff_type='eukledian', sort_it=False):
     """
+    Deprecated version of IrregularNeighbourListPy. Will be removed soon.
+    """
+    print >>sys.stderr,"WARNING: use of NeighbourListPy is deprecated, use the new IrregularNeighbourListPy instead (same interface)."
+    return IrregularNeighbourListPy(grid, nr_neighbours, cutoff, max_nr_neighbours, prog_report, cutoff_type, sort_it)
+
+def IrregularNeighbourListPy(grid, nr_neighbours, cutoff, max_nr_neighbours=None, prog_report=True, cutoff_type='eukledian', sort_it=False):
+    """
     Generate a list of neighbours of each point on an arbitrary grid.
 
     grid: list of [float,float,float]
@@ -363,10 +370,52 @@ def NeighbourListPy(grid, nr_neighbours, cutoff, max_nr_neighbours=None, prog_re
 
     grid_vec = VectorDouble([component for point in grid for component in point])
 
-    make_neighbour_list(prog_report, nr_gridpoints, max_nr_neighbours, nr_neighbours, cutoff_int, grid_vec, cutoff_vec, neighbours_vec, sort_it);
+    make_neighbour_list_irregular(prog_report, nr_gridpoints, max_nr_neighbours, nr_neighbours, cutoff_int, grid_vec, cutoff_vec, neighbours_vec, sort_it);
 
     del grid_vec
     del cutoff_vec
+
+    return neighbours_vec
+
+def RegularNeighbourListPy(nr_gridpoints_xyz, nr_neighbour_shells, prog_report=True):
+    """
+    Generate a list of neighbours of each point on a regular grid.
+    Returns a std::vector<int> with (2*nr_neighbour_shells+1)**3-1 elements per gridpoint indicating
+    how many neighbours there are and which ones are the neighbours. If fewer than the maximum
+    number of gridpoints was found (e.g. because the point is at a corner), -1's will be added.
+
+    nr_gridpoints_xyz: [int, int, int]
+        The number of points in each of the three directions of the regular 3D-grid.
+    nr_neighbour_shells: int
+        How many neighbour shells shall be treated (i.e., consider all those points to be
+        neighbours who lie inside a cuboid that is spanned by 2*nr_neighbour_shells times the
+        vectors that make up the grid. That cuboid is centered around each point.)
+    prog_report: boolean, optional, default: True
+        Whether or not information about the progress of the calculation
+        should be printed to stdout.
+    """
+
+    try:
+        if not len(nr_gridpoints_xyz) == 3:
+            raise ValueError("The variable nr_gridpoints_xyz must contain three values.")
+    except TypeError as e:
+        raise TypeError("The variable nr_gridpoints_xyz must be a list with three ints.",e)
+
+    for val in nr_gridpoints_xyz:
+        if not isinstance(val,int):
+            raise TypeError("nr_gridpoints_xyz must contain integers.",e)
+
+    try:
+        nr_gridpoints = reduce(int.__mul__,nr_gridpoints_xyz)
+    except TypeError as e:
+        raise TypeError("Too many points in grid, total number cannot be represented as integers.",e)
+
+    nr_neighbours = (2*nr_neighbour_shells+1)**3 - 1
+
+    neighbours_vec = VectorInt()
+    neighbours_vec.reserve(nr_gridpoints*(nr_neighbours+1));
+
+    make_neighbour_list_regular(prog_report, nr_gridpoints_xyz[0], nr_gridpoints_xyz[1], nr_gridpoints_xyz[2], nr_neighbour_shells, neighbours_vec)
 
     return neighbours_vec
 
@@ -435,6 +484,11 @@ def LocalMinimaPy(neighbour_list, values, degeneration, nr_neighbours, prog_repo
         if hasattr(depths,'append'):
             depths_vec = VectorDouble()
 
+    if neighbour_list.size() != values_vec.size()*(nr_neighbours+1):
+        raise ValueError("I expect %d ints in neighbour_list for each float in values, but I found %.2f."
+                %( nr_neighbours+1, 1.0*neighbour_list.size()/values_vec.size() )
+                )
+
     local_minima_from_neighbour_list(prog_report, nr_neighbours, nr_values, neighbour_list, values_vec, minima_vec, degeneration_vec, use_upper, use_lower, upper_cutoff, lower_cutoff, sort_it, depths_vec)
 
     del values_vec
@@ -454,5 +508,5 @@ def LocalMinimaPy(neighbour_list, values, degeneration, nr_neighbours, prog_repo
 %include "skin_surface_deamon.h"
 %include "electrostatic_potential.h"
 %include "irregular_grid_interpolation.h"
-%include "irregular_grid_local_minima.h"
+%include "arbitrary_grid_local_minima.h"
 %include "electron_density.h"

@@ -6,9 +6,9 @@ include make.vars
 #         SOURCE FOR MAIN C++ LIBRARY
 #-----------------------------------------------------
 MAINSRC  := $(SRCDIR)/skin_surface_deamon.cpp $(SRCDIR)/electrostatic_potential.cpp $(SRCDIR)/parallel_generic.cpp \
-	$(SRCDIR)/irregular_grid_interpolation.cpp $(SRCDIR)/electron_density.cpp $(SRCDIR)/irregular_grid_local_minima.cpp
+	$(SRCDIR)/irregular_grid_interpolation.cpp $(SRCDIR)/electron_density.cpp $(SRCDIR)/arbitrary_grid_local_minima.cpp
 MAINOBJ  := $(OBJDIR)/skin_surface_deamon.o $(OBJDIR)/electrostatic_potential.o $(OBJDIR)/parallel_generic.o \
-	$(OBJDIR)/irregular_grid_interpolation.o $(OBJDIR)/electron_density.o $(OBJDIR)/irregular_grid_local_minima.o
+	$(OBJDIR)/irregular_grid_interpolation.o $(OBJDIR)/electron_density.o $(OBJDIR)/arbitrary_grid_local_minima.o
 #-----------------------------------------------------
 #         SOURCE FOR TEST FILES
 #-----------------------------------------------------
