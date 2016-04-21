@@ -65,19 +65,25 @@ def SkinSurfacePy(shrink_factor,coordinates,radii,refinesteps=1):
     nr_atoms=len(radii)
     
     vertex_vec=VectorDouble();
+    normal_vec=VectorDouble();
     index_vec=VectorInt();
     length_vec=VectorInt();
     
-    make_skin_surface(shrink_factor,coord_radii_vec,index_vec,vertex_vec,length_vec,refinesteps)
+    make_skin_surface(shrink_factor,coord_radii_vec,index_vec,vertex_vec,normal_vec,length_vec,refinesteps)
     nr_indices=length_vec.pop()
     nr_vertices=length_vec.pop()
     del length_vec
     del coord_radii_vec
     
-    result=[(nr_indices,nr_vertices),[facet for facet in _generate_triples(index_vec,3*nr_indices)],[vertex for vertex in _generate_triples(vertex_vec,3*nr_vertices)]]
+    result=[(nr_indices,nr_vertices),
+        [facet for facet in _generate_triples(index_vec,3*nr_indices)],
+        [vertex for vertex in _generate_triples(vertex_vec,3*nr_vertices)],
+        [n for n in _generate_triples(normal_vec,3*nr_vertices)]
+    ]
     
     del vertex_vec
     del index_vec
+    del normal_vec
     
     return result
 

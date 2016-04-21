@@ -26,6 +26,8 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <skin_surface_deamon.h>
 
+#include <iostream>
+
 template <class SkinSurface, class Polyhedron>
 //extract data into 2 arrays and return length in 2 integers
 //Since this is only to be used with polyhedrons without half-edges,
@@ -34,6 +36,7 @@ void get_polyhedron(SkinSurface &skin,
 				   Polyhedron &p,
 				   std::vector<int> &ivec,
                    std::vector<double> &dvec,
+                   std::vector<double> &nvec,
                    int *nr_vertices,
                    int *nr_facets)
 {
@@ -43,6 +46,7 @@ void get_polyhedron(SkinSurface &skin,
     typedef typename Polyhedron::Vertex_handle                    Vertex_handle;
     typedef typename Polyhedron::Halfedge_around_facet_circulator HFC;
     typedef typename Polyhedron::Traits::Point_3                  Point;
+    typedef typename Polyhedron::Traits::Vector_3                 Vector;
 
 
     CGAL::Skin_surface_refinement_policy_3<SkinSurface, Polyhedron> policy(skin);
@@ -55,6 +59,7 @@ void get_polyhedron(SkinSurface &skin,
     //reserve appropriate amount of memory
     ivec.reserve(3 * *nr_facets  );
     dvec.reserve(3 * *nr_vertices);
+    nvec.reserve(3 * *nr_vertices);
 
     // add vertices to vector
     for (Vertex_iterator vit = p.vertices_begin(); vit != p.vertices_end(); ++vit) {
@@ -62,6 +67,15 @@ void get_polyhedron(SkinSurface &skin,
         dvec.push_back(vit_point.cartesian(0));
         dvec.push_back(vit_point.cartesian(1));
         dvec.push_back(vit_point.cartesian(2));
+        Vector normal = policy.normal(vit);
+        double nx,ny,nz, norm;
+        nx = normal.cartesian(0);
+        ny = normal.cartesian(1);
+        nz = normal.cartesian(2);
+        norm = sqrt( nx*nx + ny*ny + nz*nz );
+        nvec.push_back(nx/norm);
+        nvec.push_back(ny/norm);
+        nvec.push_back(nz/norm);
     }
 
     // add facets to vector
@@ -87,7 +101,7 @@ typedef Weighted_point::Point                               Bare_point;
 typedef CGAL::Polyhedron_3<K,
   CGAL::Skin_surface_polyhedral_items_3<Skin_surface_3> >   Polyhedron;
 
-void make_skin_surface(double shrink_factor, std::vector<double> coord_radii_vec, std::vector<int> *ivec, std::vector<double> *dvec, std::vector<int> *length, int nr_refinements) {
+void make_skin_surface(double shrink_factor, std::vector<double> coord_radii_vec, std::vector<int> *ivec, std::vector<double> *dvec, std::vector<double> *nvec, std::vector<int> *length, int nr_refinements) {
     //declare variables for computation
     FT shrinkfactor = shrink_factor;
     std::list<Weighted_point> l;
@@ -117,10 +131,10 @@ void make_skin_surface(double shrink_factor, std::vector<double> coord_radii_vec
     }
     
     //extract data from the generated skin_surface and the polyhedron
-    //into 2 vectors and get their respective lengths
+    //into 3 vectors and get their respective lengths
     
     //fill variables
-    get_polyhedron(skin_surface, p, *ivec, *dvec, length_vert, length_face);
+    get_polyhedron(skin_surface, p, *ivec, *dvec, *nvec, length_vert, length_face);
     length->push_back(*length_vert);
     length->push_back(*length_face);
 
@@ -128,4 +142,3 @@ void make_skin_surface(double shrink_factor, std::vector<double> coord_radii_vec
     free(length_face);
 
 }
-

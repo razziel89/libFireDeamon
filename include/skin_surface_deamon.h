@@ -21,6 +21,6 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-void make_skin_surface(double shrink_factor, std::vector<double> coord_radii_vec, std::vector<int> *ivec, std::vector<double> *dvec, std::vector<int> *length, int nr_refinements);
+void make_skin_surface(double shrink_factor, std::vector<double> coord_radii_vec, std::vector<int> *ivec, std::vector<double> *dvec, std::vector<double> *nvec, std::vector<int> *length, int nr_refinements);
 
 #endif //MAKE_SKIN_SURFACE_HEADER_H
