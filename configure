@@ -245,7 +245,7 @@ CGALINC   := $CGALINC
 OTHERINC  := $OTHERINC
 OTHERLIB  := $OTHERLIB
 
-LDFLAGS   := $LDFLAGS -lmpfr -lgmp -lboost_thread -lCGAL -lpthread
+LDFLAGS   := $LDFLAGS -lmpfr -lgmp -lboost_thread -lCGAL -lCGAL_ImageIO -lpthread
 CPPFLAGS  := $CPPFLAGS $rounding
 
 EOF

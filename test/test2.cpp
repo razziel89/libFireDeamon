@@ -39,8 +39,9 @@ int main () {
     std::vector<int> ivec;
     std::vector<double> dvec;
     std::vector<int> length;
+    std::vector<double> nvec;
 
-    make_skin_surface(shrink_factor, nr_atoms, coord_radii_vec, &ivec, &dvec, &length, nr_refinements);
+    make_skin_surface(shrink_factor, coord_radii_vec, &ivec, &dvec, &nvec, &length, nr_refinements);
 
     return 0;
 }

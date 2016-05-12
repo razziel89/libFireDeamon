@@ -11,6 +11,7 @@ namespace std {
 
 %{
 #include "skin_surface_deamon.h"
+#include "isosurface.h"
 #include "electrostatic_potential.h"
 #include "irregular_grid_interpolation.h"
 #include "arbitrary_grid_local_minima.h"
@@ -509,9 +510,54 @@ def LocalMinimaPy(neighbour_list, values, degeneration, nr_neighbours, prog_repo
 
     return minima
 
+def IsosurfacePy(isovalue=4.3,dxfile="test.dx",points_inside=[[122.0,102.0,117.0],[110.,102.0,117.0],[122.0,102.0,113.0]],relative_precision=1.0e-05,mesh_criteria=[30,5,5]):
+
+    from collection.read import read_dx
+    import numpy as np
+
+    header = {}
+
+    data = read_dx(dxfile,unit_conversion=1.0,invert_charge_data=False,density=True,header_dict=header,
+        grid=False,data=True,silent=False,gzipped=False,comments=False)
+
+    origin = np.array(header["org_xyz"])
+    counts = np.array(header["counts_xyz"])
+    delta  = np.array([header["delta_x"],header["delta_y"],header["delta_z"]])
+
+    if not np.allclose(delta, np.diag(np.diag(delta))):
+        raise ValueError("ERROR: the voxel vectors must be orthogonal to each other.")
+
+    delta_total = np.diag(delta)*counts
+
+    data_vec   = VectorDouble([d for d in data["data"]]);
+    extent_vec = VectorInt(list(counts))
+    center_vec = VectorDouble(list(origin))
+    voxel_vec  = VectorDouble(list(np.diag(delta)))
+
+    radii = []
+
+    for point_inside in points_inside:
+        radius = 0.0
+        p = np.array(point_inside,dtype=float)
+        for d in np.array([[0,0,0],[1,0,0],[0,1,0],[0,0,1],[1,1,0],[1,0,1],[0,1,1],[1,1,1]],dtype=float):
+            temp = np.linalg.norm(p-(origin+np.dot(delta_total,d)))
+            if temp > radius:
+                radius = temp
+        radii.append(radius)
+
+    radii_vec = VectorDouble(radii)
+    points_inside_vec = VectorDouble([c for p in points_inside for c in p])
+
+    mesh_criteria_vec = VectorDouble([float(e) for e in mesh_criteria])
+    
+    make_isosurface(data_vec, center_vec, voxel_vec, extent_vec,
+            points_inside_vec, mesh_criteria_vec, radii_vec, relative_precision,
+            isovalue)
+
 %}
 
 %include "skin_surface_deamon.h"
+%include "isosurface.h"
 %include "electrostatic_potential.h"
 %include "irregular_grid_interpolation.h"
 %include "arbitrary_grid_local_minima.h"
