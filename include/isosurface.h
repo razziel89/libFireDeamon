@@ -21,8 +21,10 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-void make_isosurface(std::vector<double> data, std::vector<double> center, std::vector<double> voxel, std::vector<int> extent,
-                std::vector<double> points_inside, std::vector<double> mesh_criteria, std::vector<double> radii, double relative_precision,
-                double isovalue);
+void make_isosurface(std::vector<double> data, std::vector<double> center,
+        std::vector<double> voxel, std::vector<int> extent, std::vector<double>
+        points_inside, std::vector<double> mesh_criteria, std::vector<double>
+        radii, double relative_precision, double isovalue,std::vector<int> *ivec,
+        std::vector<double> *dvec, std::vector<double> *nvec, std::vector<int> *length);
 
 #endif //MAKE_ISOSURFACE_HEADER_H

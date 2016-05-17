@@ -510,7 +510,7 @@ def LocalMinimaPy(neighbour_list, values, degeneration, nr_neighbours, prog_repo
 
     return minima
 
-def IsosurfacePy(isovalue=4.3,dxfile="test.dx",points_inside=[[122.0,102.0,117.0],[110.,102.0,117.0],[122.0,102.0,113.0]],relative_precision=1.0e-05,mesh_criteria=[30,5,5]):
+def IsosurfacePy(isovalue=8.0,dxfile="test.dx",points_inside=[[122.0,102.0,117.0],[110.,102.0,117.0],[122.0,102.0,113.0]],relative_precision=1.0e-05,mesh_criteria=[30,5,5]):
 
     from collection.read import read_dx
     import numpy as np
@@ -534,6 +534,8 @@ def IsosurfacePy(isovalue=4.3,dxfile="test.dx",points_inside=[[122.0,102.0,117.0
     center_vec = VectorDouble(list(origin))
     voxel_vec  = VectorDouble(list(np.diag(delta)))
 
+    points_inside=[origin+np.dot(delta_total,d) for d in np.array([[0,0,0],[1,0,0],[0,1,0],[0,0,1],[1,1,0],[1,0,1],[0,1,1],[1,1,1]],dtype=float)]
+
     radii = []
 
     for point_inside in points_inside:
@@ -549,10 +551,26 @@ def IsosurfacePy(isovalue=4.3,dxfile="test.dx",points_inside=[[122.0,102.0,117.0
     points_inside_vec = VectorDouble([c for p in points_inside for c in p])
 
     mesh_criteria_vec = VectorDouble([float(e) for e in mesh_criteria])
+
+    index_vec=VectorInt()
+    length_vec=VectorInt()
+    vertex_vec=VectorDouble()
+    normal_vec=VectorDouble()
     
     make_isosurface(data_vec, center_vec, voxel_vec, extent_vec,
             points_inside_vec, mesh_criteria_vec, radii_vec, relative_precision,
-            isovalue)
+            isovalue,index_vec,vertex_vec,normal_vec,length_vec)
+
+    nr_indices=length_vec.pop()
+    nr_vertices=length_vec.pop()
+
+    result=[(nr_indices,nr_vertices),
+        [facet for facet in _generate_triples(index_vec,3*nr_indices)],
+        [vertex for vertex in _generate_triples(vertex_vec,3*nr_vertices)],
+        [n for n in _generate_triples(normal_vec,3*nr_vertices)]
+    ]
+
+    return result
 
 %}
 
