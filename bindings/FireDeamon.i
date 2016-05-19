@@ -510,7 +510,7 @@ def LocalMinimaPy(neighbour_list, values, degeneration, nr_neighbours, prog_repo
 
     return minima
 
-def IsosurfacePy(isovalue=8.0,dxfile="test.dx",points_inside=[[122.0,102.0,117.0],[110.,102.0,117.0],[122.0,102.0,113.0]],relative_precision=1.0e-05,mesh_criteria=[30,5,5]):
+def IsosurfacePy(dxfile,isovalue,points_inside,relative_precision=1.0e-05,mesh_criteria=[30,5,5]):
 
     from collection.read import read_dx
     import numpy as np
@@ -525,16 +525,17 @@ def IsosurfacePy(isovalue=8.0,dxfile="test.dx",points_inside=[[122.0,102.0,117.0
     delta  = np.array([header["delta_x"],header["delta_y"],header["delta_z"]])
 
     if not np.allclose(delta, np.diag(np.diag(delta))):
-        raise ValueError("ERROR: the voxel vectors must be orthogonal to each other.")
+        raise ValueError("ERROR: the voxel vectors must be parallel to the three cartesian axes.")
 
     delta_total = np.diag(delta)*counts
 
     data_vec   = VectorDouble([d for d in data["data"]]);
     extent_vec = VectorInt(list(counts))
-    center_vec = VectorDouble(list(origin))
+    origin_vec = VectorDouble(list(origin))
     voxel_vec  = VectorDouble(list(np.diag(delta)))
 
-    points_inside=[origin+np.dot(delta_total,d) for d in np.array([[0,0,0],[1,0,0],[0,1,0],[0,0,1],[1,1,0],[1,0,1],[0,1,1],[1,1,1]],dtype=float)]
+    #points at all corners
+    #points_inside=[origin+np.dot(delta_total,d) for d in np.array([[0,0,0],[1,0,0],[0,1,0],[0,0,1],[1,1,0],[1,0,1],[0,1,1],[1,1,1]],dtype=float)]
 
     radii = []
 
@@ -552,12 +553,15 @@ def IsosurfacePy(isovalue=8.0,dxfile="test.dx",points_inside=[[122.0,102.0,117.0
 
     mesh_criteria_vec = VectorDouble([float(e) for e in mesh_criteria])
 
+    #for v in [origin_vec, voxel_vec, extent_vec,points_inside_vec, mesh_criteria_vec, radii_vec]:
+    #    print [i for i in v]
+
     index_vec=VectorInt()
     length_vec=VectorInt()
     vertex_vec=VectorDouble()
     normal_vec=VectorDouble()
-    
-    make_isosurface(data_vec, center_vec, voxel_vec, extent_vec,
+
+    make_isosurface(data_vec, origin_vec, voxel_vec, extent_vec,
             points_inside_vec, mesh_criteria_vec, radii_vec, relative_precision,
             isovalue,index_vec,vertex_vec,normal_vec,length_vec)
 

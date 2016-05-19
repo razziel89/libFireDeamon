@@ -16,6 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 ***********/
+//Includes
 //CGAL includes
 #include <CGAL/Surface_mesh_default_triangulation_3.h>
 #include <CGAL/Surface_mesh_default_criteria_3.h>
@@ -47,6 +48,7 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <deque>
 #include <stdlib.h>
 #include <math.h>
+#include <signal.h>
 //
 //---deamon includes (interface)---
 #include <isosurface.h>
@@ -72,6 +74,20 @@ typedef CGAL::Nef_polyhedron_3<Kex>     Nef_Polyhedron;
 typedef CGAL::Polyhedron_3<Kex>         Ex_Polyhedron;
 //typedef Ex_Polyhedron::HalfedgeDS       Ex_HalfedgeDS; 
 typedef CGAL::Polyhedron_3<Kinex>       Polyhedron;
+
+int signum = -1;
+void iso_signal_callback_handler(int signal){
+    if      (signum == -1){
+        fprintf(stderr, "\nCaught signal %d, interrupting at the next possible point\n", signal);
+        signum = signal;
+    }else{if(signal == signum){
+        fprintf(stderr, "\nCaught signal %d again, interrupting now (might fail)\n", signal);
+        exit(signal);
+    }else{
+        fprintf(stderr, "\nCaught new signal %d, interrupting at the next possible point\n", signal);
+        signum = signal;
+    }}
+}
 
 template <class Polyhedron_input,
           class Polyhedron_output>
@@ -136,15 +152,90 @@ void copy_to(const Poly_A& poly_a, Poly_B& poly_b)
         poly_b.delegate(modifier);
 }
 
+struct Point3d;
+typedef struct Point3d {
+    double x,y,z;
+    Point3d(double* p){
+        x = *(p+0);
+        y = *(p+1);
+        z = *(p+2);
+    }
+    Point3d() : x(0.0), y(0.0), z(0.0){}
+    Point3d(double _x, double _y, double _z) : x(_x), y(_y), z(_z){}
+    Point3d(const Point3d& p) : x(p.x), y(p.y), z(p.z){}
+    struct Point3d operator-(struct Point3d p){
+        return Point3d(x-p.x,y-p.y,z-p.z);
+    }
+    struct Point3d operator+(struct Point3d p){
+        return Point3d(x+p.x,y+p.y,z+p.z);
+    }
+    struct Point3d& operator+=(const struct Point3d p){
+        x += p.x;
+        y += p.y;
+        z += p.z;
+        return *this;
+    }
+    struct Point3d& operator-=(const struct Point3d p){
+        x -= p.x;
+        y -= p.y;
+        z -= p.z;
+        return *this;
+    }
+    double operator[](int i){
+        if     (i==0){return x;}
+        else{if(i==1){return y;}
+        else{if(i==2){return z;}
+        else{throw std::logic_error("Index to point must be >=0 and <=2");
+        }}}
+    }
+    //double operator*(struct Point3d p){
+    //    return x*p.x + y*p.y + z*p.z;
+    //}
+    struct Point3d operator*(struct Point3d p){
+        return Point3d(
+                y*p.z - p.y*z,
+                z*p.x - p.z*x,
+                x*p.y - p.x*y
+                );
+    }
+    struct Point3d operator*(double d){
+        return Point3d(x*d, y*d, z*d);
+    }
+    struct Point3d& operator/=(double d){
+        x /= d;
+        y /= d;
+        z /= d;
+        return *this;
+    }
+    struct Point3d& operator/=(unsigned int i){
+        double d = static_cast<double>(i);
+        return *this /= d;
+    }
+    void normalize(){
+        double norm = sqrt(x*x + y*y + z*z);
+        x /= norm;
+        y /= norm;
+        z /= norm;
+    }
+} point;
+
+std::ostream& operator<<(std::ostream& os, struct Point3d p){
+    os << "(" << p.x << " " << p.y << " " << p.z << ")";
+    return os;
+}
+
 template <class Polyhedron>
 //extract data into 2 arrays and return length in 2 integers
 //Since this is only to be used with polyhedrons without half-edges,
 //that information will not be returned.
-void get_polyhedron(Polyhedron &p,
+void add_polyhedron(Polyhedron &p,
                    std::vector<int> &ivec,
                    std::vector<double> &dvec,
+                   std::vector<double> &nvec,
                    int *nr_vertices,
-                   int *nr_facets)
+                   int *nr_facets,
+                   point origin
+                   )
 {
     //define types
     typedef typename Polyhedron::Vertex_iterator                  Vertex_iterator;
@@ -152,23 +243,32 @@ void get_polyhedron(Polyhedron &p,
     typedef typename Polyhedron::Vertex_handle                    Vertex_handle;
     typedef typename Polyhedron::Halfedge_around_facet_circulator HFC;
     typedef typename Polyhedron::Traits::Point_3                  Point;
-    //typedef typename Polyhedron::Traits::Vector_3                 Vector;
+
+    //double* dvec_first = dvec.end();
+    //int*    ivec_first = ivec.end();
+    int     nr_points  = *nr_vertices;
 
     //get size of vectors
-    *nr_vertices   = p.size_of_vertices ();
-    *nr_facets     = p.size_of_facets   ();
-//    int nr_halfedges  = p.size_of_halfedges()
+    *nr_vertices   += p.size_of_vertices ();
+    *nr_facets     += p.size_of_facets   ();
 
     //reserve appropriate amount of memory
     ivec.reserve(3 * *nr_facets  );
     dvec.reserve(3 * *nr_vertices);
 
+    std::vector<std::pair<unsigned int,point>> normals;
+    normals.reserve(p.size_of_vertices());
+
     // add vertices to vector
     for (Vertex_iterator vit = p.vertices_begin(); vit != p.vertices_end(); ++vit) {
         Point vit_point = vit->point();
-        dvec.push_back(vit_point.cartesian(0));
-        dvec.push_back(vit_point.cartesian(1));
-        dvec.push_back(vit_point.cartesian(2));
+        point p (vit_point.cartesian(0),vit_point.cartesian(1),vit_point.cartesian(2));
+        p += origin;
+        dvec.push_back(p.x);
+        dvec.push_back(p.y);
+        dvec.push_back(p.z);
+        std::pair<unsigned int,point> temp_pair = std::make_pair(0,point());
+        normals.push_back(temp_pair);
     }
 
     // add facets to vector
@@ -176,26 +276,70 @@ void get_polyhedron(Polyhedron &p,
     for(Facet_iterator fi = p.facets_begin(); fi != p.facets_end(); ++fi) {
         HFC hc = fi->facet_begin();
         HFC hc_end = hc;
-        //std::size_t n = circulator_size( hc);
+        std::size_t n = circulator_size( hc);
+        if (n!=3){
+            char buff[1000];
+            sprintf(buff,"Encountered facet with number of vertices unequal 3 but %lu.",n);
+            throw std::logic_error(buff);
+        }
         do {
             Vertex_handle vh = (*hc).vertex();
-            ivec.push_back(index[vh]);
+            ivec.push_back(nr_points + index[vh]);
         } while (++hc != hc_end);
+        int i1 = *(ivec.end()-3);
+        int i2 = *(ivec.end()-2);
+        int i3 = *(ivec.end()-1);
+        point p1( &(dvec[3*i1]) );
+        point p2( &(dvec[3*i2]) );
+        point p3( &(dvec[3*i3]) );
+        point normal( ((p2-p1)*(p3-p2)) );
+        normal.normalize();
+        normals[i1-nr_points].first  += 1;
+        normals[i1-nr_points].second += normal;
+        normals[i2-nr_points].first  += 1;
+        normals[i2-nr_points].second += normal;
+        normals[i3-nr_points].first  += 1;
+        normals[i3-nr_points].second += normal;
+    }
+
+    std::vector<std::pair<unsigned int,point>>::iterator normal_it;
+    for (normal_it = normals.begin(); normal_it != normals.end(); ++normal_it) {
+        if (normal_it->first == 0){
+            char buff[1000];
+            sprintf(buff,"Found point that is in no triangle.");
+            throw std::logic_error(buff);
+        }else{
+            normal_it->second /= normal_it->first;
+            normal_it->second.normalize();
+            nvec.push_back(normal_it->second.x);
+            nvec.push_back(normal_it->second.y);
+            nvec.push_back(normal_it->second.z);
+        }
     }
 }
 
-bool intersect(std::deque<Nef_Polyhedron> & NefPolyDeq, Ex_Polyhedron & P){
+bool intersect(std::deque<Nef_Polyhedron> & NefPolyDeq, Ex_Polyhedron & P, bool verbose=false, char verbose_string[] = NULL){
     
-    if (not(P.is_closed())){ 
-        throw std::logic_error("The computed polyhedron is not closed (which should be impossible).");
-    }
+    //if (not(P.is_closed())){ 
+    //    throw std::logic_error("The computed polyhedron is not closed (which should be impossible).");
+    //}
     bool intersection = false;
     Nef_Polyhedron NPin(P); 
+    if (verbose){
+        fprintf(stdout,"%c[2K\r", 27);
+        fprintf(stdout,"%s - %-60s",verbose_string,"Converted to Nef-polyhedron");
+        fflush(stdout);
+    }
     for (std::deque<Nef_Polyhedron>::iterator it=NefPolyDeq.begin(); !intersection && it!=NefPolyDeq.end(); ++it){
         Nef_Polyhedron NPinter = *it * NPin; 
         if (!NPinter.is_empty()){
             intersection = true;
         }
+    }
+    if (verbose){
+        fprintf(stdout,"%c[2K\r", 27);
+        fprintf(stdout,"%s - %-60s",verbose_string,"Checked for intersections");
+        fflush(stdout);
     }
     if (!intersection){
         NefPolyDeq.push_back(NPin);
@@ -203,120 +347,10 @@ bool intersect(std::deque<Nef_Polyhedron> & NefPolyDeq, Ex_Polyhedron & P){
     return intersection;
 } 
 
-//template <class C2t3>
-//bool get_surface_facets(std::ostream& os,
-//                   const C2t3& c2t3){
-//
-//    using CGAL::Surface_mesher::number_of_facets_on_surface;
-//    int options = CGAL::Surface_mesher::IO_ORIENT_SURFACE;
-//    
-//    typedef typename C2t3::Triangulation Tr;
-//    typedef typename Tr::Finite_facets_iterator Finite_facets_iterator;
-//    typedef typename Tr::Finite_vertices_iterator Finite_vertices_iterator;
-//    typedef typename Tr::Facet Facet;
-//    typedef typename Tr::Edge Edge;
-//    typedef typename Tr::Vertex_handle Vertex_handle;
-//    
-//    // Header.
-//    const Tr& tr = c2t3.triangulation();
-//    
-//    bool success = true;
-//    
-//    CGAL::Surface_mesher::Write_to_OFF_file<Tr>
-//      off(os, (options & CGAL::Surface_mesher::IO_VERBOSE) != 0);
-//    
-//    success &= off.write_header(tr.number_of_vertices(),
-//                    c2t3.number_of_facets());
-//    
-//    CGAL_assertion(c2t3.number_of_facets() == number_of_facets_on_surface(tr));
-//    
-//    // Finite vertices coordinates.
-//    std::map<Vertex_handle, int> V;
-//    int inum = 0;
-//    for(Finite_vertices_iterator vit = tr.finite_vertices_begin();
-//        vit != tr.finite_vertices_end();
-//        ++vit)
-//    {
-//      V[vit] = inum++;
-//      success &= off.write_vertex(vit);
-//    }
-//    
-//    success &= off.begin_facets();
-//    
-//    Finite_facets_iterator fit = tr.finite_facets_begin();
-//    std::set<Facet> oriented_set;
-//    std::stack<Facet> stack;
-//    
-//    typename Tr::size_type number_of_facets = c2t3.number_of_facets();
-//    
-//    CGAL_assertion_code(typename Tr::size_type nb_facets = 0; )
-//    
-//      while (oriented_set.size() != number_of_facets)
-//      {
-//    while ( fit->first->is_facet_on_surface(fit->second) == false ||
-//        oriented_set.find(*fit) != oriented_set.end() ||
-//    
-//        oriented_set.find(c2t3.opposite_facet(*fit)) !=
-//        oriented_set.end() )
-//    {
-//      ++fit;
-//    }
-//    oriented_set.insert(*fit);
-//    stack.push(*fit);
-//    while(! stack.empty() )
-//    {
-//      Facet f = stack.top();
-//      stack.pop();
-//      for(int ih = 0 ; ih < 3 ; ++ih) {
-//        const int i1  = tr.vertex_triple_index(f.second, tr. cw(ih));
-//        const int i2  = tr.vertex_triple_index(f.second, tr.ccw(ih));
-//    
-//        const typename C2t3::Face_status face_status
-//          = c2t3.face_status(Edge(f.first, i1, i2));
-//        if(face_status == C2t3::REGULAR) {
-//          Facet fn = c2t3.neighbor(f, ih);
-//          if (oriented_set.find(fn) == oriented_set.end()) {
-//        if(oriented_set.find(c2t3.opposite_facet(fn)) == oriented_set.end())
-//        {
-//          oriented_set.insert(fn);
-//          stack.push(fn);
-//        }
-//        else {
-//          success = false; // non-orientable
-//        }
-//          }
-//        }
-//        else if(face_status != C2t3::BOUNDARY) {
-//          success = false; // non manifold, thus non-orientable
-//        }
-//      } // end "for each neighbor of f"
-//    } // end "stack non empty"
-//      } // end "oriented_set not full"
-//    
-//    for(typename std::set<Facet>::const_iterator fit =
-//      oriented_set.begin();
-//    fit != oriented_set.end();
-//    ++fit)
-//    {
-//      const typename Tr::Cell_handle cell = fit->first;
-//      const int& index = fit->second;
-//      const int index1 = V[cell->vertex(tr.vertex_triple_index(index, 0))];
-//      const int index2 = V[cell->vertex(tr.vertex_triple_index(index, 1))];
-//      const int index3 = V[cell->vertex(tr.vertex_triple_index(index, 2))];
-//      success &= off.write_facet(index1, index2, index3);
-//      CGAL_assertion_code(++nb_facets);
-//    }
-//    
-//    CGAL_assertion(nb_facets == number_of_facets);
-//    
-//    success &= off.write_footer();
-//    return success;
-//}
-
 template <typename T>
-_image* get_image(std::vector<double> vec, std::vector<double> center, std::vector<double> voxel, std::vector<int> extent){
+_image* get_image(std::vector<double> vec, std::vector<double> voxel, point center, std::vector<int> extent){
     
-    _image* image = new _image();
+    _image *image = new _image();
     image->xdim=extent[0]; image->ydim=extent[1]; image->zdim=extent[2];
     image->vdim=1;
     image->vx=voxel[0];    image->vy=voxel[1];    image->vz=voxel[2];
@@ -341,145 +375,33 @@ _image* get_image(std::vector<double> vec, std::vector<double> center, std::vect
     T* data = (T*) malloc(sizeof(T) * image->xdim * image->ydim * image->zdim);
     T* data_it = data;
     std::vector<double>::iterator vec_it = vec.begin();
-    for (; vec_it!=vec.end(); ++vec_it, ++data_it){
-        *data_it = static_cast<T>(*vec_it);
+    int ex = extent[0];
+    int ey = extent[1];
+    int ez = extent[2];
+    for (int xc=0; xc<ex; ++xc){
+        for (int yc=0; yc<ey; ++yc){
+            for (int zc=0; zc<ez; ++zc, ++vec_it){
+                *(data_it + xc + yc*(ex) + zc*(ex*ey) ) = static_cast<T>(*vec_it);
+            }
+        }
     }
+    //for (; vec_it!=vec.end(); ++vec_it, ++data_it){
+    //    *data_it = static_cast<T>(*vec_it);
+    //}
     image->data = data;
 
     return image;
 }
 
-//void print_image(_image* i){
-//    std::cout << i->xdim << " " << i->ydim << " " << i->zdim << " " << i->vdim << std::endl;
-//    std::cout << i->vx<< " " << i->vy<< " " << i->vz<< std::endl;
-//    std::cout << i->tx<< " " << i->ty<< " " << i->tz<< std::endl;
-//    std::cout << i->rx<< " " << i->ry<< " " << i->rz<< std::endl;
-//    std::cout << i->cx<< " " << i->cy<< " " << i->cz<< std::endl;
-//    std::cout << i->spm_offset<< " " << i->spm_scale<< std::endl;
-//    std::cout << i->data<< std::endl;
-//    std::cout << i->wdim<< std::endl;
-//    std::cout << i->imageFormat<< std::endl;
-//    std::cout << i->vectMode<< std::endl;
-//    std::cout << i->wordKind<< std::endl;
-//    std::cout << i->sign<< std::endl;
-//    std::cout << i->user<< std::endl;
-//    std::cout << i->nuser<< std::endl;
-//    std::cout << i->fd<< std::endl;
-//    std::cout << i->openMode<< std::endl;
-//    std::cout << i->endianness<< std::endl;
-//    std::cout << i->dataMode<< std::endl << std::flush;
-//
-//    //float* d = (float*) i->data;
-//    //for (unsigned int j=1; j<= i->xdim * i->ydim * i->zdim; ++j, ++d){
-//    //    std::cout << *d << " ";
-//    //    if (j%10==0){
-//    //        std::cout << std::endl;
-//    //    }
-//    //}
-//}
-//
-//void print_floats(float f1, float f2){
-//    char* c1 = reinterpret_cast<char*>(&f1);
-//    char* c2 = reinterpret_cast<char*>(&f2);
-//    char temp1[1000] = {'\0'};
-//    char* tstart = temp1;
-//    for (unsigned int i = 0; i < sizeof(float); ++i){
-//        char C1 = c1[i];
-//        for (int j = 7; j >= 0; --j){
-//            int t = ((C1 >> j) & 1);
-//            if (t==0){
-//                *tstart = '1';
-//            }else{
-//                *tstart = '0';
-//            }
-//            ++tstart;
-//        }
-//    }
-//    printf("%s\t",temp1);
-//    char temp2[1000] = {'\0'};
-//    tstart = temp2;
-//    for (unsigned int i = 0; i < sizeof(float); ++i){
-//        char C2 = c2[i];
-//        for (int j = 7; j >= 0; --j){
-//            int t = ((C2 >> j) & 1);
-//            if (t==0){
-//                *tstart = '1';
-//            }else{
-//                *tstart = '0';
-//            }
-//            ++tstart;
-//        }
-//    }
-//    printf("%s\n",temp2);
-//}
-
-//typedef std::pair<std::vector<double>,std::vector<int>> mesh_data;
-//
-//mesh_data reduce_isosurfaces(std::deque<mesh_data> surfaces){
-//    return surfaces[0];
-//}
-
-struct Point3d;
-
-typedef struct Point3d {
-    double x,y,z;
-    Point3d(double* p){
-        x = *(p+0);
-        y = *(p+1);
-        z = *(p+2);
-    }
-    Point3d(double _x, double _y, double _z) : x(_x), y(_y), z(_z){}
-    Point3d(const Point3d& p) : x(p.x), y(p.y), z(p.z){}
-    struct Point3d operator-(struct Point3d p){
-        return Point3d(x-p.x,y-p.y,z-p.z);
-    }
-    struct Point3d operator+(struct Point3d p){
-        return Point3d(x+p.x,y+p.y,z+p.z);
-    }
-    struct Point3d& operator+=(const struct Point3d p){
-        x += p.x;
-        y += p.y;
-        z += p.z;
-        return *this;
-    }
-    //double operator*(struct Point3d p){
-    //    return x*p.x + y*p.y + z*p.z;
-    //}
-    struct Point3d operator*(struct Point3d p){
-        return Point3d(
-                y*p.z - p.y*z,
-                z*p.x - p.z*x,
-                x*p.y - p.x*y
-                );
-    }
-    struct Point3d& operator/=(double d){
-        x /= d;
-        x /= y;
-        x /= z;
-        return *this;
-    }
-    void normalize(){
-        double norm = sqrt(x*x + y*y + z*z);
-        x /= norm;
-        y /= norm;
-        z /= norm;
-    }
-} point;
-
-std::ostream& operator<<(std::ostream& os, struct Point3d p){
-    os << "(" << p.x << " " << p.y << " " << p.z << ")";
-    return os;
-}
-
-void make_isosurface(std::vector<double> data, std::vector<double> center, std::vector<double> voxel, std::vector<int> extent,
+void make_isosurface(std::vector<double> data, std::vector<double> origin, std::vector<double> voxel, std::vector<int> extent,
         std::vector<double> points_inside, std::vector<double> mesh_criteria, std::vector<double> radii, double relative_precision,
         double isovalue, std::vector<int> *ivec, std::vector<double> *dvec, std::vector<double> *nvec, std::vector<int> *length){
     // perform some sanity checks
     if (mesh_criteria.size()!=3){
         throw std::invalid_argument("The mesh_criteria vector must have a length of 3.");
     }
-    if (center.size()!=3){
-        throw std::invalid_argument("The center vector must have a length of 3.");
+    if (origin.size()!=3){
+        throw std::invalid_argument("The origin vector must have a length of 3.");
     }
     if (voxel.size()!=3){
         throw std::invalid_argument("The voxel vector must have a length of 3.");
@@ -490,29 +412,66 @@ void make_isosurface(std::vector<double> data, std::vector<double> center, std::
     if ( (points_inside.empty()) || (points_inside.size()%3!=0) || (points_inside.size()/3 != radii.size()) ){
         throw std::invalid_argument("The points_inside vector does not have three times as many elements as the radii vector.");
     }
+    {double min=data[0]; double max=min;
+    for (std::vector<double>::iterator it=data.begin(); it!=data.end(); ++it){
+        if (*it < min){min = *it;}
+        if (*it > max){max = *it;}
+    }
+    if (isovalue < min || isovalue > max){
+        char buff[1000];
+        sprintf(buff,"Isovalue %f not in data interval [%f,%f]",isovalue,min,max);
+        throw std::invalid_argument(buff);
+    }}
+    point origin_point(&(origin[0]));
+    point delta_point(extent[0]*voxel[0], extent[1]*voxel[1], extent[2]*voxel[2]);
+    point center_point = origin_point + delta_point*0.5;
 
     // defining meshing criteria
     CGAL::Surface_mesh_default_criteria_3<Tr> criteria(mesh_criteria[0],
                                                        mesh_criteria[1],
                                                        mesh_criteria[2]);
 
-    //std::deque<mesh_data> surfaces;
     std::deque<Nef_Polyhedron> NefPolyDeq;
-    std::deque<Polyhedron>     PolyDeq;
+    //std::deque<Polyhedron>     PolyDeq;
     std::vector<double>::iterator radius, point_inside;
 
-    //Polyhedron all_surfaces;
+    int nr_vertices = 0;
+    int nr_facets = 0;
+
+    //std::cerr << "here" << std::endl << std::flush;
+    bool verbose = (radii.size() > 1);
+    if (verbose){
+        std::cout << "Started computation of isosurface starting from multiple points." << std::endl;
+    }
+    int current_radius = 0;
+    int nr_radii = radii.size();
+    char verbose_string[1000] = {'\0'};
+
+    signal(SIGINT, iso_signal_callback_handler);
 
     radius = radii.begin();
     point_inside = points_inside.begin();
-    for (; radius!=radii.end(); ++radius, point_inside+=3){
-
-        _image* raw_image = get_image<double>(data, center, voxel, extent);
+    for (; radius!=radii.end() && signum==-1; ++radius, point_inside+=3, ++current_radius){
+        if (verbose){
+            sprintf(verbose_string,"Computing isosurface, internal point %d/%d",current_radius,nr_radii);
+            fprintf(stdout,"%c[2K\r", 27);
+            fprintf(stdout,"%s - %-50s",verbose_string,"Starting");
+            fflush(stdout);
+        }
+        //std::cerr << "inner here 1" << std::endl << std::flush;
+        _image* raw_image = get_image<double>(data, voxel, center_point, extent);
+        //std::cerr << "inner here 1.5" << std::endl << std::flush;
         Tr tr;            // 3D-Delaunay triangulation
         C2t3 c2t3 (tr);   // 2D-complex in 3D-Delaunay triangulation
         // the 'function' is a 3D gray level image
         CGAL::Image_3 image3(raw_image);
         Gray_level_image image(image3, static_cast<float>(isovalue));
+        //std::cerr << "inner here 2" << std::endl << std::flush;
+        if (verbose){
+            fprintf(stdout,"%c[2K\r", 27);
+            fprintf(stdout,"%s - %-50s",verbose_string,"Created grey level image");
+            fflush(stdout);
+        }
 
         // Carefully choosen bounding sphere: the center must be inside the
         // surface defined by 'image' and the radius must be high enough so that
@@ -521,110 +480,93 @@ void make_isosurface(std::vector<double> data, std::vector<double> center, std::
         GT::FT bounding_sphere_squared_radius = (*radius)*(*radius)*2.0;
         GT::Sphere_3 bounding_sphere(bounding_sphere_center,
                                      bounding_sphere_squared_radius);
+        //std::cerr << "inner here 3" << std::endl << std::flush;
         // definition of the surface with relative precision
         Surface_3 surface(image, bounding_sphere, relative_precision);
+        if (verbose){
+            fprintf(stdout,"%c[2K\r", 27);
+            fprintf(stdout,"%s - %-50s",verbose_string,"Defined enclosing surface");
+            fflush(stdout);
+        }
+        //std::cerr << "inner here 4" << std::endl << std::flush;
         // meshing surface, with the "manifold without boundary" algorithm
         CGAL::make_surface_mesh(c2t3, surface, criteria, CGAL::Manifold_tag());
-
-        //std::vector<double> double_dummy(100,0.0);
-        //std::vector<int> int_dummy(100,0);
-
-        //surfaces.push_back( std::make_pair(double_dummy,int_dummy) );
+        //std::cerr << "inner here 5" << std::endl << std::flush;
+        if (verbose){
+            fprintf(stdout,"%c[2K\r", 27);
+            fprintf(stdout,"%s - %-50s",verbose_string,"Meshed surface");
+            fflush(stdout);
+        }
 
         //extract data from mesh
         Polyhedron P;
         CGAL::output_surface_facets_to_polyhedron(c2t3, P);
-        Ex_Polyhedron Pex;
-        copy_to<Polyhedron,Ex_Polyhedron>(P,Pex);
-        //printf("Treating %u\t",(unsigned)(radius-radii.begin()));
-        //fflush(stdout);
-        bool inter = intersect(NefPolyDeq,Pex);
-        //printf("Intersecting? %s\n",inter ? "yes" : "no");
-        //fflush(stdout);
-        if (!inter){
-            PolyDeq.push_back(P);
-            //char temp[100] = {'\0'};
-            //sprintf(temp,"out_%u.off",(unsigned)(radius-radii.begin()));
-            //std::ofstream out(temp);
-            ////get_surface_facets(out, c2t3);
-            //CGAL::output_surface_facets_to_off(out, c2t3);
-            //std::cout << "File: " << temp << "\tFinal number of points: " << tr.number_of_vertices() << "\n";
-            //fflush(stdout);
+        if (verbose){
+            fprintf(stdout,"%c[2K\r", 27);
+            fprintf(stdout,"%s - %-50s",verbose_string,"Converted to inexact polyhedron");
+            fflush(stdout);
         }
+        //std::cerr << "Treating point number " << radius-radii.begin() << std::endl << std::flush;
+        bool inter;
+        if (radii.size() == 1){
+            inter = false;
+        }else{
+            Ex_Polyhedron Pex;
+            copy_to<Polyhedron,Ex_Polyhedron>(P,Pex);
+            if (verbose){
+                fprintf(stdout,"%c[2K\r", 27);
+                fprintf(stdout,"%s - %-50s",verbose_string,"Transferred to exact polyhedron");
+                fflush(stdout);
+            }
+            inter = intersect(NefPolyDeq,Pex,verbose,verbose_string);
+        }
+        if (verbose){
+            fprintf(stdout,"%c[2K\r", 27);
+            fprintf(stdout,"%s - %-50s",verbose_string,"Checked for intersections with previous polyhedra");
+            fflush(stdout);
+        }
+        if (!inter){
+            //PolyDeq.push_back(P);
+            //std::cerr << "Not intersecting" << std::endl << std::flush;
+            add_polyhedron(P,*ivec,*dvec,*nvec,&nr_vertices,&nr_facets,origin_point);
+            if (verbose){
+                fprintf(stdout,"%c[2K\r", 27);
+                fprintf(stdout,"%s - %-50s",verbose_string,"No intersection found, added polyhedron");
+                fflush(stdout);
+            }
+        }else{
+            if (verbose){
+                fprintf(stdout,"%c[2K\r", 27);
+                fprintf(stdout,"%s - %-50s",verbose_string,"Intersection found, not adding");
+                fflush(stdout);
+            }
+        }
+        //free(raw_image->data);
+        //delete raw_image;
     }
-
-    Nef_Polyhedron Nef_result;
-    for (std::deque<Nef_Polyhedron>::iterator nef_it=NefPolyDeq.begin(); nef_it!=NefPolyDeq.end(); ++nef_it){
-        Nef_result += *nef_it;
+    //std::cerr << "here" << std::endl << std::flush;
+    if (signum != -1){
+        fprintf(stderr,"Interrupting\n");
+        exit(signum);
     }
-
-    Ex_Polyhedron ex_result;
-    Nef_result.convert_to_Polyhedron(ex_result);
-
-    Polyhedron result;
-    copy_to<Ex_Polyhedron,Polyhedron>(ex_result,result);
-
-    //std::vector<int> ivec;
-    //std::vector<double> dvec;
-    int nr_vertices;
-    int nr_facets;
-
-    get_polyhedron<Polyhedron>(result,
-                   *ivec,
-                   *dvec,
-                   &nr_vertices,
-                   &nr_facets);
+    if (verbose){
+        fprintf(stdout,"%c[2K\r", 27);
+        fprintf(stdout,"Computed all %d points.\n",nr_radii);
+        fflush(stdout);
+    }
+    
 
     length->reserve(2);
     length->push_back(nr_vertices);
     length->push_back(nr_facets);
 
-    std::vector<point> normals;
-    normals.reserve(nr_facets);
-    std::vector<std::deque<int>> my_triangles(nr_vertices,std::deque<int>());
-    //my_triangles.reserve(nr_vertices);
-
-    for (int triangle=0; triangle<nr_facets/3; ++triangle){
-        int i1 = (*ivec)[3*triangle+0];
-        int i2 = (*ivec)[3*triangle+1];
-        int i3 = (*ivec)[3*triangle+2];
-        //std::cout << triangle << ": " << i1 << "," << i2 << "," << i3 << std::endl << std::flush;
-        std::cout << i1 << " " << i2 << " " << i3 << std::endl << std::flush;
-        point p1(&( (*dvec)[3*i1] ));
-        point p2(&( (*dvec)[3*i2] ));
-        point p3(&( (*dvec)[3*i3] ));
-        //std::cout << p1 << "\t" << p2 << "\t" << p3 << std::endl << std::flush;
-        point temp( ((p2-p1)*(p3-p2)) );
-        //std::cout << temp << std::endl << std::flush;
-        temp.normalize();
-        //std::cout << temp << std::endl << std::flush;
-        normals.push_back( temp );
-        (my_triangles[i1]).push_back(triangle);
-        (my_triangles[i2]).push_back(triangle);
-        (my_triangles[i3]).push_back(triangle);
-        //std::cout << "pushed back" << std::endl << std::flush;
-    }
-    for(std::vector<std::deque<int>>::iterator vec_it=my_triangles.begin(); vec_it!=my_triangles.end(); ++vec_it){
-        point p(0.0,0.0,0.0);
-        //std::cout << "Adding " << vec_it-my_triangles.begin() << std::endl;
-        for (std::deque<int>::iterator deq_it=vec_it->begin(); deq_it!=vec_it->end(); ++deq_it){
-            p += normals[*deq_it];
-            //std::cout << p << "\t" << normals[*deq_it] << std::endl;
-        }
-        p /= vec_it->size();
-        nvec->push_back(p.x);
-        nvec->push_back(p.y);
-        nvec->push_back(p.z);
-    }
-
     //FILE* out = fopen("complete.off","w");
     //fprintf(out,"OFF\n%d %d %d\n",nr_vertices, nr_facets, 0);
-    //for (std::vector<double>::iterator it=dvec.begin(); it!=dvec.end(); it+=3){
+    //for (std::vector<double>::iterator it=dvec->begin(); it!=dvec->end(); it+=3){
     //    fprintf(out,"%f %f %f\n",*(it+0),*(it+1),*(it+2));
     //}
-    //for (std::vector<int>::iterator it=ivec.begin(); it!=ivec.end(); it+=3){
+    //for (std::vector<int>::iterator it=ivec->begin(); it!=ivec->end(); it+=3){
     //    fprintf(out,"3 %d %d %d\n",*(it+0),*(it+1),*(it+2));
     //}
     //fflush(out);
-
 }
