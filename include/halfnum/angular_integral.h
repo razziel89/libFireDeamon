@@ -16,11 +16,16 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 ***********/
-#ifndef ELECTRON_DENSITY_H 
-#define ELECTRON_DENSITY_H
+#ifndef HALFNUM_ANGULAR_INTEGRALS_H
+#define HALFNUM_ANGULAR_INTEGRALS_H
 
-#include <vector>
-
-void electron_density(bool progress_reports, int num_gridpoints, std::vector<double> prim_centers, std::vector<double> prim_exponents, std::vector<double> prim_coefficients, std::vector<int> prim_angular, std::vector<double> density_grid, std::vector<double>  mo_coefficients, std::vector<double> *density, double cutoff=-1.0);
-
-#endif //ELECTRON_DENSITY_H
+#define LMAXP1 6
+class AngInt{
+    private:
+        double* m_integrals;
+    public:
+        AngInt();
+        double GetInt(unsigned int lambda, int mu, unsigned int i, unsigned int j, unsigned int k) const;
+        ~AngInt();
+};
+#endif //HALFNUM_ANGULAR_INTEGRALS_H

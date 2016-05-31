@@ -32,6 +32,8 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <iterate_over_tuple.h>
 #include <deamon_functors.h>
 
+#include <iostream>
+
 //an alias template that is a tuple of vectors
 template <typename... Ts>
 using tuple_of_vectors = std::tuple<std::vector<Ts>...>;

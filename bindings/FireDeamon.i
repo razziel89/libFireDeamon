@@ -12,7 +12,8 @@ namespace std {
 %{
 #include "skin_surface_deamon.h"
 #include "isosurface.h"
-#include "electrostatic_potential.h"
+#include "electrostatic_potential_charges.h"
+#include "electrostatic_potential_orbitals.h"
 #include "irregular_grid_interpolation.h"
 #include "arbitrary_grid_local_minima.h"
 #include "electron_density.h"
@@ -208,7 +209,7 @@ def InitializeElectronDensityPy(grid,basis,scale=1.0):
     vec_density_grid      = VectorDouble([p/scale for gpoint in grid for p in gpoint])
     density_indices       = np.array([ bc for b,bc in zip(basis,xrange(len(basis))) for prim in xrange(len(b[2])) ])
     vec_prim_centers      = VectorDouble([ p for b in basis for prim in b[2] for p in b[0] ])
-    vec_prim_angular      = VectorDouble([ a for b in basis for prim in b[2] for a in b[1] ])
+    vec_prim_angular      = VectorInt([ a for b in basis for prim in b[2] for a in b[1] ])
     vec_prim_exponents    = VectorDouble([ prim[0] for b in basis for prim in b[2] ])
     vec_prim_coefficients = VectorDouble([ prim[1] for b in basis for prim in b[2] ])
 
@@ -225,9 +226,9 @@ def ElectronDensityPy(coefficients_list,data,volume=1.0,prog_report=True,detaile
     volume: float
         Scale the whole density by the inverse of this value.
     prog_report: bool
-        Whether or not ti give progress reports over MOs.
+        Whether or not to give progress reports over MOs.
     detailed_prog:
-        Whether or not ti give progress reports while a MO
+        Whether or not to give progress reports while a MO
         is being treated.
     cutoff: float in units of the grid
         No density will be computed if the difference between the
@@ -576,11 +577,110 @@ def IsosurfacePy(dxfile,isovalue,points_inside,relative_precision=1.0e-05,mesh_c
 
     return result
 
+def InitializeElectrostaticPotentialOrbitalsPy(grid,basis,scale=1.0):
+    """
+    Create data structures suitable for efficiently computing
+    the electrostatic potential on an arbitrary grid. Call this first
+    and then ElectrostaticPotentialOrbitalsPy(coefficients_list,S,occupations,data)
+    where 'data' is what this function returns.
+
+    grid: list of [float,float,float]
+        The Cartesian coordinates of the grid
+    basis: a list of [A,L,Prim]
+           with
+           A: a list of 3 floats
+                The center of the contracted Cartesian Gaussian function
+           L: a list of 3 ints
+                The polynomial exponents of the contracted Cartesian Gaussian
+           Prim: a list of [alpha,pre]
+                with
+                alpha: float
+                    The exponential factor of the primitive Gaussian function
+                pre: float
+                    The contraction coefficient of the primitive Gaussian function
+    scale: float
+        Divide each coordinate by this value (coordinate transformation).
+    """
+    return InitializeElectronDensityPy(grid,basis,scale=scale)
+
+def ElectrostaticPotentialOrbitalsPy(coefficients_list,Smat,occupations,data,prog_report=True,cutoff=8.0,overlap_cutoff=1.0e-6):
+    """
+    Calculate the electron density due to some molecular orbitals on a grid.
+
+    coefficients_list: list of lists of floats
+        The coefficients of the molecular orbitals.
+    Smat: list of lists of floats
+        The overlap matrix between the primitive Gaussian functions
+    occupations: a list of floats 
+        The occupation number of the corresponding molecular orbital
+    data: what InitializeElectrostaticPotentialOrbitalsPy returned
+
+    prog_report: bool
+        Whether or not to give progress reports over the grid.
+    """
+    import numpy as np
+
+    vec_prim_centers, vec_prim_exponents, vec_prim_coefficients, vec_prim_angular, vec_potential_grid, potential_indices = data
+
+    if not (vec_potential_grid.size())%3 == 0:
+        raise ValueError("Number of values in vector for potential grid is not divisible by 3.")
+
+    nr_gridpoints = int(vec_potential_grid.size()/3)
+
+    nr_primitives = len(potential_indices)
+    nr_electrons  = sum(occupations)
+    np_o = np.array(occupations,dtype=float)/nr_electrons
+    np_c = np.array(coefficients_list,dtype=float).T
+    #compute the first order density matrix P_mu_nu
+    P = [
+            [
+                np.sum( np_o * np_c[potential_indices[mu]] * np_c[potential_indices[nu]] )
+            for nu in xrange(nr_primitives)
+            ]
+        for mu in xrange(nr_primitives)
+        ]
+    screen = [
+                [
+                    1 if abs(Smat[potential_indices[mu]][potential_indices[nu]])>overlap_cutoff else 0
+                for nu in xrange(nr_primitives)
+                ]
+            for mu in xrange(nr_primitives)
+            ]
+
+    #The following was taken from a paper but turned out to be plain wrong
+    #np_S = np.array(S,dtype=float)
+    #np_c = np.array(coefficients_list,dtype=float)
+    #np_o = np.array(occupations,dtype=float)/nr_electrons
+    #np_cS = np.dot(np_c,np_S).T
+    #P = [
+    #        [
+    #            np.sum( np_o * np_cS[potential_indices[mu]] * np_cS[potential_indices[nu]] )
+    #        for nu in xrange(nr_primitives)
+    #        ]
+    #    for mu in xrange(nr_primitives)
+    #    ]
+
+    potential_vec = VectorDouble()
+    potential_vec.reserve(nr_gridpoints)
+
+    P_vec = VectorDouble([p for pinner in P for p in pinner])
+    screen_vec = VectorInt([s for sinner in screen for s in sinner])
+
+    electrostatic_potential_orbitals(prog_report, nr_gridpoints, nr_primitives, vec_prim_centers, vec_prim_exponents, vec_prim_coefficients, vec_prim_angular, vec_potential_grid, P_vec, screen_vec, potential_vec, cutoff );
+    
+    potential = [p for p in potential_vec]
+
+    del potential_vec
+    del P_vec
+
+    return potential
+
 %}
 
 %include "skin_surface_deamon.h"
 %include "isosurface.h"
-%include "electrostatic_potential.h"
+%include "electrostatic_potential_charges.h"
+%include "electrostatic_potential_orbitals.h"
 %include "irregular_grid_interpolation.h"
 %include "arbitrary_grid_local_minima.h"
 %include "electron_density.h"

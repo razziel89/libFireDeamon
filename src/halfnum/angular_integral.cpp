@@ -21,6 +21,9 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstring>
 #include <string>
 #include <cmath>
+#include <stdexcept>
+
+#include <halfnum/angular_integral.h>
 
 const static double Pi  = acos(-1.0L);
 const static double S00 = 1.0L/(2.0L*sqrt(Pi));
@@ -155,92 +158,6 @@ inline double f_v_coeff (int l, int m, int lx, int ly, int lz){
 	return result;
 }
 
-////populate lxyz with (lx,ly,lz)
-////this construct is used to map (lx,ly,lz) with sum((lx,ly,lz))==l to one index
-//inline void f_populate_lxyz (int lmax, int lxyz[]){
-//	int count_lxyz=0;
-//	for (int l=0; l<=lmax; ++l){
-//		for (int lx=0;lx<=l;++lx){
-//			for (int ly=0;ly<=l;++ly){
-//				for (int lz=0;lz<=l;++lz){
-//					if (lx+ly+lz==l){
-//						lxyz[0+count_lxyz*3]=lx;
-//						lxyz[1+count_lxyz*3]=ly;
-//						lxyz[2+count_lxyz*3]=lz;
-//						++count_lxyz;
-//					}
-//				}
-//			}
-//		}
-//	}
-//	return;
-//}
-//
-////populate alphaxyz with (alphax,alphay,alphaz)
-////this construct is used to map (\alpha_x,\alpha_y,\alpha_z) with \alpha_i<=a_i and sum((ax,ay,az))==a to one index
-//inline void f_populate_alphaxyz (int a, int alphaxyz[]){
-//	int count_alphaxyz = 0;
-//	for (int alphax=0;alphax<=a;++alphax){
-//		for (int alphay=0;alphay<=a;++alphay){
-//			for (int alphaz=0;alphaz<=a;++alphaz){
-//				if (alphax+alphay+alphaz <= a){
-//					alphaxyz[0+count_alphaxyz*3]=alphax;
-//					alphaxyz[1+count_alphaxyz*3]=alphay;
-//					alphaxyz[2+count_alphaxyz*3]=alphaz;
-//					++count_alphaxyz;
-//				}
-//			}
-//		}
-//	}
-//	return;
-//}
-//
-////This does the same as the above functions with the only difference
-////that it counts for a given ax, ay and az
-//int f_count_alphaxyz_orbital (int ax, int ay, int az){
-//	int nr_alphaxyz = 0;
-//	for (int alphax=0;alphax<=ax;++alphax){
-//		for (int alphay=0;alphay<=ay;++alphay){
-//			for (int alphaz=0;alphaz<=az;++alphaz){
-//				++nr_alphaxyz;
-//			}
-//		}
-//	}
-//	return nr_alphaxyz;
-//}
-//
-////This does the same as the above functions with the only difference
-////that it populates for a given ax, ay and az.
-////This way, the appropriate alpha indeces can be found that are required to
-////acces the appropriate omega-coefficients for a certain orbital type (given
-////by ax, ay and az).
-//void f_populate_alphaxyz_orbital (int a, int ax, int ay, int az, int* alphaxyz, int* a_minus_alphaxyz, int* counts, long long int* binomials){
-//	int count_alphaxyz_orbital = 0;
-//	int count_alphaxyz = 0;
-//	for (int alphax=0;alphax<=a;++alphax){
-//		for (int alphay=0;alphay<=a;++alphay){
-//			for (int alphaz=0;alphaz<=a;++alphaz){
-//				if (alphax <= ax && alphay <= ay && alphaz <= az){
-//					alphaxyz[0+count_alphaxyz_orbital*3]=alphax;
-//					alphaxyz[1+count_alphaxyz_orbital*3]=alphay;
-//					alphaxyz[2+count_alphaxyz_orbital*3]=alphaz;
-//					a_minus_alphaxyz[0+count_alphaxyz_orbital*3]=ax-alphax;
-//					a_minus_alphaxyz[1+count_alphaxyz_orbital*3]=ay-alphay;
-//					a_minus_alphaxyz[2+count_alphaxyz_orbital*3]=az-alphaz;
-//					binomials[count_alphaxyz_orbital] = f_binomial(ax,alphax) * f_binomial(ay,alphay) * f_binomial(az,alphaz);
-//					counts[count_alphaxyz_orbital]=count_alphaxyz;//these are the indices that
-//					//associate the alphaxyz with the elements of the Omega coefficients
-//					++count_alphaxyz_orbital;
-//				}
-//				if (alphax+alphay+alphaz <= a){
-//					++count_alphaxyz;
-//				}
-//			}
-//		}
-//	}
-//	return;
-//}
-
 //Return the square of an integer. The built-in function pow can
 //do this only for doubles, but I want it for integers too.
 //The actual problem with pow is that it appears to return a double
@@ -249,45 +166,42 @@ inline int square (int i){
 	return i*i;
 }
 
-#define LMAXP1 4
-class AngInt{
-    private:
-        double* m_integrals;
-    public:
-        AngInt(){
-            size_t max_nr_elements = LMAXP1 * LMAXP1 * LMAXP1 * (3*LMAXP1+1);
-            m_integrals = (double*) malloc(max_nr_elements * sizeof(double));
-            memset(m_integrals, 0.0, max_nr_elements * sizeof(double));
+AngInt::AngInt(){
+    size_t max_nr_elements = LMAXP1 * LMAXP1 * LMAXP1 * (3*LMAXP1+1);
+    m_integrals = (double*) malloc(max_nr_elements * sizeof(double));
+    memset(m_integrals, 0.0, max_nr_elements * sizeof(double));
 
-	        double u = f_u_coeff (0, 0, 0, 0, 0) / S00;
+    double u = f_u_coeff (0, 0, 0, 0, 0) / S00;
 
-	        for (int i=0; i<LMAXP1; ++i){
-	        	for (int j=0; j<LMAXP1; ++j){
-	        		for (int k=0; k<LMAXP1; ++k){
-                        int index = k + j*(LMAXP1) + i*(LMAXP1*LMAXP1);
-                        if ( i+j+k < LMAXP1){
-	        			    for (int lambda=0; lambda<i+j+k+1; ++lambda){
-	        			    	for (int mu_plus_lambda=0; mu_plus_lambda<2*lambda+1; ++mu_plus_lambda){
-                                    m_integrals[index + mu_plus_lambda+square(lambda)] = u * f_v_coeff (lambda, mu_plus_lambda-lambda, i, j, k);
-	                            } //mu_plus_lambda
-	                        } //lambda
-                        } //check
-	                } //k
-	            } //j
-	        } //i
+    for (int i=0; i<LMAXP1; ++i){
+    	for (int j=0; j<LMAXP1; ++j){
+    		for (int k=0; k<LMAXP1; ++k){
+                int index = k + j*(LMAXP1) + i*(LMAXP1*LMAXP1);
+                if ( i+j+k < LMAXP1){
+    			    for (int lambda=0; lambda<i+j+k+1; ++lambda){
+    			    	for (int mu_plus_lambda=0; mu_plus_lambda<2*lambda+1; ++mu_plus_lambda){
+                            m_integrals[index + mu_plus_lambda+square(lambda)] = u * f_v_coeff (lambda, mu_plus_lambda-lambda, i, j, k);
+                        } //mu_plus_lambda
+                    } //lambda
+                } //check
+            } //k
+        } //j
+    } //i
+}
+double AngInt::GetInt(unsigned int lambda, int mu, unsigned int i, unsigned int j, unsigned int k) const {
+    if (i+j+k>=LMAXP1 || mu*mu>lambda*lambda){
+        if (i+j+k>=LMAXP1){
+            throw std::invalid_argument("Given i+j+k > LMAXP1");
+        }else{
+            throw std::invalid_argument("Given mu > lambda");
         }
-        double GetInt(unsigned int lambda, int mu, unsigned int i, unsigned int j, unsigned int k){
-            if (i+j+k>=LMAXP1 || mu*mu>lambda*lambda){
-                throw;
-            }
-            if (lambda>i+j+k){
-                return 0.0;
-            }else{
-                return m_integrals[k + j*(LMAXP1) + i*(LMAXP1*LMAXP1) + mu+lambda+square(lambda)];
-            }
-        }
-        ~AngInt(){
-            free(m_integrals);
-        }
-};
-#undef LMAXP1
+    }
+    if (lambda>i+j+k){
+        return 0.0;
+    }else{
+        return m_integrals[k + j*(LMAXP1) + i*(LMAXP1*LMAXP1) + mu+lambda+square(lambda)];
+    }
+}
+AngInt::~AngInt(){
+    free(m_integrals);
+}

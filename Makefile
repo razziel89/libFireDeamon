@@ -5,9 +5,10 @@ include make.vars
 #-----------------------------------------------------
 #         SOURCE FOR MAIN C++ LIBRARY
 #-----------------------------------------------------
-MAINSRC  := $(SRCDIR)/skin_surface_deamon.cpp $(SRCDIR)/electrostatic_potential.cpp $(SRCDIR)/parallel_generic.cpp \
+MAINSRC  := $(SRCDIR)/skin_surface_deamon.cpp $(SRCDIR)/electrostatic_potential_charges.cpp $(SRCDIR)/parallel_generic.cpp \
 	$(SRCDIR)/irregular_grid_interpolation.cpp $(SRCDIR)/electron_density.cpp $(SRCDIR)/arbitrary_grid_local_minima.cpp \
-	$(SRCDIR)/isosurface.cpp
+	$(SRCDIR)/isosurface.cpp $(SRCDIR)/halfnum/angular_integral.cpp $(SRCDIR)/halfnum/kfunction.cpp \
+	$(SRCDIR)/halfnum/radial_integral.cpp $(SRCDIR)/electrostatic_potential_orbitals.cpp
 MAINOBJ  := $(MAINSRC:$(SRCDIR)%.cpp=$(OBJDIR)%.o)
 #-----------------------------------------------------
 #         SOURCE FOR TEST FILES
@@ -148,14 +149,14 @@ clean_bindings :
 
 .PHONY : clean_mainlib
 clean_mainlib : 
-	rm -f  $(OBJDIR)/*.o $(OBJDIR)/*.d.tmp
-	rm -f  $(LIBDIR)/*.so $(LIBDIR)/*.a
-	rm -f  $(TESTDIR)/*.o $(TESTDIR)/*.d.tmp
-	rm -f  $(TESTDIR)/test*.exe
+	rm -f $(MAINOBJ)
+	rm -f $(OBJDIR)/*.d.tmp
+	rm -f $(LIBDIR)/*.so $(LIBDIR)/*.a
+	rm -f $(TESTDIR)/*.o $(TESTDIR)/*.d.tmp
+	rm -f $(TESTDIR)/test*.exe
 #-----------------------------------------------------
 #              GENERIC BUILD RULES
 #-----------------------------------------------------
-# Make compilation rules for cpp files of main library
 $(OBJDIR)/%.o : $(SRCDIR)/%.cpp
 	@printf "Compiling %-25s > %-25s\n" $< $@
 	mkdir -p $(dir $@)

@@ -35,6 +35,7 @@ GXX=
 AR=
 SWIG=
 PYTHON=
+DEBUG=
 
 USEPYTHON=true
 
@@ -71,6 +72,9 @@ Flags:
                         an error due to incorrect rounding. Declare
                         the type of compiler you use and the appropriate
                         rounding flag will be used. Can be gnu or intel.
+--debug                 enable debugging mode, switch off optimization and
+                        use CGAL without rounding math checks (warning: will
+                        probably yield wrong results)
 
 The environment variables OTHERINC, OTHERLIB and LDFLAGS are respected.
 This means that you should fill them BEFORE executing this configure
@@ -168,6 +172,9 @@ do
                     ;;
             esac
         ;;
+        --debug)
+            DEBUG=1
+        ;;
         *)
             helptext
             echo "Command line option $1 not known, aborting and printing help text."
@@ -236,7 +243,7 @@ LIBDIR    := $LIBDIR
 INCDIR    := $INCDIR
 TESTDIR   := $TESTDIR
 
-GXX       := $GXX -O3
+GXX       := $GXX $([[ $DEBUG -eq 1 ]] && echo " -O0 -g -DFDDEBUG" || echo " -O3")
 AR        := $AR
 
 CGALLIB   := $CGALLIB
@@ -245,7 +252,7 @@ CGALINC   := $CGALINC
 OTHERINC  := $OTHERINC
 OTHERLIB  := $OTHERLIB
 
-LDFLAGS   := $LDFLAGS -lmpfr -lgmp -lboost_thread -lCGAL -lCGAL_ImageIO -lpthread
+LDFLAGS   := $LDFLAGS -lmpfr -lgmp -lboost_thread -lCGAL -lCGAL_ImageIO -lpthread -lgsl -lgslcblas
 CPPFLAGS  := $CPPFLAGS $rounding
 
 EOF

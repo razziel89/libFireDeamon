@@ -16,11 +16,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 ***********/
-#ifndef ELECTRON_DENSITY_H 
-#define ELECTRON_DENSITY_H
+#ifndef ELECTROSTATIC_POTENTIAL_CHARGES_H
+#define ELECTROSTATIC_POTENTIAL_CHARGES_H
 
 #include <vector>
 
-void electron_density(bool progress_reports, int num_gridpoints, std::vector<double> prim_centers, std::vector<double> prim_exponents, std::vector<double> prim_coefficients, std::vector<int> prim_angular, std::vector<double> density_grid, std::vector<double>  mo_coefficients, std::vector<double> *density, double cutoff=-1.0);
+void electrostatic_potential (bool progress_reports, int num_points, std::vector<double> points, std::vector<double> charges_coordinates, std::vector<double> *potential);
 
-#endif //ELECTRON_DENSITY_H
+#endif //ELECTROSTATIC_POTENTIAL_CHARGES_H

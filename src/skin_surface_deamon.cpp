@@ -16,6 +16,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 ***********/
+#ifdef FDDEBUG
+#define CGAL_DISABLE_ROUNDING_MATH_CHECK
+#endif
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Skin_surface_3.h>
 #include <CGAL/Polyhedron_3.h>
