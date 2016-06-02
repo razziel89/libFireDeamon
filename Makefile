@@ -5,9 +5,10 @@ include make.vars
 #-----------------------------------------------------
 #         SOURCE FOR MAIN C++ LIBRARY
 #-----------------------------------------------------
-MAINSRC  := $(SRCDIR)/skin_surface_deamon.cpp $(SRCDIR)/electrostatic_potential_charges.cpp $(SRCDIR)/parallel_generic.cpp \
+MAINSRC  := $(SRCDIR)/halfnum/kfunction.cpp \
+	$(SRCDIR)/skin_surface_deamon.cpp $(SRCDIR)/electrostatic_potential_charges.cpp $(SRCDIR)/parallel_generic.cpp \
 	$(SRCDIR)/irregular_grid_interpolation.cpp $(SRCDIR)/electron_density.cpp $(SRCDIR)/arbitrary_grid_local_minima.cpp \
-	$(SRCDIR)/isosurface.cpp $(SRCDIR)/halfnum/angular_integral.cpp $(SRCDIR)/halfnum/kfunction.cpp \
+	$(SRCDIR)/isosurface.cpp $(SRCDIR)/halfnum/angular_integral.cpp \
 	$(SRCDIR)/halfnum/radial_integral.cpp $(SRCDIR)/electrostatic_potential_orbitals.cpp
 MAINOBJ  := $(MAINSRC:$(SRCDIR)%.cpp=$(OBJDIR)%.o)
 #-----------------------------------------------------
@@ -99,7 +100,7 @@ main_install :
 	cp $(LIBDIR)/libFireDeamon.a $(PREFIX)/lib/libFireDeamon.a
 
 .PHONY : main_uninstall 
-main_uninstall : clean_mainlib
+main_uninstall : 
 	rm -f $(PREFIX)/lib/libFireDeamon.so $(PREFIX)/lib/libFireDeamon.a
 
 .PHONY : python_install 
@@ -110,7 +111,7 @@ python_install :
 	cp $(PYTHONDIR)/_FireDeamon.so $(PYTHON_DEST_DIR)/FireDeamon/_FireDeamon.so
 
 .PHONY : python_uninstall 
-python_uninstall : clean_bindings
+python_uninstall : 
 	rm -rf $(PYTHON_DEST_DIR)/FireDeamon/__init__.py $(PYTHON_DEST_DIR)/FireDeamon/__init__.pyc $(PYTHON_DEST_DIR)/FireDeamon/_FireDeamon.so
 #-----------------------------------------------------
 #              BUILD RULES FOR LANGUAGE BINDINGS

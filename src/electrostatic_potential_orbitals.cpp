@@ -117,30 +117,30 @@ inline double X_mu_nu(double A[3], double B[3], double P[3], unsigned int a[3], 
     double phiP;
     cartesian_to_spherical(P[0],P[1],P[2],absP,thetaP,phiP);
     //loop over all ai
-    //int a_minus1 = ((a[0]+a[1]+a[2])%2==0) ? 1 : -1;
-    for (unsigned int ax=0; ax<=a[0]; ++ax/*, a_minus1=-a_minus1*/){
+    int a_minus1 = ((a[0]+a[1]+a[2])%2==0) ? 1 : -1;
+    for (unsigned int ax=0; ax<=a[0]; ++ax, a_minus1=-a_minus1){
         int a_binom[3];
         a_binom[0] = binomial(a[0],ax);
-    for (unsigned int ay=0; ay<=a[1]; ++ay/*, a_minus1=-a_minus1*/){
+    for (unsigned int ay=0; ay<=a[1]; ++ay, a_minus1=-a_minus1){
         a_binom[1] = binomial(a[1],ay) * a_binom[0];
-    for (unsigned int az=0; az<=a[2]; ++az/*, a_minus1=-a_minus1*/){
+    for (unsigned int az=0; az<=a[2]; ++az, a_minus1=-a_minus1){
         a_binom[2] = binomial(a[2],az) * a_binom[1];
 
-        int a_minus1 = ((a[0]+a[1]+a[2]+ax+ay+az)%2==0) ? 1 : -1;
+        //int a_minus1 = ((a[0]+a[1]+a[2]+ax+ay+az)%2==0) ? 1 : -1;
         unsigned int sum_a = ax+ay+az;
         double Apow = d_mu_nu * a_binom[2] * a_minus1 * power(A[0],a[0]-ax) * power(A[1],a[1]-ay) * power(A[2],a[2]-az);
 
         //loop over all bi
-        //int b_minus1 = ((b[0]+b[1]+b[2])%2==0) ? 1 : -1;
-        for (unsigned int bx=0; bx<=b[0]; ++bx/*, b_minus1=-b_minus1*/){
+        int b_minus1 = ((b[0]+b[1]+b[2])%2==0) ? 1 : -1;
+        for (unsigned int bx=0; bx<=b[0]; ++bx, b_minus1=-b_minus1){
             int b_binom[3];
             b_binom[0] = binomial(b[0],bx);
-        for (unsigned int by=0; by<=b[1]; ++by/*, b_minus1=-b_minus1*/){
+        for (unsigned int by=0; by<=b[1]; ++by, b_minus1=-b_minus1){
             b_binom[1] = binomial(b[1],by) * b_binom[0];
-        for (unsigned int bz=0; bz<=b[2]; ++bz/*, b_minus1=-b_minus1*/){
+        for (unsigned int bz=0; bz<=b[2]; ++bz, b_minus1=-b_minus1){
             b_binom[2] = binomial(b[2],bz) * b_binom[1];
 
-            int b_minus1 = ((b[0]+b[1]+b[2]+bx+by+bz)%2==0) ? 1 : -1;
+            //int b_minus1 = ((b[0]+b[1]+b[2]+bx+by+bz)%2==0) ? 1 : -1;
             unsigned int sum_b = bx+by+bz;
             double Bpow = b_binom[2] * b_minus1 * power(B[0],b[0]-bx) * power(B[1],b[1]-by) * power(B[2],b[2]-bz);
             
@@ -206,7 +206,7 @@ void* _potentialThreadOrbitals(void* data){
     for(int pp = 0; pp < nr_pot;){
         for (int prog=0; prog<progress && pp<nr_pot; ++prog, ++pp){
             //std::cout << "point " << pp << "/" << nr_pot << std::endl << std::flush;
-            double sum = 0.0;
+            long double sum = 0.0;
             double r[3];
             r[0] = *gp; ++gp;
             r[1] = *gp; ++gp;
@@ -295,7 +295,7 @@ void* _potentialThreadOrbitals(void* data){
     pthread_exit(NULL);
 }
 
-void electrostatic_potential_orbitals(bool progress_reports, int num_gridpoints, int num_primitives, std::vector<double> prim_centers, std::vector<double> prim_exponents, std::vector<double> prim_coefficients, std::vector<int> prim_angular, std::vector<double> potential_grid, std::vector<double> P_matrix, std::vector<int> screen, std::vector<double> *potential, double cutoff)
+void electrostatic_potential_orbitals(bool progress_reports, int num_gridpoints, std::vector<double> prim_centers, std::vector<double> prim_exponents, std::vector<double> prim_coefficients, std::vector<int> prim_angular, std::vector<double> potential_grid, std::vector<double> P_matrix, std::vector<int> screen, std::vector<double> *potential, double cutoff)
 {
     //std::cout << "start" << std::endl << std::flush;
     //std::cout << prim_centers.size() << " " << prim_exponents.size() << " " << prim_coefficients.size() << " " << prim_angular.size() << " " << potential_grid.size() << " " << P_matrix.size() << " " << std::endl << std::flush;

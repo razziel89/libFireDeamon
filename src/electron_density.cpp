@@ -28,6 +28,20 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <parallel_generic.h>
 #include <electron_density.h>
 
+//const static double pi_to_3_half = 5.5683279968317078453;
+const static double sqrt_pihalf_to_3_4 = 1.4031041455342160267;
+
+inline double power(double base, unsigned int exp){
+    double result = 1.0;
+    while (exp){
+        if (exp & 1)
+            result *= base;
+        exp >>= 1;
+        base *= base;
+    }
+    return result;
+}
+
 void* _electronDensityThreadCutoff(void* data){
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,NULL);
@@ -75,9 +89,9 @@ void* _electronDensityThreadCutoff(void* data){
                 if (dist_2 < cutoff_2){
                     double exp_factor = exp( -(*pexp) * dist_2 );
                     double prefac;
-                    prefac  = pow(dx,*(pang+0));
-                    prefac *= pow(dy,*(pang+1));
-                    prefac *= pow(dz,*(pang+2));
+                    prefac  = power(dx,*(pang+0));
+                    prefac *= power(dy,*(pang+1));
+                    prefac *= power(dz,*(pang+2));
                     sum += (*pcoef) * (*mo) * prefac * exp_factor;
                 }
                 ++pcoef; ++mo; ++pexp; pang+=3; pcent+=3;
@@ -144,9 +158,9 @@ void* _electronDensityThreadNoCutoff(void* data){
                 double dist_2 = (dx*dx + dy*dy + dz*dz);
                 double exp_factor = exp( -(*pexp) * dist_2 );
                 double prefac;
-                prefac  = pow(dx,*(pang+0));
-                prefac *= pow(dy,*(pang+1));
-                prefac *= pow(dz,*(pang+2));
+                prefac  = power(dx,*(pang+0));
+                prefac *= power(dy,*(pang+1));
+                prefac *= power(dz,*(pang+2));
                 sum += (*pcoef) * (*mo) * prefac * exp_factor;
                 ++pcoef; ++mo; ++pexp; pang+=3;
             }
@@ -165,6 +179,16 @@ void* _electronDensityThreadNoCutoff(void* data){
         }
     }
     pthread_exit(NULL);
+}
+
+void normalize_gaussians(std::vector<double> prefactor, std::vector<double> exponent){
+    if (prefactor.size()!=exponent.size()){
+        throw std::invalid_argument("Lengths of prefactor and exponent vectors do not equal.");
+    }
+    std::vector<double>::iterator preit, expit;
+    for (preit=prefactor.begin(),expit=exponent.begin(); preit!=prefactor.end() && expit!=exponent.end(); ++preit, ++expit){
+        *preit *= sqrt_pihalf_to_3_4 * pow(*expit,-0.75);
+    }
 }
 
 void electron_density(bool progress_reports, int num_gridpoints, std::vector<double> prim_centers, std::vector<double> prim_exponents, std::vector<double> prim_coefficients, std::vector<int> prim_angular, std::vector<double> density_grid, std::vector<double> mo_coefficients, std::vector<double> *density, double cutoff)

@@ -91,7 +91,7 @@ def SkinSurfacePy(shrink_factor,coordinates,radii,refinesteps=1):
 
 from itertools import chain as iterchain
 
-def ElectrostaticPotentialPy(points, charges, coordinates, prog_report=True):
+def ElectrostaticPotentialPy(points, charges, coordinates, prog_report=True,cutoff=10000000.0):
     """
     High level function that wraps the computation of the electrostatic potential via
     multithreaded C++ code.
@@ -113,7 +113,7 @@ def ElectrostaticPotentialPy(points, charges, coordinates, prog_report=True):
     potential_vec=VectorDouble()
     potential_vec.reserve(len(points))
 
-    electrostatic_potential(prog_report, len(points), points_vec, charges_coordinates_vec, potential_vec);
+    electrostatic_potential(prog_report, len(points), points_vec, charges_coordinates_vec, potential_vec,cutoff);
     
     potential=[p for p in potential_vec]
 
@@ -181,7 +181,7 @@ def InterpolationPy(coordinates, vals, points, config=None, prog_report=True):
     
     return interpolation 
 
-def InitializeElectronDensityPy(grid,basis,scale=1.0):
+def InitializeGridCalculationOrbitalsPy(grid,basis,scale=1.0,normalize=True):
     """
     Create data structures suitable for efficiently computing
     the elctron density on an arbitrary grid. Call this first
@@ -202,8 +202,11 @@ def InitializeElectronDensityPy(grid,basis,scale=1.0):
                     The exponential factor of the primitive Gaussian function
                 pre: float
                     The contraction coefficient of the primitive Gaussian function
-    scale: float
+    scale: float, optional (default: 1.0)
         Divide each coordinate by this value (coordinate transformation).
+    normalize: bool, optional (default: True)
+        Whether or not to assume that the Gaussian functions that make up the
+        primnitives are normalized or not.
     """
     import numpy as np
     vec_density_grid      = VectorDouble([p/scale for gpoint in grid for p in gpoint])
@@ -213,15 +216,18 @@ def InitializeElectronDensityPy(grid,basis,scale=1.0):
     vec_prim_exponents    = VectorDouble([ prim[0] for b in basis for prim in b[2] ])
     vec_prim_coefficients = VectorDouble([ prim[1] for b in basis for prim in b[2] ])
 
+    if normalize:
+        normalize_gaussians(vec_prim_coefficients,vec_prim_exponents)
+
     return vec_prim_centers, vec_prim_exponents, vec_prim_coefficients, vec_prim_angular, vec_density_grid, density_indices
 
-def ElectronDensityPy(coefficients_list,data,volume=1.0,prog_report=True,detailed_prog=False, cutoff=-1.0):
+def ElectronDensityPy(coefficients_list,data,occupations=None,volume=1.0,prog_report=True,detailed_prog=False, cutoff=-1.0,correction=None):
     """
     Calculate the electron density due to some molecular orbitals on a grid.
 
     coefficients_list: list of lists of floats
         The coefficients of the molecular orbitals.
-    data: what InitializeElectronDensityPy returned
+    data: what InitializeGridCalculationOrbitalsPy returned
 
     volume: float
         Scale the whole density by the inverse of this value.
@@ -235,7 +241,6 @@ def ElectronDensityPy(coefficients_list,data,volume=1.0,prog_report=True,detaile
         gridpoint and the center of the basis function is larger
         than this value.
     """
-
     import numpy as np
 
     if not prog_report and detailed_prog:
@@ -261,7 +266,7 @@ def ElectronDensityPy(coefficients_list,data,volume=1.0,prog_report=True,detaile
 
     if prog_report:
         print "  %4d/%d"%(0,maxrcount)+CURSOR_UP_ONE
-        rcount = 0
+    rcount = 0
 
     for coefficients in coefficients_list:
 
@@ -272,13 +277,20 @@ def ElectronDensityPy(coefficients_list,data,volume=1.0,prog_report=True,detaile
 
         electron_density(detailed_prog, nr_gridpoints, vec_prim_centers, vec_prim_exponents, vec_prim_coefficients, vec_prim_angular, vec_density_grid, vec_mo_coefficients, density_vec, cutoff);
 
-        density += np.array([d for d in density_vec])
+        tempdens =  np.array([d for d in density_vec])
+        sumtemp  = np.sum(tempdens)
+        if correction is not None:
+            correction.append(1.0/sumtemp)
+        if occupations is not None:
+            density += occupations[rcount]*tempdens/sumtemp
+        else:
+            density += tempdens/sumtemp
 
         del density_vec
         del vec_mo_coefficients
 
+        rcount+=1
         if prog_report:
-            rcount+=1
             reportstring = "  %4d/%d"%(rcount,maxrcount)
             print ERASE_LINE+reportstring+CURSOR_UP_ONE
 
@@ -577,33 +589,7 @@ def IsosurfacePy(dxfile,isovalue,points_inside,relative_precision=1.0e-05,mesh_c
 
     return result
 
-def InitializeElectrostaticPotentialOrbitalsPy(grid,basis,scale=1.0):
-    """
-    Create data structures suitable for efficiently computing
-    the electrostatic potential on an arbitrary grid. Call this first
-    and then ElectrostaticPotentialOrbitalsPy(coefficients_list,S,occupations,data)
-    where 'data' is what this function returns.
-
-    grid: list of [float,float,float]
-        The Cartesian coordinates of the grid
-    basis: a list of [A,L,Prim]
-           with
-           A: a list of 3 floats
-                The center of the contracted Cartesian Gaussian function
-           L: a list of 3 ints
-                The polynomial exponents of the contracted Cartesian Gaussian
-           Prim: a list of [alpha,pre]
-                with
-                alpha: float
-                    The exponential factor of the primitive Gaussian function
-                pre: float
-                    The contraction coefficient of the primitive Gaussian function
-    scale: float
-        Divide each coordinate by this value (coordinate transformation).
-    """
-    return InitializeElectronDensityPy(grid,basis,scale=scale)
-
-def ElectrostaticPotentialOrbitalsPy(coefficients_list,Smat,occupations,data,prog_report=True,cutoff=8.0,overlap_cutoff=1.0e-6):
+def ElectrostaticPotentialOrbitalsPy(coefficients_list,Smat,occupations,data,prog_report=True,cutoff=1000000.0,overlap_cutoff=1.0e-300):
     """
     Calculate the electron density due to some molecular orbitals on a grid.
 
@@ -613,7 +599,7 @@ def ElectrostaticPotentialOrbitalsPy(coefficients_list,Smat,occupations,data,pro
         The overlap matrix between the primitive Gaussian functions
     occupations: a list of floats 
         The occupation number of the corresponding molecular orbital
-    data: what InitializeElectrostaticPotentialOrbitalsPy returned
+    data: what InitializeGridCalculationOrbitalsPy returned
 
     prog_report: bool
         Whether or not to give progress reports over the grid.
@@ -627,21 +613,25 @@ def ElectrostaticPotentialOrbitalsPy(coefficients_list,Smat,occupations,data,pro
 
     nr_gridpoints = int(vec_potential_grid.size()/3)
 
+    correction = []
+    ElectronDensityPy(coefficients_list,data,prog_report=prog_report,cutoff=cutoff,correction=correction)
+    np_corr = np.array(correction)
+
     nr_primitives = len(potential_indices)
     nr_electrons  = sum(occupations)
-    np_o = np.array(occupations,dtype=float)/nr_electrons
+    np_o = np.array(occupations,dtype=float)
     np_c = np.array(coefficients_list,dtype=float).T
     #compute the first order density matrix P_mu_nu
     P = [
             [
-                np.sum( np_o * np_c[potential_indices[mu]] * np_c[potential_indices[nu]] )
+                np.sum( np_corr * np_o * np_c[potential_indices[mu]] * np_c[potential_indices[nu]] )
             for nu in xrange(nr_primitives)
             ]
         for mu in xrange(nr_primitives)
         ]
     screen = [
                 [
-                    1 if abs(Smat[potential_indices[mu]][potential_indices[nu]])>overlap_cutoff else 0
+                    1 # if abs(Smat[potential_indices[mu]][potential_indices[nu]])>overlap_cutoff else 0
                 for nu in xrange(nr_primitives)
                 ]
             for mu in xrange(nr_primitives)
@@ -666,7 +656,7 @@ def ElectrostaticPotentialOrbitalsPy(coefficients_list,Smat,occupations,data,pro
     P_vec = VectorDouble([p for pinner in P for p in pinner])
     screen_vec = VectorInt([s for sinner in screen for s in sinner])
 
-    electrostatic_potential_orbitals(prog_report, nr_gridpoints, nr_primitives, vec_prim_centers, vec_prim_exponents, vec_prim_coefficients, vec_prim_angular, vec_potential_grid, P_vec, screen_vec, potential_vec, cutoff );
+    electrostatic_potential_orbitals(prog_report, nr_gridpoints, vec_prim_centers, vec_prim_exponents, vec_prim_coefficients, vec_prim_angular, vec_potential_grid, P_vec, screen_vec, potential_vec, cutoff );
     
     potential = [p for p in potential_vec]
 
