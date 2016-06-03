@@ -34,10 +34,12 @@ void* _potentialThread(void* data){
     struct timespec req = {0/*req.tv_sec*/, 1L/*req.tv_nsec*/};
     //req.tv_sec = 0;
     //req.tv_nsec = 1L;
-    GPSubData<double,double,double>* dat;
-    dat = static_cast<GPSubData<double,double,double>*>(data);
+    GPSubData<double,double,double,double>* dat;
+    dat = static_cast<GPSubData<double,double,double,double>*>(data);
     double *pnts = dat->GetData<0>();
     double *ccos = dat->GetData<1>();
+    double *cutoff = dat->GetData<2>();
+    double cutoff_2 = (*cutoff)*(*cutoff);
     double *pots = dat->GetDataOutput();
     const int nr_ccos = dat->GetNr<1>();
     const int nr_pots = dat->GetNrOutput();
@@ -57,11 +59,13 @@ void* _potentialThread(void* data){
                 double sum = 0.0;
                 double* c = ccos;
                 for(int ic=0; ic<nr_ccos; ic+=4){
-                    double norm = 0.0;
-                    norm += (*c-xpc)*(*c-xpc); ++c;
-                    norm += (*c-ypc)*(*c-ypc); ++c;
-                    norm += (*c-zpc)*(*c-zpc); ++c;
-                    sum += *c/(sqrt(norm));
+                    double dx = *c-xpc; ++c;
+                    double dy = *c-ypc; ++c;
+                    double dz = *c-zpc; ++c;
+                    double norm = dx*dx + dy*dy + dz*dz;
+                    if (norm < cutoff_2){
+                        sum += *c/(sqrt(norm));
+                    }
                     ++c;
                 }
                 *p = sum;
@@ -99,29 +103,32 @@ void* _potentialThread(void* data){
     pthread_exit(NULL);
 }
 
-void electrostatic_potential (bool progress_reports, int num_points, std::vector<double> points, std::vector<double> charges_coordinates, std::vector<double> *potential)
+void electrostatic_potential (bool progress_reports, int num_points, std::vector<double> points, std::vector<double> charges_coordinates, std::vector<double> *potential, double cutoff)
 {
     //initialize everything
     PG globals; 
     init_parallel_generic(&progress_reports, &globals);
 
+    std::vector<double> cutoff_vec;
+    cutoff_vec.push_back(cutoff);
+
     //reserve data structures and fill them with input
-    tuple_of_vectors<double,double> input;
+    tuple_of_vectors<double,double,double> input;
     //std::tuple< std::vector<double>, std::vector<double> > input;
-    input = std::make_tuple(points,charges_coordinates);
+    input = std::make_tuple(points,charges_coordinates,cutoff_vec);
     const int split_factor = 3;
     
     //fill class that holds data for each thread
-    GPData<double,double,double> *data;
+    GPData<double,double,double,double> *data;
     try
     {
-        data = new GPData<double,double,double>(progress_reports, globals.nr_threads, input, potential, &(globals.mutex), &(globals.progress_bar), split_factor, 1, false);
+        data = new GPData<double,double,double,double>(progress_reports, globals.nr_threads, input, potential, &(globals.mutex), &(globals.progress_bar), split_factor, 1, false);
     }
     catch( const std::invalid_argument& e ) {
         throw;
     }
     //perform computation
-    do_parallel_generic<double,double,double>(_potentialThread, &globals, progress_reports, num_points, data);
+    do_parallel_generic<double,double,double,double>(_potentialThread, &globals, progress_reports, num_points, data);
     //transfer output data
     data->TransferOutput();
     //clean up

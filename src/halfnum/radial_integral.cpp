@@ -30,10 +30,29 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #error "MINNRINTS must be at least 3."
 #endif
 
+#include <gsl/gsl_sf_hyperg.h>
+//double gsl_sf_hyperg_1F1(double a, double b, double x);
+#include <gsl/gsl_sf_gamma.h>
+//double gsl_sf_gammainv(const double x);
+//double gsl_sf_gamma(const double x);
+
+#include <iostream>
+
 static const double Pi     = acos(-1.0L);
+static const double sqrtPi = sqrt(acos(-1.0L));
 static const double logof2 = log(2.0);
 
 inline double power(double base, unsigned int exp){
+    double result = 1.0;
+    while (exp){
+        if (exp & 1)
+            result *= base;
+        exp >>= 1;
+        base *= base;
+    }
+    return result;
+}
+inline long double power(long double base, unsigned int exp){
     double result = 1.0;
     while (exp){
         if (exp & 1)
@@ -123,13 +142,13 @@ bool RadInt::CheckConvergence(){
             );
 }
 void RadInt::NextT(){
-    double T = 0.0;
+    long double T = 0.0;
     if (m_current_T>=0){
         T = 0.5*m_T[m_current_T];
     }
     for (unsigned int k=1; k<=m_p; k+=2, ++m_absit, ++m_weiit, ++m_radit){
         double r = *m_absit;
-        T += *m_weiit * *m_radit * Kfunction(2.0*m_eta*m_P*r,m_lambda) * exp((float)(-m_eta*(r - m_P)*(r - m_P)));
+        T += *m_weiit * *m_radit * Kfunction(2.0*m_eta*m_P*r,m_lambda) * exp(-m_eta*(r - m_P)*(r - m_P));
     }
     m_p = 2*m_p+1;
     ++m_current_T;
@@ -152,27 +171,53 @@ RadInt::~RadInt(){
     free(m_weights);
     free(m_r_to_N);
 }
-double RadInt::GetInt(double eta, double P, unsigned int N, unsigned int lambda){
-    NewQuadrature(eta, P, N, lambda);
-    for (int i=0; i<MINNRINTS; ++i){
-        NextT();
-    }
-    //NextT();
-    //NextT();
-    while (not(CheckConvergence()) && m_current_T<NRSTEPS-1 && m_T[m_current_T]>RADINTTOLERANCE){
-        NextT();
-    }
-    if (not(CheckConvergence())){
-        if (m_T[m_current_T]>RADINTTOLERANCE){
-            std::cerr << std::endl << eta << " " << P << " " << N << " " << lambda <<
-            std::endl << m_current_T << " " << m_T[m_current_T] << " " << m_T[m_current_T-1] << " " << m_T[m_current_T-2] << std::endl <<
-            power(m_T[m_current_T]-m_T[m_current_T-1],2)
-                            << " <= " <<
-            fabs(m_T[m_current_T]-m_T[m_current_T-2]) << " * " << m_epsilon << std::endl;
-            throw std::runtime_error("Radial quadrature did not converge.");
-        }else{
-            m_T[m_current_T] = 0.0;
-        }
-    }
-    return m_T[m_current_T];
+long double RadInt::GetInt(double eta, double P, unsigned int N, unsigned int lambda){
+    //NewQuadrature(eta, P, N, lambda);
+    //for (int i=0; i<MINNRINTS; ++i){
+    //    NextT();
+    //}
+    ////NextT();
+    ////NextT();
+    //while (not(CheckConvergence()) && m_current_T<NRSTEPS-1 && m_T[m_current_T]>RADINTTOLERANCE){
+    //    NextT();
+    //}
+    //if (not(CheckConvergence())){
+    //    if (m_T[m_current_T]>RADINTTOLERANCE){
+    //        std::cerr << std::endl << eta << " " << P << " " << N << " " << lambda <<
+    //        std::endl << m_current_T << " " << m_T[m_current_T] << " " << m_T[m_current_T-1] << " " << m_T[m_current_T-2] << std::endl <<
+    //        power(m_T[m_current_T]-m_T[m_current_T-1],2)
+    //                        << " <= " <<
+    //        fabs(m_T[m_current_T]-m_T[m_current_T-2]) << " * " << m_epsilon << std::endl;
+    //        throw std::runtime_error("Radial quadrature did not converge.");
+    //    }else{
+    //        m_T[m_current_T] = 0.0;
+    //    }
+    //}
+    //return m_T[m_current_T];
+//    1/4 Sqrt[\[Pi]] \[Eta]^(1/2 (-1-NN-\[Lambda])) (P \[Eta])^\[Lambda]
+//        
+//        Gamma[1/2 (1+NN+\[Lambda])]
+//        
+//        Hypergeometric1F1Regularized[1/2 (2-NN+\[Lambda]),3/2+\[Lambda],-P^2 \[Eta]]
+//
+//double gsl_sf_hyperg_1F1(double a, double b, double x);
+//double gsl_sf_gammainv(const double x);
+//double gsl_sf_gamma(const double x);
+
+    double etaP = eta*P;
+    double a,b,z;
+    a=0.5*(2-(int)N+(int)lambda);
+    b=2.0/3.0 + lambda;
+    z=-etaP*P;
+    //std::cout << N << " " << lambda << a << " " << b << " " << eta << " " << P << std::endl << std::flush;
+    double hyper = gsl_sf_hyperg_1F1(a,b,z) * gsl_sf_gammainv(b);
+
+    //std::cout << "gamma" << std::endl << std::flush;
+    double gammaarg = 0.5*(1+N+lambda);
+    double gamma = gsl_sf_gamma(gammaarg);
+    //std::cout << "done" << std::endl << std::flush;
+
+    double result = 0.25 * sqrtPi * pow(eta,-gammaarg) * power(etaP,lambda) * gamma * hyper;
+
+    return result;
 }

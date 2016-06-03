@@ -231,17 +231,18 @@ void* _potentialThreadOrbitals(void* data){
                 //screening
                 if ( ((A[0]*A[0]) + (A[1]*A[1]) + (A[2]*A[2])) < cutoff_2){
 
-                    sum += P_mu_nu[mu*nr_prim + mu] * X_mu_nu(A,A,A,a,a,d_mu*d_mu,2.0*xi_mu,RI,AI);
+                    //sum += P_mu_nu[mu*nr_prim + mu] * X_mu_nu(A,A,A,a,a,d_mu*d_mu,2.0*xi_mu,RI,AI);
                     //nu
-                    //double* pcent_nu = prm_cent;
-                    //int*    pang_nu  = prm_ang;
-                    //double* pexp_nu  = prm_exp;
-                    //double* pcoef_nu = prm_coef;
-                    double* pcent_nu = pcent_mu;
-                    int*    pang_nu  = pang_mu;
-                    double* pexp_nu  = pexp_mu;
-                    double* pcoef_nu = pcoef_mu;
-                    for (int nu=mu+1; nu<nr_prim; ++nu){ //both, P_mu_nu and X_mu_nu are symmetric
+                    double* pcent_nu = prm_cent;
+                    int*    pang_nu  = prm_ang;
+                    double* pexp_nu  = prm_exp;
+                    double* pcoef_nu = prm_coef;
+                    //double* pcent_nu = pcent_mu;
+                    //int*    pang_nu  = pang_mu;
+                    //double* pexp_nu  = pexp_mu;
+                    //double* pcoef_nu = pcoef_mu;
+                    //for (int nu=mu+1; nu<nr_prim; ++nu){ //both, P_mu_nu and X_mu_nu are symmetric //are they?
+                    for (int nu=0; nu<nr_prim; ++nu){ //both, P_mu_nu and X_mu_nu are symmetric //are they?
                         double B[3];
                         B[0] = *pcent_nu - r[0]; ++pcent_nu;
                         B[1] = *pcent_nu - r[1]; ++pcent_nu;
@@ -257,6 +258,7 @@ void* _potentialThreadOrbitals(void* data){
                             //combined values
                             //if ( (P[0]*P[0] + P[1]*P[1] + P[2]*P[2]) < cutoff_2){
                             if ( screen[mu*nr_prim + nu] != 0 ){
+                                //printf("%d|%d   %f (%f,%f,%f) / %f \\ (%u,%u,%u) ||| %f (%f,%f,%f) / %f \\ (%u,%u,%u)\n",mu,nu,d_mu,A[0],A[1],A[2],xi_mu,a[0],a[1],a[2],d_nu,B[0],B[1],B[2],xi_nu,b[0],b[1],b[2]);
                                 double eta_mu_nu = xi_mu + xi_nu;
                                 double P[3];
                                 P[0] = (A[0]-B[0]);
@@ -265,11 +267,12 @@ void* _potentialThreadOrbitals(void* data){
                                 double C_mu_nu = exp(-(d_mu*d_nu*(
                                                                     (P[0]*P[0])+(P[1]*P[1])+(P[2]*P[2])
                                                                  ))/eta_mu_nu);
+                                //printf("%f (%f,%f,%f) / %f\n",C_mu_nu,P[0],P[1],P[2],eta_mu_nu);
                                 P[0] = (xi_mu*A[0] + xi_nu*B[0]) / eta_mu_nu;
                                 P[1] = (xi_mu*A[1] + xi_nu*B[1]) / eta_mu_nu;
                                 P[2] = (xi_mu*A[2] + xi_nu*B[2]) / eta_mu_nu;
                                 double d_mu_nu = d_mu * d_nu * C_mu_nu;
-                                sum += 2.0 * P_mu_nu[mu*nr_prim + nu] * X_mu_nu(A,B,P,a,b,d_mu_nu,eta_mu_nu,RI,AI);
+                                sum += /*2.0 **/ P_mu_nu[mu*nr_prim + nu] * X_mu_nu(A,B,P,a,b,d_mu_nu,eta_mu_nu,RI,AI);
                             }
                         }
                     }
@@ -302,6 +305,8 @@ void electrostatic_potential_orbitals(bool progress_reports, int num_gridpoints,
     //initialize everything
     PG globals; 
     init_parallel_generic(&progress_reports, &globals);
+
+    //progress_reports = false;
 
     const int split_factor = 3;
 

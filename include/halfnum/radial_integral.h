@@ -22,14 +22,14 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #define MINP 1 //do not set this to anything else than 1
 #define NRSTEPS 16 //this equals 65535 quadrature points
 #define MAXNP1 8 //the actual max N is this minus 1 but N==0 will never be obtained
-#define RADINTTOLERANCE 1.0e-10 //an integral will only be computed if after MINNRINTS steps it is above this threshold
-#define MINNRINTS 3 //the minimum number of integration steps to be performed
+#define RADINTTOLERANCE 1.0e-20 //an integral will only be computed if after MINNRINTS steps it is above this threshold
+#define MINNRINTS 7 //the minimum number of integration steps to be performed
 class RadInt{
     private:
         double *m_abscissas, *m_weights;
         double *m_r_to_N;
         size_t m_nr_elements;
-        double m_T[NRSTEPS];
+        long double m_T[NRSTEPS];
         int m_current_T;
         unsigned int m_p;
         unsigned int m_lambda;
@@ -48,6 +48,6 @@ class RadInt{
     public:
         RadInt(double epsilon);
         ~RadInt();
-        double GetInt(double eta, double P, unsigned int N, unsigned int lambda);
+        long double GetInt(double eta, double P, unsigned int N, unsigned int lambda);
 };
 #endif //HALFNUM_RADIAL_INTEGRAL_H

@@ -21,6 +21,6 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-void electrostatic_potential (bool progress_reports, int num_points, std::vector<double> points, std::vector<double> charges_coordinates, std::vector<double> *potential);
+void electrostatic_potential (bool progress_reports, int num_points, std::vector<double> points, std::vector<double> charges_coordinates, std::vector<double> *potential, double cutoff);
 
 #endif //ELECTROSTATIC_POTENTIAL_CHARGES_H

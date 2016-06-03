@@ -112,7 +112,7 @@ python_install :
 
 .PHONY : python_uninstall 
 python_uninstall : 
-	rm -rf $(PYTHON_DEST_DIR)/FireDeamon/__init__.py $(PYTHON_DEST_DIR)/FireDeamon/__init__.pyc $(PYTHON_DEST_DIR)/FireDeamon/_FireDeamon.so
+	rm -rf $(PYTHON_DEST_DIR)/FireDeamon/__init__.py* $(PYTHON_DEST_DIR)/FireDeamon/_FireDeamon.so
 #-----------------------------------------------------
 #              BUILD RULES FOR LANGUAGE BINDINGS
 #-----------------------------------------------------
