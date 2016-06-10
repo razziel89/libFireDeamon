@@ -217,7 +217,7 @@ def InitializeGridCalculationOrbitalsPy(grid,basis,scale=1.0,normalize=True):
     vec_prim_coefficients = VectorDouble([ prim[1] for b in basis for prim in b[2] ])
 
     if normalize:
-        normalize_gaussians(vec_prim_coefficients,vec_prim_exponents)
+        normalize_gaussians(vec_prim_coefficients,vec_prim_exponents,vec_prim_angular)
 
     return vec_prim_centers, vec_prim_exponents, vec_prim_coefficients, vec_prim_angular, vec_density_grid, density_indices
 
@@ -589,7 +589,7 @@ def IsosurfacePy(dxfile,isovalue,points_inside,relative_precision=1.0e-05,mesh_c
 
     return result
 
-def ElectrostaticPotentialOrbitalsPy(coefficients_list,Smat,occupations,data,prog_report=True,cutoff=1000000.0,overlap_cutoff=1.0e-300):
+def ElectrostaticPotentialOrbitalsPy(coefficients_list,Smat,occupations,data,prog_report=True):
     """
     Calculate the electron density due to some molecular orbitals on a grid.
 
@@ -613,10 +613,6 @@ def ElectrostaticPotentialOrbitalsPy(coefficients_list,Smat,occupations,data,pro
 
     nr_gridpoints = int(vec_potential_grid.size()/3)
 
-    correction = []
-    ElectronDensityPy(coefficients_list,data,prog_report=prog_report,cutoff=cutoff,correction=correction)
-    np_corr = np.array(correction)
-
     nr_primitives = len(potential_indices)
     nr_electrons  = sum(occupations)
     np_o = np.array(occupations,dtype=float)
@@ -624,41 +620,21 @@ def ElectrostaticPotentialOrbitalsPy(coefficients_list,Smat,occupations,data,pro
     #compute the first order density matrix P_mu_nu
     P = [
             [
-                np.sum( np_corr * np_o * np_c[potential_indices[mu]] * np_c[potential_indices[nu]] )
+                np.sum( np_o * np_c[potential_indices[mu]] * np_c[potential_indices[nu]] )
             for nu in xrange(nr_primitives)
             ]
         for mu in xrange(nr_primitives)
         ]
-    screen = [
-                [
-                    1 # if abs(Smat[potential_indices[mu]][potential_indices[nu]])>overlap_cutoff else 0
-                for nu in xrange(nr_primitives)
-                ]
-            for mu in xrange(nr_primitives)
-            ]
-
-    #The following was taken from a paper but turned out to be plain wrong
-    #np_S = np.array(S,dtype=float)
-    #np_c = np.array(coefficients_list,dtype=float)
-    #np_o = np.array(occupations,dtype=float)/nr_electrons
-    #np_cS = np.dot(np_c,np_S).T
-    #P = [
-    #        [
-    #            np.sum( np_o * np_cS[potential_indices[mu]] * np_cS[potential_indices[nu]] )
-    #        for nu in xrange(nr_primitives)
-    #        ]
-    #    for mu in xrange(nr_primitives)
-    #    ]
 
     potential_vec = VectorDouble()
     potential_vec.reserve(nr_gridpoints)
 
     P_vec = VectorDouble([p for pinner in P for p in pinner])
-    screen_vec = VectorInt([s for sinner in screen for s in sinner])
+    #screen_vec = VectorInt([s for sinner in screen for s in sinner])
 
-    electrostatic_potential_orbitals(prog_report, nr_gridpoints, vec_prim_centers, vec_prim_exponents, vec_prim_coefficients, vec_prim_angular, vec_potential_grid, P_vec, screen_vec, potential_vec, cutoff );
-    
-    potential = [p for p in potential_vec]
+    electrostatic_potential_orbitals(prog_report, nr_gridpoints, vec_prim_centers, vec_prim_exponents, vec_prim_coefficients, vec_prim_angular, vec_potential_grid, P_vec, potential_vec );
+
+    potential = np.array([p for p in potential_vec])
 
     del potential_vec
     del P_vec

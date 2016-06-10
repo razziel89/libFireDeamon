@@ -22,6 +22,6 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 void electron_density(bool progress_reports, int num_gridpoints, std::vector<double> prim_centers, std::vector<double> prim_exponents, std::vector<double> prim_coefficients, std::vector<int> prim_angular, std::vector<double> density_grid, std::vector<double>  mo_coefficients, std::vector<double> *density, double cutoff=-1.0);
-void normalize_gaussians(std::vector<double> prefactor, std::vector<double> exponent);
+void normalize_gaussians(std::vector<double> *prefactor, std::vector<double> exponent, std::vector<int> angular);
 
 #endif //ELECTRON_DENSITY_H

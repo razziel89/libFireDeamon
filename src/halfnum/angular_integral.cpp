@@ -23,6 +23,8 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <stdexcept>
 
+//#include <iostream>
+
 #include <halfnum/angular_integral.h>
 
 const static double Pi  = acos(-1.0L);
@@ -167,7 +169,8 @@ inline int square (int i){
 }
 
 AngInt::AngInt(){
-    size_t max_nr_elements = LMAXP1 * LMAXP1 * LMAXP1 * (3*LMAXP1+1);
+    //size_t max_nr_elements = LMAXP1 * LMAXP1 * LMAXP1 * (3*LMAXP1+1);
+    size_t max_nr_elements = LMAXP1 * LMAXP1 * LMAXP1 * LMAXP1 * LMAXP1;
     m_integrals = (double*) malloc(max_nr_elements * sizeof(double));
     memset(m_integrals, 0.0, max_nr_elements * sizeof(double));
 
@@ -180,7 +183,8 @@ AngInt::AngInt(){
                 if ( i+j+k < LMAXP1){
     			    for (int lambda=0; lambda<i+j+k+1; ++lambda){
     			    	for (int mu_plus_lambda=0; mu_plus_lambda<2*lambda+1; ++mu_plus_lambda){
-                            m_integrals[index + mu_plus_lambda+square(lambda)] = u * f_v_coeff (lambda, mu_plus_lambda-lambda, i, j, k);
+                            m_integrals[index*LMAXP1*LMAXP1 + mu_plus_lambda+square(lambda)] = u * f_v_coeff (lambda, mu_plus_lambda-lambda, i, j, k);
+                            //std::cout << i << " " << j << " " << k << " " << lambda << " " << mu_plus_lambda-lambda << " " << (&(m_integrals[index*LMAXP1*LMAXP1 + mu_plus_lambda+square(lambda)]) - m_integrals) << std::endl;
                         } //mu_plus_lambda
                     } //lambda
                 } //check
@@ -199,7 +203,7 @@ double AngInt::GetInt(unsigned int lambda, int mu, unsigned int i, unsigned int 
     if (lambda>i+j+k){
         return 0.0;
     }else{
-        return m_integrals[k + j*(LMAXP1) + i*(LMAXP1*LMAXP1) + mu+lambda+square(lambda)];
+        return m_integrals[(k + j*(LMAXP1) + i*(LMAXP1*LMAXP1))*LMAXP1*LMAXP1 + mu+lambda+square(lambda)];
     }
 }
 AngInt::~AngInt(){

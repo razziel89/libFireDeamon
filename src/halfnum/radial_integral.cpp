@@ -207,7 +207,7 @@ long double RadInt::GetInt(double eta, double P, unsigned int N, unsigned int la
     double etaP = eta*P;
     double a,b,z;
     a=0.5*(2-(int)N+(int)lambda);
-    b=2.0/3.0 + lambda;
+    b=1.5 /*3.0/2.0*/ + lambda;
     z=-etaP*P;
     //std::cout << N << " " << lambda << a << " " << b << " " << eta << " " << P << std::endl << std::flush;
     double hyper = gsl_sf_hyperg_1F1(a,b,z) * gsl_sf_gammainv(b);
@@ -215,9 +215,10 @@ long double RadInt::GetInt(double eta, double P, unsigned int N, unsigned int la
     //std::cout << "gamma" << std::endl << std::flush;
     double gammaarg = 0.5*(1+N+lambda);
     double gamma = gsl_sf_gamma(gammaarg);
-    //std::cout << "done" << std::endl << std::flush;
 
     double result = 0.25 * sqrtPi * pow(eta,-gammaarg) * power(etaP,lambda) * gamma * hyper;
+    //double result = hyper;
+    //std::cerr << a << " " << b << " " << z << " " << hyper << std::flush;
 
     return result;
 }

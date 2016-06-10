@@ -29,7 +29,9 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <electron_density.h>
 
 //const static double pi_to_3_half = 5.5683279968317078453;
-const static double sqrt_pihalf_to_3_4 = 1.4031041455342160267;
+//const static double sqrt_pihalf_to_3_4 = 1.4031041455342160267;
+const static double two_div_by_pi_to_three_fourth = 0.71270547035499016035;
+const static double sqrt2 = 1.41421356237309504880;
 
 inline double power(double base, unsigned int exp){
     double result = 1.0;
@@ -181,13 +183,48 @@ void* _electronDensityThreadNoCutoff(void* data){
     pthread_exit(NULL);
 }
 
-void normalize_gaussians(std::vector<double> prefactor, std::vector<double> exponent){
-    if (prefactor.size()!=exponent.size()){
-        throw std::invalid_argument("Lengths of prefactor and exponent vectors do not equal.");
+//this name is a short form of: one_div_by_sqrt_double_factorial_of_2aminus1
+// which is 1.0/((2*a-1)!!)
+double odbsdfo2[] = {
+    1.0/sqrt(1.0),
+    1.0/sqrt(1.0),
+    1.0/sqrt(3.0),
+    1.0/sqrt(15.0),
+    1.0/sqrt(105.0),
+    1.0/sqrt(945.0),
+    1.0/sqrt(10395.0),
+    1.0/sqrt(135135.0),
+    1.0/sqrt(2027025.0),
+    1.0/sqrt(34459425.0),
+    1.0/sqrt(654729075.0),
+    1.0/sqrt(13749310575.0),
+    1.0/sqrt(316234143225.0),
+    1.0/sqrt(7905853580625.0),
+    1.0/sqrt(213458046676875.0),
+    1.0/sqrt(6190283353629375.0),
+    1.0/sqrt(191898783962510625.0),
+    1.0/sqrt(6332659870762850625.0)
+};
+
+void normalize_gaussians(std::vector<double> *prefactor, std::vector<double> exponent, std::vector<int> angular){
+    if (prefactor->size()!=exponent.size()){
+        throw std::invalid_argument("Lengths of prefactor, exponent vectors do not equal.");
+    }
+    if (prefactor->size() * 3 != angular.size()){
+        throw std::invalid_argument("Lengths of prefactor (times 3) and angular vectors do not equal.");
     }
     std::vector<double>::iterator preit, expit;
-    for (preit=prefactor.begin(),expit=exponent.begin(); preit!=prefactor.end() && expit!=exponent.end(); ++preit, ++expit){
-        *preit *= sqrt_pihalf_to_3_4 * pow(*expit,-0.75);
+    std::vector<int>::iterator angit;
+    for (preit=prefactor->begin(),expit=exponent.begin(),angit=angular.begin(); preit!=prefactor->end(); ++preit, ++expit, angit+=3){
+        //printf("%f ",*preit); fflush(stdout);
+        //*preit *= two_div_by_pi_to_three_fourth * pow(*expit,0.75);
+        //*preit *= two_div_by_pi_to_three_fourth * sqrt2 * pow(*expit,1.5);
+        //printf("%f\n",*preit); fflush(stdout);
+        int ax=*(angit+0);
+        int ay=*(angit+1);
+        int az=*(angit+2);
+        //odbsdfo2 is short for one_div_by_sqrt_double_factorial_of_2aminus1 (see above)
+        *preit *= two_div_by_pi_to_three_fourth * pow(*expit,0.75) * pow(2.0*2.0*(*expit),0.5*(ax+ay+az)) / (odbsdfo2[ax]*odbsdfo2[ay]*odbsdfo2[az]);
     }
 }
 
