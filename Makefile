@@ -126,7 +126,7 @@ bindings : $(MAINOBJ) $(SWIGRUN)
 #-----------------------------------------------------
 python_bindings : $(PYTHONBINDOBJ)
 	@echo "Linking shared python library..."
-	$(GXX) -shared -fPIC $(PYTHONBINDOBJ) -L$(PYTHONLIB) -L$(LIBDIR) -lFireDeamon $(PYTHONLDFLAGS) -Wl,-z,defs -o $(PYTHONDIR)/_FireDeamon.so
+	$(GXX) -shared -fPIC $(PYTHONBINDOBJ) -L$(PYTHONLIB) -L$(LIBDIR) -lFireDeamon $(PYTHONLDFLAGS) -o $(PYTHONDIR)/_FireDeamon.so
 
 .PHONY : python_swig
 python_swig :

@@ -23,8 +23,6 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <stdexcept>
 
-//#include <iostream>
-
 #include <halfnum/angular_integral.h>
 
 const static double Pi  = acos(-1.0L);
@@ -184,7 +182,6 @@ AngInt::AngInt(){
     			    for (int lambda=0; lambda<i+j+k+1; ++lambda){
     			    	for (int mu_plus_lambda=0; mu_plus_lambda<2*lambda+1; ++mu_plus_lambda){
                             m_integrals[index*LMAXP1*LMAXP1 + mu_plus_lambda+square(lambda)] = u * f_v_coeff (lambda, mu_plus_lambda-lambda, i, j, k);
-                            //std::cout << i << " " << j << " " << k << " " << lambda << " " << mu_plus_lambda-lambda << " " << (&(m_integrals[index*LMAXP1*LMAXP1 + mu_plus_lambda+square(lambda)]) - m_integrals) << std::endl;
                         } //mu_plus_lambda
                     } //lambda
                 } //check

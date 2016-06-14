@@ -16,11 +16,19 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 ***********/
-#ifndef ELECTROSTATIC_POTENTIAL_ORBITALS_H
-#define ELECTROSTATIC_POTENTIAL_ORBITALS_H
+#ifndef FIRE_DEAMON_STATIC_NUMBERS_H
+#define FIRE_DEAMON_STATIC_NUMBERS_H
 
-#include <vector>
+extern const double Pi;
+extern const double two_div_by_pi_to_three_fourth;
+extern const double sqrt2;
+extern const double sqrt_pihalf_to_3_4;
 
-void electrostatic_potential_orbitals(bool progress_reports, int num_primitives, std::vector<double> prim_centers, std::vector<double> prim_exponents, std::vector<double> prim_coefficients, std::vector<int> prim_angular, std::vector<double> potential_grid, std::vector<double>  P_matrix, std::vector<double> S_matrix, std::vector<double> *potential);
+//this name is a short form of: one_div_by_sqrt_double_factorial_of_2aminus1
+// which is 1.0/((2*a-1)!!)
+extern const double odbsdfo2[];
 
-#endif //ELECTROSTATIC_POTENTIAL_ORBITALS_H
+extern const int factorial[];
+
+
+#endif //FIRE_DEAMON_STATIC_NUMBERS_H

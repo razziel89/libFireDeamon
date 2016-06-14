@@ -34,11 +34,8 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <iostream>
 
-#define FACTORCUTOFF 0.0 //1.0e-20
-#define OVERLAPCUTOFF 0.0 //1.0e-10
-
-//static const double Pi    = acos(-1.0L);
-//static const double sqrt2 = sqrt(2.0);
+#define FACTORCUTOFF 1.0e-12
+#define OVERLAPCUTOFF 1.0e-8
 
 inline double spherical_harmonic(int l, int m, double theta, double phi){
     int abs_m = (m>=0) ? m : -m;
@@ -51,46 +48,6 @@ inline double spherical_harmonic(int l, int m, double theta, double phi){
     }}
     return result;
 }
-
-//int factorial[] = {
-//    1                  ,
-//    1                  ,
-//    2                  ,
-//    6                  ,
-//    24                 ,
-//    120                ,
-//    720                ,
-//    5040               ,
-//    40320              ,
-//    362880             ,
-//    3628800            ,
-//    39916800           ,
-//    479001600
-//};
-//
-//int dfactorial[] = {
-//    1                               ,
-//    1                               ,
-//    2                               ,
-//    3                               ,
-//    8                               ,
-//    15                              ,
-//    48                              ,
-//    105                             ,
-//    384                             ,
-//    945                             ,
-//    3840                            ,
-//    10395                           ,
-//    46080                           ,
-//    135135                          ,
-//    645120                          ,
-//    2027025                         ,
-//    10321920                        ,
-//    34459425                        ,
-//    185794560                       ,
-//    654729075                       ,
-//    3715891200//                      ,
-//}
 
 inline int binomial(int n, int k){
     return (factorial[n])/(factorial[n-k]*factorial[k]);
@@ -122,99 +79,6 @@ std::ostream& operator<<(std::ostream& out,unsigned int val[3]){
     out << "(" << val[0] << "|" << val[1] << "|" << val[2] << ")";
     return out;
 }
-//inline double X_mu_nu(double A[3], double B[3], double P[3], unsigned int a[3], unsigned int b[3], double d_mu_nu, double eta_mu_nu, RadInt& RI, const AngInt& AI){
-//    if (fabs(d_mu_nu) > 1.0e-6){
-//        bool screen = false;
-//        double absP;
-//        double thetaP;
-//        double phiP;
-//        cartesian_to_spherical(P[0],P[1],P[2],absP,thetaP,phiP);
-//        double near_arg = absP - 2.62826/sqrt(eta_mu_nu);
-//        double estimate;
-//        //compute the point close to (0,0,0) where the Gaussian is only at 0.001 of its maximum value
-//        // If that is <0, the integral has to be computed
-//        if (near_arg>0.0){
-//            //double estimate;
-//            //estimate integral value and only compute if that is over a certain threshold
-//            //The estimate is the value if 1/r at the near_point times the prefactor d_mu_nu
-//            //times the integral over the 3D Gaussian function, ignoring the angular momentum.
-//            //NO LONGER: Add 10% to that.
-//            //estimate = (1.0/near_arg) * two_div_by_pi_to_three_fourth * pow(eta_mu_nu,0.75) * d_mu_nu;
-//            estimate = (1.0/near_arg) * two_div_by_pi_to_three_fourth * pow(eta_mu_nu,0.75) * d_mu_nu;
-//            estimate = (estimate > 0.0) ? estimate : -estimate;
-//            if (estimate < 1.0e-04){
-//                screen = true;
-//            }
-//        }
-//        //std::cout << A << " " << B << " " << P << " " << a << " " << b << " " << d_mu_nu << " " << eta_mu_nu << " " << estimate << " " << std::flush;
-//        //std::cout << estimate << " ";
-//
-//        if (!screen){
-//        //if (true)
-//        //if (d_mu_nu != 0.0)
-//            double result = 0.0;
-//            //loop over all ai
-//            //int a_minus1 = ((a[0]+a[1]+a[2])%2==0) ? 1 : -1;
-//            for (unsigned int ax=0; ax<=a[0]; ++ax/*, a_minus1=-a_minus1*/){
-//                int a_binom[3];
-//                a_binom[0] = binomial(a[0],ax);
-//            for (unsigned int ay=0; ay<=a[1]; ++ay/*, a_minus1=-a_minus1*/){
-//                a_binom[1] = binomial(a[1],ay) * a_binom[0];
-//            for (unsigned int az=0; az<=a[2]; ++az/*, a_minus1=-a_minus1*/){
-//                a_binom[2] = binomial(a[2],az) * a_binom[1];
-//
-//                int a_minus1 = ((a[0]+a[1]+a[2]-ax-ay-az)%2==0) ? 1 : -1;
-//                unsigned int sum_a = ax+ay+az;
-//                double Apow = /*d_mu_nu **/ a_binom[2] * a_minus1 * power(A[0],a[0]-ax) * power(A[1],a[1]-ay) * power(A[2],a[2]-az);
-//
-//                //loop over all bi
-//                //int b_minus1 = ((b[0]+b[1]+b[2])%2==0) ? 1 : -1;
-//                for (unsigned int bx=0; bx<=b[0]; ++bx/*, b_minus1=-b_minus1*/){
-//                    int b_binom[3];
-//                    b_binom[0] = binomial(b[0],bx);
-//                for (unsigned int by=0; by<=b[1]; ++by/*, b_minus1=-b_minus1*/){
-//                    b_binom[1] = binomial(b[1],by) * b_binom[0];
-//                for (unsigned int bz=0; bz<=b[2]; ++bz/*, b_minus1=-b_minus1*/){
-//                    b_binom[2] = binomial(b[2],bz) * b_binom[1];
-//
-//                    int b_minus1 = ((b[0]+b[1]+b[2]-bx-by-bz)%2==0) ? 1 : -1;
-//                    unsigned int sum_b = bx+by+bz;
-//                    double Bpow = b_binom[2] * b_minus1 * power(B[0],b[0]-bx) * power(B[1],b[1]-by) * power(B[2],b[2]-bz);
-//
-//                    double Q = 0.0;
-//                    for (unsigned int lambda=0; lambda<=sum_a+sum_b; ++lambda){
-//                        double Omega = 0.0;
-//                        unsigned int alpha[3] = {ax,ay,az};
-//                        unsigned int beta[3]  = {bx,by,bz};
-//                        //std::cout << "RI:" << RI.GetInt(eta_mu_nu, absP, sum_a+sum_b+1, lambda) << " OM:" << Omega << " A^a:" << Apow << " B^b:" << Bpow << " d:" << d_mu_nu << " a:" << a << " b:" << b << " xi:" << eta_mu_nu << " P:" << "|"<<P<<"|=" << absP << " lamax:" << sum_a+sum_b+1 << " la:" << lambda << " al:" << alpha << " be:" << beta << std::endl;
-//                        for (int gamma=-((int)lambda); gamma<=(int)(lambda); ++gamma){
-//                            double integral = AI.GetInt(lambda, gamma, ax+bx, ay+by, az+bz);
-//                            if (integral!=0.0){
-//                                Omega += spherical_harmonic(lambda, gamma, thetaP, phiP) * integral;
-//                            }
-//                            //std::cout << "        SH:" << spherical_harmonic(lambda, gamma, thetaP, phiP) << " AI:" << AI.GetInt(lambda, gamma, ax+bx, ay+by, az+bz) << " ga:" << gamma << std::endl;
-//                        }
-//                        if (Omega!=0.0){
-//                            //bool overflow = false;
-//                            Q += RI.GetInt(eta_mu_nu, absP, sum_a+sum_b+1, lambda) * Omega;
-//                            //if (overflow){return 0.0;}
-//                        }
-//                    }
-//                    result += Apow * Bpow * Q; 
-//                }}}
-//            }}}
-//            //std::cout << "In:" << result * d_mu_nu * 2.0*2.0*Pi << "  theta:" << thetaP << " phi:" << phiP << std::endl;
-//            //std::cout << result * d_mu_nu << std::endl;
-//            //std::cout << estimate << " " << fabs(result*4.0*Pi*d_mu_nu) << " " << fabs(estimate/(result*4.0*Pi*d_mu_nu)) << std::endl;
-//            return result * d_mu_nu * 4.0*Pi;// * 2.6195120388626;
-//        }else{
-//            //std::cout << "NULL" << std::endl << std::flush;
-//            return 0.0;
-//        }
-//    }
-//    //std::cout << "SCREEN" << std::endl << std::flush;
-//    return 0.0;
-//}
 
 inline double X_mu_nu(double A[3], double B[3], double P[3], unsigned int a[3], unsigned int b[3], double d_mu_nu, double eta_mu_nu, RadInt RI, const AngInt& AI){
     double absP;
@@ -225,8 +89,6 @@ inline double X_mu_nu(double A[3], double B[3], double P[3], unsigned int a[3], 
     RI.Init(eta_mu_nu,absP);
 
     double result = 0.0;
-    //loop over all ai
-    //int a_minus1 = ((a[0]+a[1]+a[2])%2==0) ? 1 : -1;
     for (unsigned int ax=0; ax<=a[0]; ++ax/*, a_minus1=-a_minus1*/){
         int a_binom[3];
         a_binom[0] = binomial(a[0],ax);
@@ -239,8 +101,6 @@ inline double X_mu_nu(double A[3], double B[3], double P[3], unsigned int a[3], 
         unsigned int sum_a = ax+ay+az;
         double Apow = /*d_mu_nu **/ a_binom[2] * a_minus1 * power(A[0],a[0]-ax) * power(A[1],a[1]-ay) * power(A[2],a[2]-az);
     
-        //loop over all bi
-        //int b_minus1 = ((b[0]+b[1]+b[2])%2==0) ? 1 : -1;
         for (unsigned int bx=0; bx<=b[0]; ++bx/*, b_minus1=-b_minus1*/){
             int b_binom[3];
             b_binom[0] = binomial(b[0],bx);
@@ -256,8 +116,6 @@ inline double X_mu_nu(double A[3], double B[3], double P[3], unsigned int a[3], 
             double Q = 0.0;
             for (unsigned int lambda=0; lambda<=sum_a+sum_b; ++lambda){
                 double Omega = 0.0;
-                unsigned int alpha[3] = {ax,ay,az};
-                unsigned int beta[3]  = {bx,by,bz};
                 for (int gamma=-((int)lambda); gamma<=(int)(lambda); ++gamma){
                     double integral = AI.GetInt(lambda, gamma, ax+bx, ay+by, az+bz);
                     if (integral!=0.0){
@@ -266,14 +124,6 @@ inline double X_mu_nu(double A[3], double B[3], double P[3], unsigned int a[3], 
                 }
                 if (Omega!=0.0){
                     Q += RI.GetRadInt(
-                     //       sqrteta  ,
-                     //       eta3half ,
-                     //       erfetaP  ,
-                     //       etaP     ,
-                     //       etaPP    ,
-                     //       expetaPP ,
-                     //       eta_mu_nu,
-                     //       absP     ,
                             sum_a+sum_b+1,
                             lambda 
                             ) * Omega;
@@ -312,7 +162,6 @@ void* _potentialThreadOrbitals(void* data){
 
     RadInt RI;
     const AngInt AI;
-    //std::cout << std::endl;
 
     double* gp        = grdpnts;
     double* potential = pot;
@@ -323,7 +172,6 @@ void* _potentialThreadOrbitals(void* data){
             r[0] = *gp; ++gp;
             r[1] = *gp; ++gp;
             r[2] = *gp; ++gp;
-            //std::cout << "r: " << r << std::endl;
             //mu
             double* pcent_mu = prm_cent;
             int*    pang_mu  = prm_ang;
@@ -393,20 +241,15 @@ void* _potentialThreadOrbitals(void* data){
 
 void electrostatic_potential_orbitals(bool progress_reports, int num_gridpoints, std::vector<double> prim_centers, std::vector<double> prim_exponents, std::vector<double> prim_coefficients, std::vector<int> prim_angular, std::vector<double> potential_grid, std::vector<double> P_matrix, std::vector<double> S_matrix, std::vector<double> *potential)
 {
-    //std::cout << "start" << std::endl << std::flush;
-    //std::cout << prim_centers.size() << " " << prim_exponents.size() << " " << prim_coefficients.size() << " " << prim_angular.size() << " " << potential_grid.size() << " " << P_matrix.size() << " " << std::endl << std::flush;
     //initialize everything
     PG globals; 
     init_parallel_generic(&progress_reports, &globals);
-
-    //progress_reports = false;
 
     const int split_factor = 3;
 
     //reserve data structures and fill them with input
     tuple_of_vectors<double,double,int,double,double,double,double> input;
     input = std::make_tuple(potential_grid,prim_centers,prim_angular,prim_exponents,prim_coefficients,P_matrix,S_matrix);
-    //std::cout << "tuple" << std::endl << std::flush;
 
     //fill class that holds data for each thread
     GPData<double,double,double,int,double,double,double,double> *data;
@@ -419,14 +262,11 @@ void electrostatic_potential_orbitals(bool progress_reports, int num_gridpoints,
     }
     fflush(stdout);
     //perform computation
-    //std::cout << "start do" << std::endl << std::flush;
     do_parallel_generic<double,double,double,int,double,double,double,double>(_potentialThreadOrbitals, &globals, progress_reports, num_gridpoints, data);
-    //std::cout << "end do" << std::endl << std::flush;
     //transfer output data
     data->TransferOutput();
     //clean up
     delete data;
     finalize_parallel_generic(progress_reports, &globals);
     pg_global = NULL;
-    //std::cout << "end" << std::endl << std::flush;
 }

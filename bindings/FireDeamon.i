@@ -639,10 +639,6 @@ def ElectrostaticPotentialOrbitalsPy(coefficients_list,Smat,occupations,data,pro
             ]
         for mu in xrange(nr_primitives)
         ]
-    #for mu in xrange(nr_primitives):
-    #    for nu in xrange(nr_primitives):
-    #        if mu!=nu and potential_indices[mu]==potential_indices[nu]:
-    #            S[mu][nu] = 0.0
     S_vec = VectorDouble([s for sinner in S for s in sinner])
 
     electrostatic_potential_orbitals(prog_report, nr_gridpoints, vec_prim_centers, vec_prim_exponents, vec_prim_coefficients, vec_prim_angular, vec_potential_grid, P_vec, S_vec, potential_vec );
