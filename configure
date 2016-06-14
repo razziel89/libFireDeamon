@@ -30,6 +30,8 @@ PYTHONLIB=
 PYTHONINC=
 CGALLIB=
 CGALINC=
+GSLLIB=
+GSLINC=
 SWIGINC=
 GXX=
 AR=
@@ -136,6 +138,16 @@ do
             nospace "$1"
             CGALLIB="$1"
         ;;
+        --gsl-inc)
+            shift
+            nospace "$1"
+            GSLINC="$1"
+        ;;
+        --gsl-lib)
+            shift
+            nospace "$1"
+            GSLLIB="$1"
+        ;;
         --ar)
             shift
             nospace "$1"
@@ -187,6 +199,8 @@ done
 notdef --prefix "$PREFIX" 
 notdef --cgal-lib "$CGALLIB" 
 notdef --cgal-inc "$CGALINC" 
+notdef --gsl-inc "$GSLINC" 
+notdef --gsl-lib "$GSLLIB" 
 
 if [ "$USEPYTHON" == "true" ]
 then
@@ -248,6 +262,9 @@ AR        := $AR
 
 CGALLIB   := $CGALLIB
 CGALINC   := $CGALINC
+
+GSLLIB    := $GSLLIB
+GSLINC    := $GSLINC
 
 OTHERINC  := $OTHERINC
 OTHERLIB  := $OTHERLIB

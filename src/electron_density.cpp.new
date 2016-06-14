@@ -9,8 +9,9 @@
 #include <time.h>
 #include <parallel_generic.h>
 #include <electron_density.h>
+#include <static_numbers.h>
 
-const static double sqrt_pihalf_to_3_4 = 1.4031041455342160267;
+//const static double sqrt_pihalf_to_3_4 = 1.4031041455342160267;
 
 inline double power(double base, unsigned int exp){
     double result = 1.0;

@@ -21,6 +21,6 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 
-void electrostatic_potential_orbitals(bool progress_reports, int num_primitives, std::vector<double> prim_centers, std::vector<double> prim_exponents, std::vector<double> prim_coefficients, std::vector<int> prim_angular, std::vector<double> potential_grid, std::vector<double>  P_matrix, std::vector<double> *potential);
+void electrostatic_potential_orbitals(bool progress_reports, int num_primitives, std::vector<double> prim_centers, std::vector<double> prim_exponents, std::vector<double> prim_coefficients, std::vector<int> prim_angular, std::vector<double> potential_grid, std::vector<double>  P_matrix, std::vector<double>  S_matrix, std::vector<double> *potential);
 
 #endif //ELECTROSTATIC_POTENTIAL_ORBITALS_H

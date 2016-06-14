@@ -27,11 +27,12 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <time.h>
 #include <parallel_generic.h>
 #include <electron_density.h>
+#include <constants.h>
 
 //const static double pi_to_3_half = 5.5683279968317078453;
 //const static double sqrt_pihalf_to_3_4 = 1.4031041455342160267;
-const static double two_div_by_pi_to_three_fourth = 0.71270547035499016035;
-const static double sqrt2 = 1.41421356237309504880;
+//const static double two_div_by_pi_to_three_fourth = 0.71270547035499016035;
+//const static double sqrt2 = 1.41421356237309504880;
 
 inline double power(double base, unsigned int exp){
     double result = 1.0;
@@ -183,28 +184,28 @@ void* _electronDensityThreadNoCutoff(void* data){
     pthread_exit(NULL);
 }
 
-//this name is a short form of: one_div_by_sqrt_double_factorial_of_2aminus1
-// which is 1.0/((2*a-1)!!)
-double odbsdfo2[] = {
-    1.0/sqrt(1.0),
-    1.0/sqrt(1.0),
-    1.0/sqrt(3.0),
-    1.0/sqrt(15.0),
-    1.0/sqrt(105.0),
-    1.0/sqrt(945.0),
-    1.0/sqrt(10395.0),
-    1.0/sqrt(135135.0),
-    1.0/sqrt(2027025.0),
-    1.0/sqrt(34459425.0),
-    1.0/sqrt(654729075.0),
-    1.0/sqrt(13749310575.0),
-    1.0/sqrt(316234143225.0),
-    1.0/sqrt(7905853580625.0),
-    1.0/sqrt(213458046676875.0),
-    1.0/sqrt(6190283353629375.0),
-    1.0/sqrt(191898783962510625.0),
-    1.0/sqrt(6332659870762850625.0)
-};
+////this name is a short form of: one_div_by_sqrt_double_factorial_of_2aminus1
+//// which is 1.0/((2*a-1)!!)
+//double odbsdfo2[] = {
+//    1.0/sqrt(1.0),
+//    1.0/sqrt(1.0),
+//    1.0/sqrt(3.0),
+//    1.0/sqrt(15.0),
+//    1.0/sqrt(105.0),
+//    1.0/sqrt(945.0),
+//    1.0/sqrt(10395.0),
+//    1.0/sqrt(135135.0),
+//    1.0/sqrt(2027025.0),
+//    1.0/sqrt(34459425.0),
+//    1.0/sqrt(654729075.0),
+//    1.0/sqrt(13749310575.0),
+//    1.0/sqrt(316234143225.0),
+//    1.0/sqrt(7905853580625.0),
+//    1.0/sqrt(213458046676875.0),
+//    1.0/sqrt(6190283353629375.0),
+//    1.0/sqrt(191898783962510625.0),
+//    1.0/sqrt(6332659870762850625.0)
+//};
 
 void normalize_gaussians(std::vector<double> *prefactor, std::vector<double> exponent, std::vector<int> angular){
     if (prefactor->size()!=exponent.size()){
@@ -224,7 +225,7 @@ void normalize_gaussians(std::vector<double> *prefactor, std::vector<double> exp
         int ay=*(angit+1);
         int az=*(angit+2);
         //odbsdfo2 is short for one_div_by_sqrt_double_factorial_of_2aminus1 (see above)
-        *preit *= two_div_by_pi_to_three_fourth * pow(*expit,0.75) * pow(2.0*2.0*(*expit),0.5*(ax+ay+az)) / (odbsdfo2[ax]*odbsdfo2[ay]*odbsdfo2[az]);
+        *preit *= two_div_by_pi_to_three_fourth * pow(*expit,0.75) * pow(2.0*2.0*(*expit),0.5*(ax+ay+az)) * odbsdfo2[ax]*odbsdfo2[ay]*odbsdfo2[az];
     }
 }
 

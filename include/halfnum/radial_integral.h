@@ -19,35 +19,44 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef HALFNUM_RADIAL_INTEGRAL_H
 #define HALFNUM_RADIAL_INTEGRAL_H
 
-#define MINP 1 //do not set this to anything else than 1
-#define NRSTEPS 16 //this equals 65535 quadrature points
-#define MAXNP1 8 //the actual max N is this minus 1 but N==0 will never be obtained
-#define RADINTTOLERANCE 1.0e-20 //an integral will only be computed if after MINNRINTS steps it is above this threshold
-#define MINNRINTS 7 //the minimum number of integration steps to be performed
+//#define MINP 1 //do not set this to anything else than 1
+//#define NRSTEPS 16 //this equals 65535 quadrature points
+//#define MAXNP1 8 //the actual max N is this minus 1 but N==0 will never be obtained
+//#define RADINTTOLERANCE 1.0e-80 //an integral will only be computed if after MINNRINTS steps it is above this threshold
+//#define MINNRINTS 11 //the minimum number of integration steps to be performed
 class RadInt{
     private:
-        double *m_abscissas, *m_weights;
-        double *m_r_to_N;
-        size_t m_nr_elements;
-        long double m_T[NRSTEPS];
-        int m_current_T;
-        unsigned int m_p;
-        unsigned int m_lambda;
-        double *m_absit;
-        double *m_weiit;
-        double *m_radit;
-        double m_P, m_eta;
-        double m_epsilon;
+        double P, eta;
+        double etaPP, PP, etaPetaP;
+        double erfetaP; //this is actually sqrt(pi)*erf(P*sqrt(eta))
+        double expetaPP;
+        double _eta, _P, _sqrteta, _etaeta, _eta3half, _etaP, _etaPP, _etaPetaP; //these are 1.0 divided by the variable without underscore
+        //double *m_abscissas, *m_weights;
+        //double *m_r_to_N;
+        //size_t m_nr_elements;
+        //long double m_T[NRSTEPS];
+        //int m_current_T;
+        //unsigned int m_p;
+        //unsigned int m_lambda;
+        //unsigned int m_N;
+        //double *m_absit;
+        //double *m_weiit;
+        //double *m_radit;
+        //double m_P, m_eta;
+        //double m_epsilon;
+        //double m_scale, m_offset;//, m_start, m_end;
 
-        void FillAbscissasWeightsDifferentialsRadii();
-        double* GetRStart(unsigned int N) const;
-        void NewQuadrature(double eta, double P, unsigned int N, unsigned int lambda);
-        bool CheckConvergence();
-        void NextT();
+        //void FillAbscissasWeightsDifferentialsRadii();
+        //double* GetRStart(unsigned int N) const;
+        //void NewQuadrature(double eta, double P, unsigned int N, unsigned int lambda);
+        //bool CheckConvergence();
+        //void NextT();
 
     public:
-        RadInt(double epsilon);
-        ~RadInt();
-        long double GetInt(double eta, double P, unsigned int N, unsigned int lambda);
+//        RadInt();
+//        ~RadInt();
+    //long double GetRadInt(double eta, double P, unsigned int N, unsigned int lambda);
+    void   Init(double eta, double P);
+    double GetRadInt(int N, int lambda);
 };
 #endif //HALFNUM_RADIAL_INTEGRAL_H
