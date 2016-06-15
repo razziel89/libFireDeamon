@@ -30,8 +30,7 @@ PYTHONLIB=
 PYTHONINC=
 CGALLIB=
 CGALINC=
-GSLLIB=
-GSLINC=
+BOOSTINC=
 SWIGINC=
 GXX=
 AR=
@@ -138,15 +137,10 @@ do
             nospace "$1"
             CGALLIB="$1"
         ;;
-        --gsl-inc)
+        --boost-inc)
             shift
             nospace "$1"
-            GSLINC="$1"
-        ;;
-        --gsl-lib)
-            shift
-            nospace "$1"
-            GSLLIB="$1"
+            BOOSTINC="$1"
         ;;
         --ar)
             shift
@@ -199,8 +193,7 @@ done
 notdef --prefix "$PREFIX" 
 notdef --cgal-lib "$CGALLIB" 
 notdef --cgal-inc "$CGALINC" 
-notdef --gsl-inc "$GSLINC" 
-notdef --gsl-lib "$GSLLIB" 
+notdef --boost-inc "$BOOSTINC" 
 
 if [ "$USEPYTHON" == "true" ]
 then
@@ -263,13 +256,12 @@ AR        := $AR
 CGALLIB   := $CGALLIB
 CGALINC   := $CGALINC
 
-GSLLIB    := $GSLLIB
-GSLINC    := $GSLINC
+BOOSTINC  := $BOOSTINC
 
 OTHERINC  := $OTHERINC
 OTHERLIB  := $OTHERLIB
 
-LDFLAGS   := $LDFLAGS -lmpfr -lgmp -lboost_thread -lCGAL -lCGAL_ImageIO -lpthread -lgsl -lgslcblas
+LDFLAGS   := $LDFLAGS -lmpfr -lgmp -lboost_thread -lCGAL -lCGAL_ImageIO -lpthread
 CPPFLAGS  := $CPPFLAGS $rounding
 
 EOF

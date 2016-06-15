@@ -62,3 +62,58 @@ const int factorial[] = {
     39916800           ,
     479001600
 };
+
+const double sqrt_two_lplus1_div4pi[] = {
+    sqrt(1/(4.0*Pi)),
+    sqrt(3/(4.0*Pi)),
+    sqrt(5/(4.0*Pi)),
+    sqrt(7/(4.0*Pi)),
+    sqrt(9/(4.0*Pi)),
+    sqrt(11/(4.0*Pi)),
+    sqrt(13/(4.0*Pi)),
+    sqrt(15/(4.0*Pi)),
+    sqrt(17/(4.0*Pi)),
+    sqrt(19/(4.0*Pi)),
+    sqrt(21/(4.0*Pi)),
+    sqrt(23/(4.0*Pi)),
+    sqrt(25/(4.0*Pi)),
+    sqrt(27/(4.0*Pi)),
+    sqrt(29/(4.0*Pi)),
+    sqrt(31/(4.0*Pi)),
+    sqrt(33/(4.0*Pi)),
+    sqrt(35/(4.0*Pi)),
+    sqrt(37/(4.0*Pi)),
+    sqrt(39/(4.0*Pi))
+};
+
+const double one_div_sqrt_factorial[] = {
+    1.0/(sqrt(1.0        )),
+    1.0/(sqrt(1.0        )),
+    1.0/(sqrt(2.0        )),
+    1.0/(sqrt(6.0        )),
+    1.0/(sqrt(24.0       )),
+    1.0/(sqrt(120.0      )),
+    1.0/(sqrt(720.0      )),
+    1.0/(sqrt(5040.0     )),
+    1.0/(sqrt(40320.0    )),
+    1.0/(sqrt(362880.0   )),
+    1.0/(sqrt(3628800.0  )),
+    1.0/(sqrt(39916800.0 )),
+    1.0/(sqrt(479001600.0))
+};
+
+const double sqrt_factorial[] = {
+    sqrt(1.0        ),
+    sqrt(1.0        ),
+    sqrt(2.0        ),
+    sqrt(6.0        ),
+    sqrt(24.0       ),
+    sqrt(120.0      ),
+    sqrt(720.0      ),
+    sqrt(5040.0     ),
+    sqrt(40320.0    ),
+    sqrt(362880.0   ),
+    sqrt(3628800.0  ),
+    sqrt(39916800.0 ),
+    sqrt(479001600.0)
+};

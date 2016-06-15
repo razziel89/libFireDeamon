@@ -17,6 +17,7 @@ namespace std {
 #include "irregular_grid_interpolation.h"
 #include "arbitrary_grid_local_minima.h"
 #include "electron_density.h"
+#include "orbital_overlap.h"
 %}
 
 %pythoncode %{
@@ -659,3 +660,4 @@ def ElectrostaticPotentialOrbitalsPy(coefficients_list,Smat,occupations,data,pro
 %include "irregular_grid_interpolation.h"
 %include "arbitrary_grid_local_minima.h"
 %include "electron_density.h"
+%include "orbital_overlap.h"

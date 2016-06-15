@@ -28,6 +28,64 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 const static double Pi  = acos(-1.0L);
 const static double S00 = 1.0L/(2.0L*sqrt(Pi));
 
+unsigned int lmaxp1_square[] = {
+    0*LMAXP1*LMAXP1,
+    1*LMAXP1*LMAXP1,
+    2*LMAXP1*LMAXP1,
+    3*LMAXP1*LMAXP1,
+    4*LMAXP1*LMAXP1,
+    5*LMAXP1*LMAXP1,
+    6*LMAXP1*LMAXP1,
+    7*LMAXP1*LMAXP1,
+    8*LMAXP1*LMAXP1,
+    9*LMAXP1*LMAXP1
+};
+
+unsigned int lmaxp1_cube[] = {
+    0*LMAXP1*LMAXP1*LMAXP1,
+    1*LMAXP1*LMAXP1*LMAXP1,
+    2*LMAXP1*LMAXP1*LMAXP1,
+    3*LMAXP1*LMAXP1*LMAXP1,
+    4*LMAXP1*LMAXP1*LMAXP1,
+    5*LMAXP1*LMAXP1*LMAXP1,
+    6*LMAXP1*LMAXP1*LMAXP1,
+    7*LMAXP1*LMAXP1*LMAXP1,
+    8*LMAXP1*LMAXP1*LMAXP1,
+    9*LMAXP1*LMAXP1*LMAXP1
+};
+
+unsigned int lmaxp1_fourth[] = {
+    0*LMAXP1*LMAXP1*LMAXP1*LMAXP1,
+    1*LMAXP1*LMAXP1*LMAXP1*LMAXP1,
+    2*LMAXP1*LMAXP1*LMAXP1*LMAXP1,
+    3*LMAXP1*LMAXP1*LMAXP1*LMAXP1,
+    4*LMAXP1*LMAXP1*LMAXP1*LMAXP1,
+    5*LMAXP1*LMAXP1*LMAXP1*LMAXP1,
+    6*LMAXP1*LMAXP1*LMAXP1*LMAXP1,
+    7*LMAXP1*LMAXP1*LMAXP1*LMAXP1,
+    8*LMAXP1*LMAXP1*LMAXP1*LMAXP1,
+    9*LMAXP1*LMAXP1*LMAXP1*LMAXP1
+};
+
+unsigned int i_times_i_plus_1[] = {
+    0,
+    2,
+    6,
+    12,
+    20,
+    30,
+    42,
+    56,
+    72,
+    90,
+    110,
+    132,
+    156,
+    182,
+    210,
+    240
+};
+
 //computes n!
 inline long int f_factorial(int n){
 	long int fact;
@@ -190,17 +248,18 @@ AngInt::AngInt(){
     } //i
 }
 double AngInt::GetInt(unsigned int lambda, int mu, unsigned int i, unsigned int j, unsigned int k) const {
-    if (i+j+k>=LMAXP1 || mu*mu>lambda*lambda){
-        if (i+j+k>=LMAXP1){
-            throw std::invalid_argument("Given i+j+k > LMAXP1");
-        }else{
-            throw std::invalid_argument("Given mu > lambda");
-        }
-    }
+    //if (i+j+k>=LMAXP1 || mu*mu>lambda*lambda){
+    //    if (i+j+k>=LMAXP1){
+    //        throw std::invalid_argument("Given i+j+k > LMAXP1");
+    //    }else{
+    //        throw std::invalid_argument("Given mu > lambda");
+    //    }
+    //}
     if (lambda>i+j+k){
         return 0.0;
     }else{
-        return m_integrals[(k + j*(LMAXP1) + i*(LMAXP1*LMAXP1))*LMAXP1*LMAXP1 + mu+lambda+square(lambda)];
+        //return m_integrals[(k + j*(LMAXP1) + i*(LMAXP1*LMAXP1))*LMAXP1*LMAXP1 + mu+lambda+square(lambda)];
+        return m_integrals[(int)(lmaxp1_square[k] + lmaxp1_cube[j] + lmaxp1_fourth[i] + i_times_i_plus_1[lambda]) + mu];
     }
 }
 AngInt::~AngInt(){

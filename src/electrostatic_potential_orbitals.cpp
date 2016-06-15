@@ -29,17 +29,31 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <halfnum/radial_integral.h>
 #include <halfnum/angular_integral.h>
 #include <electrostatic_potential_orbitals.h>
-#include <gsl/gsl_sf_legendre.h>
+#include <boost/math/special_functions/legendre.hpp>
+//#include <gsl/gsl_sf_legendre.h>
 #include <constants.h>
 
 #include <iostream>
 
-#define FACTORCUTOFF 1.0e-12
-#define OVERLAPCUTOFF 1.0e-8
+#define FACTORCUTOFF 1.0e-8
+#define OVERLAPCUTOFF 1.0e-4
 
+//this one is deprecated (GSL is REALLY slow)
+//inline double spherical_harmonic(int l, int m, double theta, double phi){
+//    int abs_m = (m>=0) ? m : -m;
+//    double result = gsl_sf_legendre_sphPlm (l, abs_m, cos(theta));
+//    if     (m > 0){
+//        result *= sqrt2 * (((abs_m+1) % 2)-((abs_m) % 2)) * cos(abs_m*phi);
+//    }
+//    else{if(m < 0){
+//        result *= sqrt2 * (((abs_m+1) % 2)-((abs_m) % 2)) * sin(abs_m*phi);
+//    }}
+//    return result;
+//}
 inline double spherical_harmonic(int l, int m, double theta, double phi){
     int abs_m = (m>=0) ? m : -m;
-    double result = gsl_sf_legendre_sphPlm (l, abs_m, cos(theta));
+    double result = boost::math::legendre_p(l, abs_m, cos(theta)) * sqrt_two_lplus1_div4pi[l] * 
+        sqrt_factorial[l-abs_m] * one_div_sqrt_factorial[l+abs_m];
     if     (m > 0){
         result *= sqrt2 * (((abs_m+1) % 2)-((abs_m) % 2)) * cos(abs_m*phi);
     }
@@ -88,6 +102,18 @@ inline double X_mu_nu(double A[3], double B[3], double P[3], unsigned int a[3], 
 
     RI.Init(eta_mu_nu,absP);
 
+    ////LMAXP1 is defined in angular_integral.h
+    //unsigned int lambda_max = a[0]+a[1]+a[2]+b[0]+b[1]+b[2];
+    //double sph_harm[LMAXP1*LMAXP1] = {0};
+
+    //double* sph_harm_it = sph_harm;
+    //for (unsigned int lambda=0; lambda<=lambda_max; ++lambda){
+    //    for (int gamma=-((int)lambda); gamma<=((int)(lambda)); ++gamma, ++sph_harm_it){
+
+    //        *sph_harm_it = spherical_harmonic(lambda, gamma, thetaP, phiP);
+    //    }
+    //}
+
     double result = 0.0;
     for (unsigned int ax=0; ax<=a[0]; ++ax/*, a_minus1=-a_minus1*/){
         int a_binom[3];
@@ -114,12 +140,14 @@ inline double X_mu_nu(double A[3], double B[3], double P[3], unsigned int a[3], 
             double Bpow = b_binom[2] * b_minus1 * power(B[0],b[0]-bx) * power(B[1],b[1]-by) * power(B[2],b[2]-bz);
     
             double Q = 0.0;
+            //sph_harm_it = sph_harm;
             for (unsigned int lambda=0; lambda<=sum_a+sum_b; ++lambda){
                 double Omega = 0.0;
-                for (int gamma=-((int)lambda); gamma<=(int)(lambda); ++gamma){
+                for (int gamma=-((int)lambda); gamma<=(int)(lambda); ++gamma/*, ++sph_harm_it*/){
                     double integral = AI.GetInt(lambda, gamma, ax+bx, ay+by, az+bz);
                     if (integral!=0.0){
                         Omega += spherical_harmonic(lambda, gamma, thetaP, phiP) * integral;
+                        //Omega += *sph_harm_it * integral;
                     }
                 }
                 if (Omega!=0.0){

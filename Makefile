@@ -11,7 +11,7 @@ MAINSRC  := \
 	$(SRCDIR)/irregular_grid_interpolation.cpp $(SRCDIR)/electron_density.cpp $(SRCDIR)/arbitrary_grid_local_minima.cpp \
 	$(SRCDIR)/isosurface.cpp $(SRCDIR)/halfnum/angular_integral.cpp \
 	$(SRCDIR)/halfnum/radial_integral.cpp $(SRCDIR)/electrostatic_potential_orbitals.cpp \
-	$(SRCDIR)/constants.cpp
+	$(SRCDIR)/constants.cpp $(SRCDIR)/orbital_overlap.cpp
 MAINOBJ  := $(MAINSRC:$(SRCDIR)%.cpp=$(OBJDIR)%.o)
 #-----------------------------------------------------
 #         SOURCE FOR TEST FILES
@@ -63,23 +63,23 @@ test: $(TEST)
 mainlib_test : mainlib_test1 mainlib_test2 mainlib_test3 mainlib_test4
 .PHONY : mainlib_test1
 mainlib_test1 : $(TEST1OBJ)
-	$(GXX) $(TEST1OBJ) $(OTHERLIB) -L$(CGALLIB) -L$(GSLLIB) $(LDFLAGS) -o $(TESTDIR)/test1.exe
+	$(GXX) $(TEST1OBJ) $(OTHERLIB) -L$(CGALLIB) $(LDFLAGS) -o $(TESTDIR)/test1.exe
 	@printf "Executing first test file "
 	@test/test1.exe && echo "success" || echo "failed"
 .PHONY : mainlib_test2
 mainlib_test2 : $(TEST2OBJ) mainlib
-	$(GXX) $(TEST2OBJ) $(OTHERLIB) -L$(LIBDIR) -L$(CGALLIB) -L$(GSLLIB) $(LDFLAGS) -lFireDeamon -o $(TESTDIR)/test2.exe
+	$(GXX) $(TEST2OBJ) $(OTHERLIB) -L$(LIBDIR) -L$(CGALLIB) $(LDFLAGS) -lFireDeamon -o $(TESTDIR)/test2.exe
 	@printf "Executing second test file. Have you done 'make install' first? "
 	@test/test2.exe && echo "success" || echo "failed"
 .PHONY : mainlib_test3
 #mainlib_test3 : $(TEST3OBJ) mainlib
 mainlib_test3 : $(TEST3OBJ)
-	$(GXX) $(TEST3OBJ) $(OTHERLIB) -L$(CGALLIB) -L$(GSLLIB) $(LDFLAGS) -o $(TESTDIR)/test3.exe
+	$(GXX) $(TEST3OBJ) $(OTHERLIB) -L$(CGALLIB) $(LDFLAGS) -o $(TESTDIR)/test3.exe
 	@printf "Executing third test file "
 	@test/test3.exe && echo "success" || echo "failed"
 .PHONY : mainlib_test4
 mainlib_test4 : $(TEST4OBJ) mainlib
-	$(GXX) $(TEST4OBJ) $(OTHERLIB) -L$(LIBDIR) -L$(CGALLIB) -L$(GSLLIB) $(LDFLAGS) -lFireDeamon -o $(TESTDIR)/test4.exe
+	$(GXX) $(TEST4OBJ) $(OTHERLIB) -L$(LIBDIR) -L$(CGALLIB) $(LDFLAGS) -lFireDeamon -o $(TESTDIR)/test4.exe
 	@printf "Executing fourth test file. Have you done 'make install' first? "
 	@test/test4.exe && echo "success" || echo "failed"
 .PHONY : python_test
@@ -163,7 +163,7 @@ clean_mainlib :
 $(OBJDIR)/%.o : $(SRCDIR)/%.cpp
 	@printf "Compiling %-25s > %-25s\n" $< $@
 	mkdir -p $(dir $@)
-	$(GXX)  -std=c++0x -pedantic -Wall -Wextra -c -fPIC $(CPPFLAGS) $(OTHERINC) -I$(CGALINC) -I$(GSLINC) -I$(INCDIR) $< -o $@
+	$(GXX)  -std=c++0x -pedantic -Wall -Wextra -c -fPIC $(CPPFLAGS) $(OTHERINC) -I$(CGALINC) -I$(BOOSTINC) -I$(INCDIR) $< -o $@
 
 # Make compilation rules for cxx files of bindings 
 $(PYTHONDIR)/%.o : $(PYTHONDIR)/%.cxx
@@ -175,4 +175,4 @@ $(PYTHONDIR)/%.o : $(PYTHONDIR)/%.cxx
 $(TESTDIR)/%.o : $(TESTDIR)/%.cpp
 	@printf "Compiling %-25s > %-25s\n" $< $@
 	mkdir -p $(dir $@)
-	$(GXX) -std=c++0x -pedantic -Wall -Wextra -c -fPIC $(CPPFLAGS) $(OTHERINC) -I$(CGALINC) -I$(GSLINC) -I$(INCDIR) $< -o $@
+	$(GXX) -std=c++0x -pedantic -Wall -Wextra -c -fPIC $(CPPFLAGS) $(OTHERINC) -I$(CGALINC) -I$(BOOSTINC) -I$(INCDIR) $< -o $@
