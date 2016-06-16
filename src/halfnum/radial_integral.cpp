@@ -16,12 +16,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 ***********/
-#include <algorithm>
-#include <cstring>
 #include <cmath>
 #include <stdexcept>
 #include <halfnum/radial_integral.h>
-#include <tgmath.h>
 
 static const double sqrtPi = sqrt(acos(-1.0L));
 

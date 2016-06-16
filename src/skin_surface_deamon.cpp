@@ -29,8 +29,6 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <skin_surface_deamon.h>
 
-#include <iostream>
-
 template <class SkinSurface, class Polyhedron>
 //extract data into 2 arrays and return length in 2 integers
 //Since this is only to be used with polyhedrons without half-edges,

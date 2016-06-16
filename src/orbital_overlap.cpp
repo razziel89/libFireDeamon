@@ -20,10 +20,7 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <constants.h>
 #include <orbital_overlap.h>
 
-#include <iostream>
-
 double normalization_coefficient(double alpha, int l, int m, int n){
-    //std::cout << "norm: " << pow(2*alpha,0.75) * pow(4.0*alpha,0.5*(l+m+n)) * odbsdfo2[l]*odbsdfo2[m]*odbsdfo2[n] << std::endl;
     return pow(2*alpha,0.75) * pow(4.0*alpha,0.5*(l+m+n)) * odbsdfo2[l]*odbsdfo2[m]*odbsdfo2[n];
 }
 
@@ -60,11 +57,9 @@ double Sxyz(int a, int b, double diffA, double diffB, double gamma){
                 double Apow = power(diffA,a-i);
                 double Bpow = power(diffB,b-j);
                 double gamma_pow = pow(2*gamma,0.5*(i+j));
-                //std::cout << i << " " << j << " " << binom_a << " " << binomial(b,j) << " " << double_factorial_argminus1[i+j] << " " << Apow << " " << Bpow << " " << gamma_pow << std::endl;
                 result += factor * Apow * Bpow / gamma_pow;
             }
         }
     }
-    //std::cout << "a: " << a << " b: " << b << " diffA: " << diffA << " diffB: " << diffB << " gamma: " << gamma << " S: " << result / sqrt(gamma) << std::endl;
     return result / sqrt(gamma);
 }

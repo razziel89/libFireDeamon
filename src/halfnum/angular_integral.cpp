@@ -16,12 +16,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 ***********/
-#include <cstdio>
 #include <algorithm>
 #include <cstring>
-#include <string>
 #include <cmath>
-#include <stdexcept>
+//#include <stdexcept>
 
 #include <halfnum/angular_integral.h>
 
@@ -182,7 +180,7 @@ inline double f_equation_15(int i, int j, int k){
 }
 
 //the top-level function putting the others together
-inline double f_u_coeff (int l, int m, int lx, int ly, int lz){
+inline double f_u_coeff (int l, int m, int lx, int ly/*, int lz*/){
 	double result=0;
 	int j=lx+ly-abs(m);
 	if ( j%2==0 && j>=0 ){
@@ -209,7 +207,7 @@ inline double f_v_coeff (int l, int m, int lx, int ly, int lz){
 	if (l<=lx+ly+lz){
 		for (int i=0;i<=l;++i){
 			for (int j=0;j<=l-i;++j){
-				result+=f_u_coeff(l,m,i,j,l-i-j)*f_equation_15(lx+i,ly+j,lz+l-i-j);
+				result+=f_u_coeff(l,m,i,j/*,l-i-j*/)*f_equation_15(lx+i,ly+j,lz+l-i-j);
 			}
 		}
 	}
@@ -230,7 +228,7 @@ AngInt::AngInt(){
     m_integrals = (double*) malloc(max_nr_elements * sizeof(double));
     memset(m_integrals, 0.0, max_nr_elements * sizeof(double));
 
-    double u = f_u_coeff (0, 0, 0, 0, 0) / S00;
+    double u = f_u_coeff (0, 0, 0, 0/*, 0*/) / S00;
 
     for (int i=0; i<LMAXP1; ++i){
     	for (int j=0; j<LMAXP1; ++j){

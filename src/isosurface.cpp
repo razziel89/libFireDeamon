@@ -38,18 +38,11 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <CGAL/IO/Complex_2_in_triangulation_3_file_writer.h>
 #include <CGAL/IO/output_surface_facets_to_polyhedron.h>
 #include <CGAL/ImageIO.h>
-//#include <CGAL/IO/Nef_polyhedron_iostream_3.h>
-//#include "CGAL/IO/Polyhedron_iostream.h" 
-//
-//---default IO includes---
-#include <fstream>
-#include <ostream>
 //
 //---other default includes---
 #include <stdexcept>
 #include <vector>
 #include <deque>
-#include <stdlib.h>
 #include <math.h>
 #include <signal.h>
 //
@@ -57,12 +50,6 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <isosurface.h>
 
 //---CGAL typedefs---
-//typedef CGAL::Simple_cartesian<double> Kernel; 
-//typedef CGAL::Polyhedron_3<Kernel> Polyhedron; 
-//typedef CGAL::Nef_polyhedron_3<Kernel> Nef_Polyhedron; 
-//typedef Polyhedron::HalfedgeDS HalfedgeDS; 
-//typedef Nef_Polyhedron::Vector_3  Vector_3; 
-//typedef Nef_Polyhedron::Aff_transformation_3  Aff_transformation_3; 
 typedef CGAL::Surface_mesh_default_triangulation_3 Tr; // default triangulation for Surface_mesher
 typedef CGAL::Complex_2_in_triangulation_3<Tr> C2t3;   // c2t3
 typedef Tr::Geom_traits GT;
@@ -70,12 +57,8 @@ typedef CGAL::Gray_level_image_3<GT::FT, GT::Point_3> Gray_level_image;
 typedef CGAL::Implicit_surface_3<GT, Gray_level_image> Surface_3;
 typedef CGAL::Exact_predicates_inexact_constructions_kernel Kinex;
 typedef CGAL::Exact_predicates_exact_constructions_kernel Kex;
-//typedef CGAL::Exact_integer  NT;
-//typedef CGAL::Extended_homogeneous<NT>  Kernel;
-//typedef CGAL::Nef_polyhedron_3<Kernel>  Nef_polyhedron;
 typedef CGAL::Nef_polyhedron_3<Kex>     Nef_Polyhedron;
 typedef CGAL::Polyhedron_3<Kex>         Ex_Polyhedron;
-//typedef Ex_Polyhedron::HalfedgeDS       Ex_HalfedgeDS; 
 typedef CGAL::Polyhedron_3<Kinex>       Polyhedron;
 
 int signum = -1;

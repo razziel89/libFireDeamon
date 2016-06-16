@@ -16,13 +16,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 ***********/
-#include <cstdlib>
 #include <pthread.h>
 #include <vector>
 #include <tuple>
 #include <stdexcept>
-#include <assert.h>
-#include <stdio.h>
 #include <math.h>
 #include <time.h>
 #include <parallel_generic.h>

@@ -16,13 +16,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 ***********/
-#include <cstdlib>
 #include <pthread.h>
 #include <vector>
 #include <tuple>
 #include <stdexcept>
-#include <assert.h>
-#include <stdio.h>
 #include <math.h>
 #include <time.h>
 #include <parallel_generic.h>
@@ -30,11 +27,10 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <halfnum/angular_integral.h>
 #include <electrostatic_potential_orbitals.h>
 #include <boost/math/special_functions/legendre.hpp>
-//#include <gsl/gsl_sf_legendre.h>
 #include <constants.h>
 
-#include <iostream>
-
+//header for the deprecated code below
+//#include <gsl/gsl_sf_legendre.h>
 //this one is deprecated (GSL is REALLY slow)
 //inline double spherical_harmonic(int l, int m, double theta, double phi){
 //    int abs_m = (m>=0) ? m : -m;
@@ -185,8 +181,8 @@ void* _potentialThreadOrbitals(void* data){
     int* progress_bar = dat->GetProgressBar();
     pthread_mutex_t* mut = dat->GetMutex();
 
-    RadInt RI;
-    const AngInt AI;
+    RadInt RI = RadInt();
+    const AngInt AI = AngInt();
 
     double* gp        = grdpnts;
     double* potential = pot;
