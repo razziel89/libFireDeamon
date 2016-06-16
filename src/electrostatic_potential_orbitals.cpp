@@ -35,9 +35,6 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <iostream>
 
-#define FACTORCUTOFF 1.0e-8
-#define OVERLAPCUTOFF 1.0e-4
-
 //this one is deprecated (GSL is REALLY slow)
 //inline double spherical_harmonic(int l, int m, double theta, double phi){
 //    int abs_m = (m>=0) ? m : -m;
@@ -245,7 +242,11 @@ void* _potentialThreadOrbitals(void* data){
                     P[1] = (xi_mu*A[1] + xi_nu*B[1]) / eta_mu_nu;
                     P[2] = (xi_mu*A[2] + xi_nu*B[2]) / eta_mu_nu;
                     double d_mu_nu = d_mu * d_nu * C_mu_nu * 2.0 * P_mu_nu[mu*nr_prim + nu];
-                    if (fabs(S_mu_nu[mu*nr_prim + nu])>OVERLAPCUTOFF && fabs(d_mu_nu)>FACTORCUTOFF){
+                    //WARNING: Increasing the cutoff for S_mu_nu or d_mu_nu might introduce serious errors!!!
+                    //WARNING: The current values screen away only such integrals, that can be assumed to
+                    //WARNING: definitely be insignificant. I also tried 1.0e-10 and 1.0e-14, but these
+                    //WARNING: caused serious deviations from the real results.
+                    if (fabs(S_mu_nu[mu*nr_prim + nu])>1.0e-20/*0.0*/ && fabs(d_mu_nu)>1.0e-30/*0.0*/){
                         sum += X_mu_nu(A,B,P,a,b,d_mu_nu,eta_mu_nu,RI,AI);
                     }
                 }
