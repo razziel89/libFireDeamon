@@ -35,9 +35,9 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include "CGAL/Polyhedron_incremental_builder_3.h" 
 //
 //---CGAL IO includes---
-#include <CGAL/IO/Complex_2_in_triangulation_3_file_writer.h>
+//#include <CGAL/IO/Complex_2_in_triangulation_3_file_writer.h>
 #include <CGAL/IO/output_surface_facets_to_polyhedron.h>
-#include <CGAL/ImageIO.h>
+//#include <CGAL/ImageIO.h>
 //
 //---other default includes---
 #include <stdexcept>
