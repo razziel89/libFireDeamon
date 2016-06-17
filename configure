@@ -38,6 +38,10 @@ SWIG=
 PYTHON=
 DEBUG=
 
+compilertype=gnu
+ADD_LDFLAGS=
+ADD_PYLDFLAGS=
+
 USEPYTHON=true
 
 function helptext {
@@ -55,24 +59,28 @@ flag that can be used to turn off the feature.
 Flags:
 --prefix                the prefix for the whole installation
 --enable-python         will also build python bindings
+--inc                   set all include directories to this value.
+                        Further diversification possible using
+                        following inc options
+--lib                   set all lib directories to this value.
+                        Further diversification possible using
+                        following lib options
 --cgal-inc              the cgal include directory
 --cgal-lib              the cgal lib directory. Contains
-                            libCGAL.so.10
+                            libCGAL.so and libCGAL_ImageIO.so
 --python-inc            the python include directory. NOT YET NEEDED
 --python-lib            the python lib directory. NOT YET NEEDED
 --swig                  will use the specified swig executable.
                         Deafault: first in PATH
 --swig-inc              the directory for swigs *.i files
 --ar                    will use the specified ar.
-                        Deafault: first in PATH
+                        Deafault: first ar in PATH
 --g++                   will use the specified g++ compiler.
-                        Deafault: first in PATH
+                        Deafault: first g++ in PATH
 --python                will use the specified python interpreter.
                         Deafault: first in PATH
---rounding-type         On some systems, the compiled programme will return
-                        an error due to incorrect rounding. Declare
-                        the type of compiler you use and the appropriate
-                        rounding flag will be used. Can be gnu or intel.
+--compiler-type         declare what type of compiler you want to be using.
+                        This can be GNU (default) or Intel (case insensitive).
 --debug                 enable debugging mode, switch off optimization and
                         use CGAL without rounding math checks (warning: will
                         probably yield wrong results)
@@ -116,6 +124,20 @@ do
         ;;
         --disable-python)
             USEPYTHON=false
+        ;;
+        --inc)
+            shift
+            nospace "$1"
+            PYTHONINC="$1"
+            CGALINC="$1"
+            BOOSTINC="$1"
+            SWIGINC="$1"
+        ;;
+        --lib)
+            shift
+            nospace "$1"
+            PYTHONLIB="$1"
+            CGALLIB="$1"
         ;;
         --python-inc)
             shift
@@ -167,14 +189,15 @@ do
             nospace "$1"
             PYTHON="$1"
         ;;
-        --rounding-type)
+        #--rounding-type)
+        --compiler-type)
             shift
             case ${1,,} in
                 gcc|gnu|g++|gpp)
-                    rounding="-frounding-math"
+                    compilertype=gnu
                     ;;
                 intel)
-                    rounding="-fp-model strict"
+                    compilertype=intel
                     ;;
             esac
         ;;
@@ -194,6 +217,17 @@ notdef --prefix "$PREFIX"
 notdef --cgal-lib "$CGALLIB" 
 notdef --cgal-inc "$CGALINC" 
 notdef --boost-inc "$BOOSTINC" 
+
+case $compilertype in
+    gnu)
+        rounding="-frounding-math"
+        ;;
+    intel)
+        rounding="-fp-model strict"
+        ADD_LDFLAGS="-static-intel"
+        ADD_PYLDFLAGS="-static-intel"
+        ;;
+esac
 
 if [ "$USEPYTHON" == "true" ]
 then
@@ -235,7 +269,9 @@ then
         PYTHON=$(which python)
     fi
     echo "Using python:             $PYTHON"
-    libpython="python$($PYTHON -c 'import sys; print sys.version[:3]')"
+    pythonversion="$($PYTHON -c 'import sys; print sys.version[:3]')"
+    libpython="python${pythonversion}"
+    PYTHONINC="$PYTHONINC/python${pythonversion}"
 fi
 
 cat > $output << EOF
@@ -261,7 +297,7 @@ BOOSTINC  := $BOOSTINC
 OTHERINC  := $OTHERINC
 OTHERLIB  := $OTHERLIB
 
-LDFLAGS   := $LDFLAGS -lmpfr -lgmp -lboost_thread -lCGAL -lCGAL_ImageIO -lpthread
+LDFLAGS   := $LDFLAGS $ADD_LDFLAGS -lmpfr -lgmp -lboost_thread -lCGAL -lCGAL_ImageIO -lpthread
 CPPFLAGS  := $CPPFLAGS $rounding
 
 EOF
@@ -275,7 +311,7 @@ PYTHONLIB     := $PYTHONLIB
 PYTHONINC     := $PYTHONINC
 PYTHON        := $PYTHON
 
-PYTHONLDFLAGS := $LDFLAGS -l$libpython
+PYTHONLDFLAGS := $LDFLAGS $ADD_PYLDFLAGS -l$libpython
 
 EOF
 fi
