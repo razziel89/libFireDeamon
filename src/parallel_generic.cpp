@@ -19,7 +19,7 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <pthread.h>
 #include <stdio.h>
 #include <signal.h>
-#include <parallel_generic.h>
+#include <FireDeamon/parallel_generic.h>
 
 //PG stands for ParallelGlobals
 PG::PG(){

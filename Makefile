@@ -100,10 +100,12 @@ main_install :
 	mkdir -p $(PREFIX)/lib
 	cp $(LIBDIR)/libFireDeamon.so $(PREFIX)/lib/libFireDeamon.so
 	cp $(LIBDIR)/libFireDeamon.a $(PREFIX)/lib/libFireDeamon.a
+	cp -r $(INCDIR)/FireDeamon $(PREFIX)/include/FireDeamon
 
 .PHONY : main_uninstall 
 main_uninstall : 
 	rm -f $(PREFIX)/lib/libFireDeamon.so $(PREFIX)/lib/libFireDeamon.a
+	rm -f $(PREFIX)/include/FireDeamon
 
 .PHONY : python_install 
 python_install :

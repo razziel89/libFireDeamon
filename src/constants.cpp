@@ -16,8 +16,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 ***********/
-#include <constants.h>
 #include <math.h>
+#include <FireDeamon/constants.h>
 
 const double Pi = acos(-1.0L);
 const double two_div_by_pi_to_three_fourth = 0.71270547035499016035;

@@ -37,6 +37,9 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 //---CGAL IO includes---
 //#include <CGAL/IO/Complex_2_in_triangulation_3_file_writer.h>
 #include <CGAL/IO/output_surface_facets_to_polyhedron.h>
+//use modified versions of the Image headers to remove dependencies on libGL.so and libGLU.so
+#include <FireDeamon/CGAL/ImageIO_impl.h>
+#include <FireDeamon/CGAL/Image_3_impl.h>
 //#include <CGAL/ImageIO.h>
 //
 //---other default includes---
@@ -47,7 +50,9 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <signal.h>
 //
 //---deamon includes (interface)---
-#include <isosurface.h>
+#include <FireDeamon/isosurface.h>
+
+//triLinInterp
 
 //---CGAL typedefs---
 typedef CGAL::Surface_mesh_default_triangulation_3 Tr; // default triangulation for Surface_mesher

@@ -23,8 +23,8 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdexcept>
 #include <math.h>
 #include <time.h>
-#include <parallel_generic.h>
-#include <irregular_grid_interpolation.h>
+#include <FireDeamon/parallel_generic.h>
+#include <FireDeamon/irregular_grid_interpolation.h>
 
 void* _nearestInterpolationThread(void* data){
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
