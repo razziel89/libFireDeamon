@@ -297,7 +297,7 @@ BOOSTINC  := $BOOSTINC
 OTHERINC  := $OTHERINC
 OTHERLIB  := $OTHERLIB
 
-LDFLAGS   := $LDFLAGS $ADD_LDFLAGS -lmpfr -lgmp -lboost_thread -lCGAL -lCGAL_ImageIO -lpthread
+LDFLAGS   := $LDFLAGS $ADD_LDFLAGS -lmpfr -lgmp -lboost_thread -lCGAL -lpthread
 CPPFLAGS  := $CPPFLAGS $rounding
 
 EOF
