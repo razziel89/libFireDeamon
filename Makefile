@@ -150,14 +150,13 @@ clean : clean_bindings clean_mainlib
 
 .PHONY : clean_bindings
 clean_bindings : 
-	rm -f  $(PYTHONDIR)/*.o $(PYTHONDIR)/*.d.tmp $(PYTHONDIR)/*.py  $(PYTHONDIR)/*.cxx $(PYTHONDIR)/*.so
+	rm -f  $(PYTHONDIR)/*.o $(PYTHONDIR)/*.py  $(PYTHONDIR)/*.cxx $(PYTHONDIR)/*.so
 
 .PHONY : clean_mainlib
 clean_mainlib : 
 	rm -f $(MAINOBJ)
-	rm -f $(OBJDIR)/*.d.tmp
 	rm -f $(LIBDIR)/*.so $(LIBDIR)/*.a
-	rm -f $(TESTDIR)/*.o $(TESTDIR)/*.d.tmp
+	rm -f $(TESTDIR)/*.o
 	rm -f $(TESTDIR)/test*.exe
 #-----------------------------------------------------
 #              GENERIC BUILD RULES
