@@ -19,15 +19,34 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef DEAMON_FUNCTORS_H
 #define DEAMON_FUNCTORS_H
 
-#include <vector>  //std::vector
 #include <tuple>   //std::get
 #include <cstring> //memcpy
+#include <vector>  //std::vector
+/**
+ * \file
+ * \brief A header that containes some functors that allow to do some things
+ * for each entry in a tuple.
+ *
+ * They are used in conjunction with iterate_over_tuple.h to
+ * do that.
+ */
+/// \name Functors
+/// \{
+struct get_size_functor;
+struct set_to_NULL_functor;
+struct get_size_in_bytes_and_pointer_functor;
+struct copy_functor_interlace;
+struct deallocate_functor;
+/// \}
 
-//those functors can be used for the following things:
-
-//add the sizes of each vector in a tuple to a vector
+//! \brief Add the sizes of a vector to a vector
 struct get_size_functor
 {
+    /**
+     * \brief Operator that performs the operation
+     * \param t std::vector<T>* - pointer to the vector whose length shall be added to a vector
+     * \param i int - helper parameter that allows for looping over each element in a tuple
+     */
     template<typename T>
     void operator () (std::vector<T>* t, std::vector<int>* r, int i)
     {
@@ -36,9 +55,14 @@ struct get_size_functor
     }
 };
 
-//set each element in the tuple to NULL
+//! \brief Set a pointer to NULL
 struct set_to_NULL_functor
 {
+    /**
+     * \brief Operator that performs the operation
+     * \param t T** - pointer to a pointer that shall be set to NULL
+     * \param i int - helper parameter that allows for looping over each element in a tuple
+     */
     template<typename T>
     void operator () (T** t, int i)
     {
@@ -47,14 +71,25 @@ struct set_to_NULL_functor
     }
 };
 
-//add the sizes in bytes of the data of each vector in a tuple to a vector
+//! \brief Create a tuple that contains information about a vector and append that tuple to a vector.
+//!
+//! The information contained in the tuple that is creates is as follows:
+//! -# number of elements in the vector
+//! -# size in bytes of data type
+//! -# pointers to the vector's data
 struct get_size_in_bytes_and_pointer_functor
 {
-    template<typename T>
+    /**
+     * \brief Operator that performs the operation
+     * \param t std::vector<T>* - pointer to a vecotor whose information shall be extracted
+     * \param r std::vector<std::tuple<unsigned int,size_t,void*>>* - pointer to the vector to which to append the tuple
+     * \param i int - helper parameter that allows for looping over each element in a tuple
+     */
+    template<           typename T>
     void operator () (std::vector<T>* t, std::vector<std::tuple<unsigned int,size_t,void*>>* r, int i)
     {
-        T* data = t->data(); //WARNING: the error "void value not ignored as it ought to be" means you cannot use bool as a type, sorry
         unsigned int temp_vect_size = t->size();
+        T* data = t->data(); //WARNING: the error "void value not ignored as it ought to be" means you cannot use bool as a type, sorry
         size_t T_size = sizeof(T);
         void* temp_void_ptr = (void*)data;
         std::tuple<unsigned int,size_t,void*> temp_tuple = std::make_tuple(temp_vect_size, T_size, temp_void_ptr);
@@ -63,14 +98,27 @@ struct get_size_in_bytes_and_pointer_functor
     }
 };
 
-//copy the data over
+//! \brief Copy the data in a vector over to a number of C-type arrays each (supports interlacing)
+//!
+//! Data can be grouped together, meaing that it is possible to keep a set of data together even
+//! when interlacing the data during the copy process. Interlacing the data can help to balance
+//! the load when performing computations.
 struct copy_functor_interlace
 {
-    unsigned int m_increment; //how many values belong together
-    unsigned int m_nr_parts;  //in how many parts the data shall be split
-    int m_nr_interlace; //which data stream to itnerlace (if at all)
-    int m_interlace; //whether or not to interlace the data stream defined by m_nr_interlace
+    unsigned int m_increment;   //!< Size of the group that belongs together (important when interlacing)
+    unsigned int m_nr_parts;    //!< \brief In how many parts the data shall be split, i.e., how many threads will be used 
+                                //! for parallel computations
+    int m_nr_interlace;         //!< Index of data stream to interlace (if at all)
+    int m_interlace;            //!< Whether or not to interlace the data stream defined by m_nr_interlace
 
+    /**
+     * \brief Constructor for the functor
+     * \param b int - Size of the group that belongs together (important when interlacing)
+     * \param s int - In how many parts the data shall be split, i.e., how many threads will
+     *                perform a computation simultaneously
+     * \param ni int - Index of data stream to interlace (if at all)
+     * \param i bool - Whether or not to interlace the data stream defined by m_nr_interlace
+     */
     copy_functor_interlace(int b, int s, int ni, bool i){
         m_increment    = (unsigned int) b;
         m_nr_parts     = (unsigned int) s;
@@ -78,6 +126,14 @@ struct copy_functor_interlace
         m_interlace    = i;
     }
 
+    /**
+     * \brief Operator that performs the operation.
+     * \param t T** - pointer to C-type array to which the data shall be copied
+     * \param r std::vector<std::tuple<unsigned int,size_t,void*>>* - a vector containing the information
+     *              about the data that is to be copied over (generated by \a get_size_in_bytes_and_pointer_functor)
+     * \param i int - helper parameter that allows for looping over each element in a tuple (this is also the index
+     *                for the data taken from \a r)
+     */
     template<typename T>
     void operator () (T** t, std::vector<std::tuple<unsigned int,size_t,void*>>* r, int i)
     {
@@ -124,9 +180,14 @@ struct copy_functor_interlace
 
 };
 
-//free each element of the tuple
+//! \brief Free each element in the tuple
 struct deallocate_functor
 {
+    /**
+     * \brief Operator that performs the operation
+     * \param t T** - pointer to a pointer that shall be freed
+     * \param i int - helper parameter that allows for looping over each element in a tuple
+     */
     template<typename T>
     void operator () (T** t, int i)
     {
@@ -134,8 +195,7 @@ struct deallocate_functor
         //suppress compiler warnings about unused parameter
         //that I want to have turned off but these two parameters
         //are not needed here but needed in other functors
-        (void) i;
+        (void) i; //suppress compiler warning
     }
 };
-
 #endif //DEAMON_FUNCTORS_H

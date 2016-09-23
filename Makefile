@@ -143,10 +143,20 @@ mainlib : $(MAINOBJ)
 	@echo "Linking static library..."
 	$(AR) rcs $(LIBDIR)/libFireDeamon.a $(MAINOBJ)
 #-----------------------------------------------------
+#              BUILD RULES FOR DOCUMENTATION
+#-----------------------------------------------------
+.PHONY : doc
+doc:
+	@echo "Creating documentation using doxygen..."
+	doxygen doxyfile
+	@echo "Compiling pdf using LaTeX..."
+	$(MAKE) -C documentation/latex
+	@mv documentation/latex/refman.pdf documentation/Documentation.pdf
+#-----------------------------------------------------
 #              CLEANING RULES
 #-----------------------------------------------------
 .PHONY : clean
-clean : clean_bindings clean_mainlib
+clean : clean_bindings clean_mainlib clean_doc
 
 .PHONY : clean_bindings
 clean_bindings : 
@@ -158,6 +168,10 @@ clean_mainlib :
 	rm -f $(LIBDIR)/*.so $(LIBDIR)/*.a
 	rm -f $(TESTDIR)/*.o
 	rm -f $(TESTDIR)/test*.exe
+
+.PHONY : clean_doc
+clean_doc : 
+	rm -rf documentation
 #-----------------------------------------------------
 #              GENERIC BUILD RULES
 #-----------------------------------------------------

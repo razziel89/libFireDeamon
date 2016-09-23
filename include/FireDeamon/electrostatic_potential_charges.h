@@ -16,11 +16,32 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 ***********/
+/**
+ * \file
+ * \brief Compute the electrostatic potential due to a point cloud of charges.
+ */
 #ifndef ELECTROSTATIC_POTENTIAL_CHARGES_H
 #define ELECTROSTATIC_POTENTIAL_CHARGES_H
 
 #include <vector>
 
-void electrostatic_potential (bool progress_reports, int num_points, std::vector<double> points, std::vector<double> charges_coordinates, std::vector<double> *potential, double cutoff);
+//! \brief Compute the electrostatic potential due to a point cloud of charges.
+void electrostatic_potential (
+        bool progress_reports,                      //!< bool - whether or not to print progress reports during the computation
+        int num_points,                             //!< int - at how many points shall the potential be computed
+        std::vector<double> points,                 //!< std::vector<double> - a flat list of the Cartesian coordinates of the
+                                                    //! points at which to compute the potential
+        std::vector<double> charges_coordinates,    //!< std::vector<double> - a flat list containing the information about the
+                                                    //! point cloud. Each charge in the cloud is described by four values:
+                                                    //! -# its charge
+                                                    //! -# its x-coordinate
+                                                    //! -# its y-coordinate
+                                                    //! -# its z-coordinate
+        std::vector<double> *potential,             //!< pointer to std::vector<double> - this vector will hold the computed potential
+                                                    //! in the same order as the points were specified in \a points
+        double cutoff                               //!< double - if a charge is farther away than this from a point at which the
+                                                    //! the potential is to be computed, do not consider this charge. A negative value
+                                                    //! switches off this behaviour.
+        );
 
 #endif //ELECTROSTATIC_POTENTIAL_CHARGES_H

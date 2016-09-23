@@ -16,12 +16,50 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 ***********/
+/**
+ * \file
+ * \brief Routines to compute the electron density as well as the overlap between Gaussian-type atomic orbitals.
+ */
 #ifndef ELECTRON_DENSITY_H 
 #define ELECTRON_DENSITY_H
 
 #include <vector>
 
-void electron_density(bool progress_reports, int num_gridpoints, std::vector<double> prim_centers, std::vector<double> prim_exponents, std::vector<double> prim_coefficients, std::vector<int> prim_angular, std::vector<double> density_grid, std::vector<double>  mo_coefficients, std::vector<double> *density, double cutoff=-1.0);
-void normalize_gaussians(std::vector<double> *prefactor, std::vector<double> exponent, std::vector<int> angular);
+//! \brief Compute the electron density on an arbitrary grid caused by molecular orbitals.
+//!
+//! Molecular orbitals are given as a linear combination of atomic orbitals
+//! and occupation numbers. The basis has to be specified in terms of normalized, primitive
+//! Cartesian Gaussian orbitals, which means that \a prim_centers, \a prim_exponents,
+//! \a prim_coefficients and \a prim_angular have to have the exact same length (considering
+//! that each primitive has one center, exponent and coefficient, but its angular momentum and
+//! center in space are each described by three values).
+void electron_density(
+        bool progress_reports,                  //!< bool - whether or not to output progress reports during the computation
+        int num_gridpoints,                     //!< int - the number of points at which to compute the density
+        std::vector<double> prim_centers,       //!< std::vector<double> - a flat list of the Cartesian coordinates of the
+                                                //! primitives' center (length==3N with N==no. of primitives)
+        std::vector<double> prim_exponents,     //!< std::vector<double> - a flat list of the exponential factors of the primitives
+        std::vector<double> prim_coefficients,  //!< std::vector<double> - a flat list of the preexponential factors of the primitives
+        std::vector<int> prim_angular,          //!< std::vector<int> - a flat list of the angular factors of the Cartesian primitives
+                                                //!(length==3N with N==no. of primitives)
+        std::vector<double> density_grid,       //!< std::vector<double> - a flat list of the Cartesian coordinates at which to
+                                                //! compute the density
+        std::vector<double>  mo_coefficients,   //!< std::vector<double> - a flat list of coefficients specifying how te atomic basis
+                                                //! described with the above parameters consitutes a molecular orbital
+        std::vector<double> *density,           //!< pointer to std::vector<double> - this vector will hold the resulting density
+                                                //! values
+        double cutoff=-1.0                      //!< double - if the center of two primitives are farther away from each other than
+                                                //! this value, do not compute the density due to the overlap of these orbitals
+        );
+
+//! \brief Compute the normalization coefficients for a set of primitive Cartesian Gaussian functions
+void normalize_gaussians(
+        std::vector<double> *prefactor,     //!< pointer to std::vector<double> - this vector will hold the computed normalization
+                                            //! coefficients in the same order used for \a exponent and \a angular
+        std::vector<double> exponent,       //!< std::vector<double> - a flat list of the exponential factors of the primitive
+                                            //! Cartesian Gaussian functions
+        std::vector<int> angular            //!< std::vector<int> - a flat list of the angular factors of the Cartesian primitives
+                                            //!(length==3N with N==no. of Cartesian Gaussian functions)
+        );
 
 #endif //ELECTRON_DENSITY_H

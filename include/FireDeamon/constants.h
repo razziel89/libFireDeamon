@@ -16,23 +16,31 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 ***********/
+/**
+ * \file
+ * \brief Definition of some constants needed for the treatment of atomic and
+ * molecular orbitals.
+ */
 #ifndef FIRE_DEAMON_STATIC_NUMBERS_H
 #define FIRE_DEAMON_STATIC_NUMBERS_H
 
-extern const double Pi;
-extern const double two_div_by_pi_to_three_fourth;
-extern const double sqrt2;
-extern const double sqrt_pihalf_to_3_4;
+extern const double Pi;                 //!< the number \f$\pi\f$ (approx. 3.141592653589793)
+extern const double two_div_by_pi_to_three_fourth;  //!< the number \f$ (\frac{2}{\pi})^{\frac{3}{4}} \f$
+extern const double sqrt2;              //!< the number \f$ \sqrt{2} \f$
+extern const double sqrt_pihalf_to_3_4; //!< the number \f$ \sqrt{(\frac{\pi}{2})^{\frac{3}{4}}} \f$
 
-//this name is a short form of: one_div_by_sqrt_double_factorial_of_2aminus1
-// which is 1.0/((2*a-1)!!)
-extern const double odbsdfo2[];
-//the factorial of the index
-extern const int factorial[];
-//two times the index plus 1 divided by 4*pi
-extern const double sqrt_two_lplus1_div4pi[];
+extern const double odbsdfo2[];         //!< a C-type array containing the integer numbers
+                                        //! \f$ \frac{1}{\sqrt{(2i-1)!!}}
+                                        //! \forall i \wedge i>0 \wedge i<16 \f$ and the array index is i
+extern const int factorial[];           //!< a C-type array containing the factorial of the first 11 integer numbers greater zero
 
-extern const double one_div_sqrt_factorial[];
-extern const double sqrt_factorial[] ;
+extern const double sqrt_two_lplus1_div4pi[]; //!< a C-type array containing the integer numbers
+                                              //! \f$ \sqrt{\frac{2i+1}{4\pi}}
+                                              //! \forall i \wedge i>0 \wedge i<16 \f$ and the array index is i
+
+extern const double one_div_sqrt_factorial[]; //!< //!< a C-type array containing the integer numbers
+                                              //! \f$ \frac{1}{\sqrt{i!}}
+                                              //! \forall i \wedge i>0 \wedge i<16 \f$ and the array index is i
+extern const double sqrt_factorial[] ;        //!< a C-type array containing the inverse values of \a one_div_sqrt_factorial
 
 #endif //FIRE_DEAMON_STATIC_NUMBERS_H

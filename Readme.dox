@@ -1,0 +1,84 @@
+/**
+\mainpage   Overview over libFireDeamon
+
+\section    Introduction
+
+What you are currently viewing contains the documentation for \a libFireDeamon, a
+C++-library written to perform some tasks related to what I did during my time
+as a PhD student that will be detailed in this documentation. For any
+license-related information, please see the file called \a COPYING and the
+header of each individual C++ source file.
+
+The library \a libFireDeamon contains functionality that I think is useful for
+people working in physical chemistry or quantum chemistry/physics, who perform
+quantum chemical calculations and evaluate them afterwards (or use them in any
+other way). It consists of functionality that I could not find anywhere at all
+or not anywhere I could just use it (like when it's in proprietary
+software). The functionality includes:
+- a generic way to compute values defined on an arbitrary grid from values
+  defined on an (not necessarily identical) arbitrary grid
+  - realized via variadic templates
+  - supports progress reports during the computation
+- finding local minima in volumetric data on arbitrary grids
+- compute the following chemical/physical quantities:
+  - electron densities (from atomic basis sets)
+  - electrostatic potentials from:
+    - clouds of point charges
+    - atomic basis sets
+- compute isosurfaces through volumetric data sets 
+  - arbitrarily well discretized
+  - only regular grids supported
+- compute skin-surfaces around a set of spheres
+  - arbitrarily well discretized
+  - arbitrary radii supported
+- interpolate quantities on arbitrary grids using:
+  - nearest-neighbour interpolation
+  - interpolation using inverse-distance weighting
+- compute overlaps of atomic orbitals
+
+The library \a libFireDeamon has been designed to be mainly used from Python via
+the provided language bindings. Many of the C++ functions are not that easy to
+use (i.e., their input is not that easily prepared in the correct format) and
+some sanity checks are missing. In contrast to that, the high-level Python
+wrapper functions perform many sanity checks and the input is more easily
+prepared properly. I highly recommend installing the language bindings as well.
+
+\section    Prerequisites
+
+You need to have at least the following programmes/libraries installed to use \a libFireDeamon:
+- a C++ compiler that supports the C++11 standard (tested with g++4.8 and icpc16.0)
+- CGAL (Computational Geometry Algorithms Library)
+- the Boost C++ libraries
+- GNU make
+- git (not needed if downloaded separately, e.g., as a zip-archive)
+
+If you want to use the Python bindings (strongly recommended) you also need:
+- SWIG (Simplified Wrapper Interface Generator)
+- a Python interpreter (version>=2.7.6)
+
+\section    Installation
+
+If you have everything installed and are running Ubuntu and are using the GNU C++ compiler, it should be sufficient to do:
+\verbatim
+git clone git://github.com/razziel89/libfiredeamon.git libFireDeamon
+cd libFireDeamon
+./configure --prefix PREFIX --inc /usr/include --lib /usr/local/lib \
+            --swig-inc /usr/share/swig2.0/python --compiler-type gnu
+make
+make install
+make doc
+\endverbatim
+Please replace PREFIX with the location where you want to install
+\a libFireDeamon. You might have to adjust the include and library paths and the
+compiler type. Please run
+\verbatim
+./configure --help
+\endverbatim
+for more information. The include and library paths for all necessary
+programmes can be adjusted separately.
+
+\author     Torsten Sachse
+\date       2015-2016
+\version    1.0
+\copyright  GNU General Public License
+*/

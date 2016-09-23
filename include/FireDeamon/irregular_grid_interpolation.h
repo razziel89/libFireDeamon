@@ -16,11 +16,35 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 ***********/
+/**
+ * \file
+ * \brief Interpolate data defined on an arbitrary grid onto another arbitrary grid.
+ */
 #ifndef H_IRREGULAR_GRID_INTERPOLATION_DEAMON_
 #define H_IRREGULAR_GRID_INTERPOLATION_DEAMON_
 
 #include <vector>
 
-void generic_interpolation(bool progress_reports, int num_interpolation_points, std::vector<double> points, std::vector<double> values, std::vector<double> interpolation_points, std::vector<double> *interpolation, int interpolation_type, int distance_exponent, int distance_function, double cutoff=-1.0);
+//! \brief Interpolate data defined on an arbitrary grid A onto another arbitrary grid B.
+void generic_interpolation(
+        bool progress_reports,                      //!< bool - whether or not to print progress reports during the computation
+        int num_interpolation_points,               //!< int - the number of points of grid B
+        std::vector<double> points,                 //!< std::vector<double> - a flat list containing the Cartesian coordinats of the
+                                                    //! points on grid A
+        std::vector<double> values,                 //!< std::vector<double> - a list containung the values associated with 
+                                                    //! the points whose coordinats are in \a points (i.e., those of grid A)
+        std::vector<double> interpolation_points,   //!< std::vector<double> - a flat list containing the Cartesian coordinats of the
+                                                    //! points on grid B
+        std::vector<double> *interpolation,         //!< pointer to std::vector<double> - a list that will contain the values 
+                                                    //! associated with the points on grid B (i.e., the interpolation result)
+        int interpolation_type,                     //!< int - specify the type of interpolation to use. 1: nearest neighbour,
+                                                    //! 2: inverse distance
+        int distance_exponent,                      //!< int - if using inverse-distance scaling, this is the exponent of the norm
+        int distance_function,                      //!< int - if using inverse-distance scaling, declare the norm to use.
+                                                    //!< The number 2 means the Eukledian norm, 3 the 3-norm, etc.
+        double cutoff=-1.0                          //!< double - if a point in grid A is farther away from a point in grid B than this 
+                                                    //! value, do not consider the value at that A-point to get the value at the
+                                                    //! B-point
+        );
 
 #endif //H_IRREGULAR_GRID_INTERPOLATION_DEAMON_
