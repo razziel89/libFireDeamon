@@ -525,6 +525,45 @@ def LocalMinimaPy(neighbour_list, values, degeneration, nr_neighbours, prog_repo
     return minima
 
 def IsosurfacePy(dxfile,isovalue,points_inside,relative_precision=1.0e-05,mesh_criteria=[30,5,5]):
+    """
+    High level wrapper to create an isosurface of arbitrary high discretization
+    through volumetric. The data is contained within a dx-file. One isosurface
+    per element of points_inside is computed and overlaps are discarded. Using
+    few points for points_inside greatly speeds up the computation.
+
+    WARNING: if points_inside does not fit the data, the algorithm might not
+             yield the actual iso surface.
+    WARNING: the first mesh criterion (angular bound) is <30.0, the algorithm
+             is not guaranteed to finish.
+    HINT: if creating an iso-density-surface around a molecule, it is usually
+          sufficient to pass the poisition of only one atom via points_inside.
+
+    dxfile: str
+        The name of the dx-file that contains the volumetric data.
+    isovalue: float
+        The isovalue at which to compute the isosurface.
+    points_inside: an iterable of [float,float,float]
+        Points that are expected to lie inside of (or at least very close to)
+        the resulting isosurface. In the case of molecules, this can be the
+        atoms' coordinates.
+    relative_precision: float, optional (default: 1.0e-05)
+        Precision value used to compute the isosurface. A lower value results
+        in more highly discretized surfaces.
+    mesh_criteria: a list of A,R,D, all floats. optional (default: [30.0,5.0,5.0]
+        Explanations from: http://doc.cgal.org/latest/Surface_mesher/index.html
+        A: float
+            Angular bound for surface mesh generation. If <30, the algorithm is
+            not guaranteed to finish. This is the lower bound in degrees for
+            the angles during mesh generation.
+        R: float
+            Radius bound used during mesh generation. It is an upper bound on
+            the radii of surface Delaunay balls. A surface Delaunay ball is a
+            ball circumscribing a mesh facet and centered on the surface.
+        D: float
+            Distance bound used during surface mesh generation. It is an upper
+            bound for the distance between the circumcenter of a mesh facet and
+            the center of a surface Delaunay ball of this facet.
+    """
 
     from collection.read import read_dx
     import numpy as np

@@ -16,47 +16,66 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 ***********/
+/**
+ * \file
+ * \brief Contains a class that allows for computing radial integrals that appear in pseudopotential integrals.
+ *
+ * Please see the documentation for angular_integral.h for further details about the maths involved. These
+ * integrals can be written as \f$T_{N}^{\lambda}\f$.
+ */
 #ifndef HALFNUM_RADIAL_INTEGRAL_H
 #define HALFNUM_RADIAL_INTEGRAL_H
 
-//#define MINP 1 //do not set this to anything else than 1
-//#define NRSTEPS 16 //this equals 65535 quadrature points
-//#define MAXNP1 8 //the actual max N is this minus 1 but N==0 will never be obtained
-//#define RADINTTOLERANCE 1.0e-80 //an integral will only be computed if after MINNRINTS steps it is above this threshold
-//#define MINNRINTS 11 //the minimum number of integration steps to be performed
+/**
+ * \brief A class that allows for computing radial integrals that appear in pseudopotential integrals.
+ *
+ * Please see the documentation for angular_integral.h and the class AngInt for
+ * further details about the maths involved. These integrals are used to
+ * compute the electrostatic potential at arbitrary points in space due to
+ * molecular orbitals. The integrals are computed for the products of two
+ * primitive Cartesian Gaussian functions.
+ * The integrals can be written as \f$T_{N}^{\lambda}\f$.
+ *
+ * The integral is computed in a coordinate system that is centered at the position
+ * at which the potential shall be computed. First, the integration is initialized
+ * using the exponential factor \a eta and the center of the combined Gaussian \a P
+ * and a lot of helper variables are initialized that allow for fast and numerically
+ * stable computation of the radial integral.
+ */
 class RadInt{
     private:
-        double P, eta;
-        double etaPP, PP, etaPetaP;
-        double erfetaP; //this is actually sqrt(pi)*erf(P*sqrt(eta))
-        double expetaPP;
-        double _eta, _P, _sqrteta, _etaeta, _eta3half, _etaP, _etaPP, _etaPetaP; //these are 1.0 divided by the variable without underscore
-        //double *m_abscissas, *m_weights;
-        //double *m_r_to_N;
-        //size_t m_nr_elements;
-        //long double m_T[NRSTEPS];
-        //int m_current_T;
-        //unsigned int m_p;
-        //unsigned int m_lambda;
-        //unsigned int m_N;
-        //double *m_absit;
-        //double *m_weiit;
-        //double *m_radit;
-        //double m_P, m_eta;
-        //double m_epsilon;
-        //double m_scale, m_offset;//, m_start, m_end;
-
-        //void FillAbscissasWeightsDifferentialsRadii();
-        //double* GetRStart(unsigned int N) const;
-        //void NewQuadrature(double eta, double P, unsigned int N, unsigned int lambda);
-        //bool CheckConvergence();
-        //void NextT();
+        double P,       //!< double - the norm of the vector that is the center of the Gaussian function that is the product
+                        //! of the two original primitive Cartesian Gaussian functions.
+               eta;     //!< double - \f$\eta\f$ the sum of the exponential
+                        //! factors (i.e., \f$\alpha\f$ in \f$\mathrm{e}^{\alpha \vec{r}}\f$)
+                        //! of the two original primitive Cartesian Gaussian functions
+        double etaPP,   //!< \f$\eta\cot P^2\f$
+               PP,      //!< \f$P^2\f$
+               etaPetaP;//!< \f$\eta^2\cdot P^2\f$
+        double erfetaP; //!< \f$\sqrt{\pi}\cdot\marhtm{erf}(P\cdot\sqrt{eta})\f$
+        double expetaPP;//!< \f$\marhtm{e}^{-\eta\cdot P^2}\f$
+        double _eta,        //!< \f$\frac{1}{ \eta }\f$ 
+               _P,          //!< \f$\frac{1}{ P }\f$ 
+               _sqrteta,    //!< \f$\frac{1}{ \sqrt{\eta} }\f$ 
+               _etaeta,     //!< \f$\frac{1}{ \eta^2 }\f$ 
+               _eta3half,   //!< \f$\frac{1}{ \eta^{\frac{3}{2}} }\f$ 
+               _etaP,       //!< \f$\frac{1}{ \eta\cdot P }\f$ 
+               _etaPP,      //!< \f$\frac{1}{ \eta\cdot P^2 }\f$ 
+               _etaPetaP;   //!< \f$\frac{1}{ \eta^2\cdot P^2 }\f$ 
 
     public:
-//        RadInt();
-//        ~RadInt();
-    //long double GetRadInt(double eta, double P, unsigned int N, unsigned int lambda);
-    void   Init(double eta, double P);
-    double GetRadInt(int N, int lambda);
+        /**
+         * \brief Initialization function for the radial integration
+         * \param eta double - the exponential factor of the combined Gaussian (i.e., sum of the original ones)
+         * \param P double - norm of the vector of the center of the combined Gaussian function
+         */
+        void   Init(double eta, double P);
+        /**
+         * \brief Compute the radial integral
+         * \param N int - parameter N of the radial integral
+         * \param lambda int - parameter \f$\lambda\f$ of the radial integral
+         * \return the integral value
+         */
+        double GetRadInt(int N, int lambda);
 };
 #endif //HALFNUM_RADIAL_INTEGRAL_H

@@ -30,17 +30,17 @@ extern const double sqrt2;              //!< the number \f$ \sqrt{2} \f$
 extern const double sqrt_pihalf_to_3_4; //!< the number \f$ \sqrt{(\frac{\pi}{2})^{\frac{3}{4}}} \f$
 
 extern const double odbsdfo2[];         //!< a C-type array containing the integer numbers
-                                        //! \f$ \frac{1}{\sqrt{(2i-1)!!}}
-                                        //! \forall i \wedge i>0 \wedge i<16 \f$ and the array index is i
+                                        //! \f$ \frac{1}{\sqrt{(2i-1)!!}} \forall i \wedge i>0 \wedge i<16 \f$
+                                        //! and the array index is i
 extern const int factorial[];           //!< a C-type array containing the factorial of the first 11 integer numbers greater zero
 
 extern const double sqrt_two_lplus1_div4pi[]; //!< a C-type array containing the integer numbers
-                                              //! \f$ \sqrt{\frac{2i+1}{4\pi}}
-                                              //! \forall i \wedge i>0 \wedge i<16 \f$ and the array index is i
+                                              //! \f$ \sqrt{\frac{2i+1}{4\pi}} \forall i \wedge i>0 \wedge i<16 \f$
+                                              //! and the array index is i
 
 extern const double one_div_sqrt_factorial[]; //!< //!< a C-type array containing the integer numbers
-                                              //! \f$ \frac{1}{\sqrt{i!}}
-                                              //! \forall i \wedge i>0 \wedge i<16 \f$ and the array index is i
+                                              //! \f$ \frac{1}{\sqrt{i!}} \forall i \wedge i>0 \wedge i<16 \f$
+                                              //! and the array index is i
 extern const double sqrt_factorial[] ;        //!< a C-type array containing the inverse values of \a one_div_sqrt_factorial
 
 #endif //FIRE_DEAMON_STATIC_NUMBERS_H

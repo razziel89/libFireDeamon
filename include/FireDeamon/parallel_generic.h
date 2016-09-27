@@ -16,6 +16,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 ***********/
+/**
+ * \file
+ * \brief A header containing template classes and function definitions that allow to perform parallelized computations.
+ *
+ * This is achieved by mapping a function to every data set in a std::vector (with nigh-arbitrary template argument).
+ * The type \a bool is not supported as either input nor output type since std::vector<bool> is implemented as a
+ * bitfield and not as simply avector of Boolean values.
+ */
 #ifndef H_PARALLEL_GENERIC_DEAMON_
 #define H_PARALLEL_GENERIC_DEAMON_
 #include <cstdlib>
@@ -38,54 +46,114 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 template <typename... Ts>
 using tuple_of_vectors = std::tuple<std::vector<Ts>...>;
 
-//PG stands for ParallelGlobals
+/**
+ * \brief The class \a PG contains global information required for the parallelized computation.
+ *
+ * The name stands for "ParallelGlobals". Parallelization is realized using
+ * multiple threads via pthreads. A mutex (stands for "mutually exclusive") for
+ * manipulating values in onjects of the class by all threads.  A progress bar
+ * is also provided to allow printing progress reports.
+ */
 class PG{
     public:
+        //! \brief constructor
         PG();
+        //! \brief destructor 
         ~PG();
-        pthread_t* threads;
-        pthread_mutex_t mutex;
-        int nr_threads;
-        int progress_bar;
+        pthread_t* threads;     //!< pointer to pthread_t - C-type array that allows for managing the threads (contains thread handles)
+        pthread_mutex_t mutex;  //!< pthread_mutex_t - a mutex that can be used to access data in a thread-safe way
+        int nr_threads;         //!< int - the number of threads used for the parallel computation
+        int progress_bar;       //!< int - a simple counter to estimate the progress of the compuation
 
 };
 
-extern PG* pg_global;
+extern PG* pg_global; //global instance
 
+/**
+ * \brief A function that is called whenever a signal is received (e.g., a keyboard interrupt).
+ *
+ * Clean-up of data and thread-handles is also performed.
+ */
 void signal_callback_handler(int signum);
 
-//GPSubData stands for GenericParallelSubData
-//some bits taken from http://stackoverflow.com/questions/27941661/generating-one-class-member-per-variadic-template-argument
+/**
+ * \brief A templated class that contains all the data to be passed to single threads.
+ *
+ * Multiple instances of this class are aggregated in GPData.  GPSubData stands
+ * for "GenericParallelSubData". An arbitrary number of arguments can be passed
+ * to the single threads.  Some bits for this class are taken from
+ * http://stackoverflow.com/questions/27941661/generating-one-class-member-per-variadic-template-argument
+ */
 template <typename Tout, typename... Tins>
 class GPSubData{
 
     public:
-
+        //! \brief Default constructor
         GPSubData();
-        GPSubData(bool progress_reports, int sub_nr, std::vector<int> &len_data, std::tuple<Tins*...> &data, int len_output, Tout* output, pthread_mutex_t* mutex, int* progress_bar);
+        /**
+         * \brief Alternate constructor that allows to directly set most members.
+         */
+        GPSubData(
+                bool progress_reports,          //!< bool - whether or not a report on progress is desired
+                int sub_nr,                     //!< int  - a thread index (so that each threads knows its number in line)
+                std::vector<int> &len_data,     //!< std::vector<int> - a vector that contains the lengths of all elements in \a data
+                std::tuple<Tins*...> &data,     //!< std::tuple<Tins*...> - a tuple aggregating all the data to be passed
+                                                //! to the threads. The data has to be in C-type array format.
+                int len_output,                 //!< int - the lengths of the output C-type array
+                Tout* output,                   //!< pointer to Tout - this array will be filled with the output data
+                pthread_mutex_t* mutex,         //!< pointer to pthread_mutex_t - the mutex to be used
+                int* progress_bar               //!< pointer to int - the counter used for reporting progress
+                );
+        //! \brief Default destructor
         ~GPSubData();
+        /**
+         * \brief A method to get the n-th set of input data.
+         *
+         * The number n is passed as a template argument.
+         *
+         * \return the n-th input C-type array
+         */
         template <unsigned int N>
         typename std::tuple_element<N,std::tuple<Tins*...>>::type GetData();
+        /**
+         * \brief A method to get the number of entries in the n-th set of input data.
+         *
+         * The number n is passed as a template argument.
+         *
+         * \return the length of the n-th input C-type array
+         */
         template <unsigned int N>
         int GetNr();
+        //! \brief A method to get the C-type array for the output data
+        //! \return C-type array for the output data
         Tout* GetDataOutput();
+        //! \brief A method to get the length of the C-type array for the output data
+        //! \return length of the C-type array for the output data
         int GetNrOutput();
+        //! \brief Get the thread index.
+        //! \return the thread index
         int GetSubNr();
+        //! \brief Get the progress bar.
+        //! \return a pointer to the int used to measure progress
         int* GetProgressBar();
+        //! \brief Get \a progress_reports
+        //! \return whether or not progress reports are desired
         bool GetProgressReports();
+        //! \brief Get \a mutex
+        //! \return a pointer to the mutex to be used
         pthread_mutex_t* GetMutex();
 
     protected:
 
-        std::tuple<Tins*...> m_data;
-        std::vector<int> m_lengths;
-        Tout* m_output;
-        int m_len_output;
-        int m_sub_nr;
-        int m_nr_types;
-        int* m_progress_bar;
-        pthread_mutex_t* m_mut;
-        bool m_progress_reports;
+        std::tuple<Tins*...> m_data;    //!< std::tuple<Tins*...> - the input data sets
+        std::vector<int> m_lengths;     //!< std::tuple<int> - the lenghts of the input data sets
+        Tout* m_output;                 //!< pointer to Tout - C-type array for the output data
+        int m_len_output;               //!< int - length of the C-type array for the output dat
+        int m_sub_nr;                   //!< int - thread index
+        int m_nr_types;                 //!< int - number of template arguments
+        int* m_progress_bar;            //!< pointer to int - integer used to report progress
+        pthread_mutex_t* m_mut;         //!< pointer to pthread_mutex_t - mutex used for thread-safe access
+        bool m_progress_reports;        //!< bool - whether or not progress reports are desired
 
 };
 
@@ -93,7 +161,7 @@ template <typename Tout, typename... Tins>
 GPSubData<Tout,Tins...>::GPSubData(){
     m_lengths.reserve(0);
     m_nr_types        = sizeof...(Tins);
-    for_each_in_tuple(&m_data,set_to_NULL_functor());
+    tuple_it::for_each_in_tuple(&m_data,set_to_NULL_functor());
     m_output          = NULL;
     m_len_output      = 0;
     m_sub_nr          = 0;
@@ -162,25 +230,64 @@ int GPSubData<Tout,Tins...>::GetNrOutput(){
     return m_len_output;
 }
 
+/**
+ * \brief A templated class that contains all the data to be passed to all threads.
+ *
+ * This aggregates multiple instances of GPData and also spreads the data over
+ * all threads. GPData stands for "GenericParallelData". An arbitrary number of
+ * arguments can be passed to the single threads. Some bits for this class are
+ * taken from
+ * http://stackoverflow.com/questions/27941661/generating-one-class-member-per-variadic-template-argument
+ */
 template <typename Tout, typename Tsplit, typename... Tins>
 class GPData: public GPSubData<Tout, Tsplit, Tins...> {
 
     public:
 
+        //! \brief Default constructor
         GPData();
-        GPData(bool progress_reports, int nr_subs, std::tuple< std::vector<Tsplit>,std::vector<Tins>...> &input, std::vector<Tout> *output, pthread_mutex_t* mutex, int* progress_bar, int split_factor_in, int split_factor_out, bool interlace);
+        /**
+         * \brief Alternate constructor.
+         *
+         * Allows to set most members directly.
+         */
+        GPData(
+                bool progress_reports,          //!< bool - whether or not progress reports are desired
+                int nr_subs,                    //!< int  - the number of threads to use in parallel
+                /**
+                 * \param input std::tuple<std::vector<Tsplit>,std::vector<Tins>...> - the input data.
+                 * The input data is given in the form of multiple objects of types std::vector<Tins> and the
+                 * vector whose content shall be spread over the threads.
+                 */
+                std::tuple< std::vector<Tsplit>,std::vector<Tins>...> &input,
+                std::vector<Tout> *output,      //!< pointer to std::vector<Tout> - the output data
+                pthread_mutex_t* mutex,         //!< pointer to pthread_mutex_t - the mutex used to acces data thread-safely
+                int* progress_bar,              //!< pointer to int - integer to be used to report progress
+                int split_factor_in,            //!< int - the number of consecutive values in the vector (whose content 
+                                                //! is to be spread over all threads) that shall remain together (e.g., would be
+                                                //! 3 in the case of Cartesian coordinates). Only used when interlacing.
+                int split_factor_out,           //!< int - same as \a split_factor_in but for the output data
+                bool interlace                  //!< bool - whether or not the input data shall be interlaced before
+                                                //! being spread over all threads. This might help to equalize loads.
+                );
+        //! \brief Default destructor
         ~GPData();
+        //! \brief Get the i-th sub data (all data required for thread i in the form of an onject of type GPSubData)
         GPSubData<Tout,Tsplit,Tins...>* GetSubData(int i);
+        //! \brief Transfer the output values from the C-type array to the std::vector<Tout> used for output
         void TransferOutput(bool empty_check = true);
 
     private:
         
-        int m_nr_subs;
-        int m_split_factor_in;
-        int m_split_factor_out;
-        bool m_interlace;
-        std::vector< GPSubData<Tout,Tsplit,Tins...> > subdata;
-        std::vector<Tout>* m_output_vector;
+        int m_nr_subs;          //!< int - the number of threads to use in parallel
+        int m_split_factor_in;  //!< int - the number of consecutive values in the vector (whose content 
+                                //! is to be spread over all threads) that shall remain together (e.g., would be
+                                //! 3 in the case of Cartesian coordinates). Only used when interlacing.
+        int m_split_factor_out; //!< int - same as \a m_split_factor_in but for the output data
+        bool m_interlace;       //!< bool - whether or not the input data shall be interlaced before
+                                //! being spread over all threads. This might help to equalize loads.
+        std::vector< GPSubData<Tout,Tsplit,Tins...> > subdata; //!< std::vector<GPSubData<Tout,Tsplit,Tins...>> - data for all threads
+        std::vector<Tout>* m_output_vector; //!< pointer to std::vector<Tout> - will contain output data after calling \a TransferOutput
         using GPSubData<Tout,Tsplit,Tins...>::m_data;
         using GPSubData<Tout,Tsplit,Tins...>::m_lengths;
         using GPSubData<Tout,Tsplit,Tins...>::m_output;
@@ -199,7 +306,7 @@ GPData<Tout,Tsplit,Tins...>::GPData(bool progress_reports, int nr_subs, std::tup
     //if there is only one thread, do not waste time with interlacing and
     //deinterlacing since that is not necessary
     m_interlace = m_nr_subs>1 ? interlace : false;
-    for_each_in_tuple_vector(&input, &m_lengths, get_size_functor());
+    tuple_it::for_each_in_tuple_vector(&input, &m_lengths, get_size_functor());
     m_len_output = output->capacity(); //this has not yet been filled with values but has to be reserved already
     m_progress_bar = progress_bar;
     m_mut = mutex;
@@ -225,9 +332,9 @@ GPData<Tout,Tsplit,Tins...>::GPData(bool progress_reports, int nr_subs, std::tup
         std::vector<std::tuple<unsigned int,size_t,void*>> sizes_pointers_vec;
         sizes_pointers_vec.reserve(1 + sizeof...(Tins));
 
-        for_each_in_tuple_vector(&input, &sizes_pointers_vec, get_size_in_bytes_and_pointer_functor());
+        tuple_it::for_each_in_tuple_vector(&input, &sizes_pointers_vec, get_size_in_bytes_and_pointer_functor());
 
-        for_each_in_tuple_vector(&m_data, &sizes_pointers_vec, copy_functor_interlace(m_split_factor_in,m_nr_subs,0,m_interlace));
+        tuple_it::for_each_in_tuple_vector(&m_data, &sizes_pointers_vec, copy_functor_interlace(m_split_factor_in,m_nr_subs,0,m_interlace));
     }
     //create sub data
     subdata.reserve(m_nr_subs);
@@ -272,7 +379,7 @@ GPData<Tout,Tsplit,Tins...>::GPData(bool progress_reports, int nr_subs, std::tup
 
 template <typename Tout, typename Tsplit, typename... Tins>
 GPData<Tout,Tsplit,Tins...>::~GPData(){
-    for_each_in_tuple(&m_data,deallocate_functor());
+    tuple_it::for_each_in_tuple(&m_data,deallocate_functor());
     if (m_output!=NULL){
         free(m_output);
     }
@@ -328,10 +435,22 @@ void GPData<Tout,Tsplit,Tins...>::TransferOutput(bool empty_check){
 }
 //END of class definitions
 
+/**
+ * \brief initialize the global data structure (that is used for signal handling and reporting progress)
+ */
 void init_parallel_generic(bool* progress_reports, PG* globals);
 
+/**
+ * \brief Perform a parallelized compuation.
+ */
 template <typename... Ts>
-void do_parallel_generic(void *(*thread_func)(void*), PG* globals, bool progress_reports, int nr_calcs, GPData<Ts...>* data){
+void do_parallel_generic(
+        void *(*thread_func)(void*),    //!< void *(*thread_func)(void*) - function pointer. This function is mapped to the data.
+        PG* globals,                    //!< pointer to PG - global data that is, e.g., used for treating keyboard interrupts
+        bool progress_reports,          //!< bool - whether or not progress reports are desired
+        int nr_calcs,                   //!< int  - how many computations shall be performed ,i.e., maximum counter for progress reports
+        GPData<Ts...>* data             //!< pointer to GPData<Ts...> - the data structure that contains all the data
+        ){
     if (pg_global){
         throw std::logic_error( "Global data for parallel computation already filled." );
     }
@@ -372,6 +491,9 @@ void do_parallel_generic(void *(*thread_func)(void*), PG* globals, bool progress
     }
 }
 
+/**
+ * \brief finalize everything after the parallel computation. This also transfers output data properly.
+ */
 void finalize_parallel_generic(bool progress_reports, PG* globals);
 
 #endif //H_PARALLEL_GENERIC_DEAMON_
