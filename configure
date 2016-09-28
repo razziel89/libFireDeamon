@@ -66,8 +66,7 @@ Flags:
                         Further diversification possible using
                         following lib options
 --cgal-inc              the cgal include directory
---cgal-lib              the cgal lib directory. Contains
-                            libCGAL.so and libCGAL_ImageIO.so
+--cgal-lib              the cgal lib directory. Contains libCGAL.so
 --python-inc            the python include directory. NOT YET NEEDED
 --python-lib            the python lib directory. NOT YET NEEDED
 --swig                  will use the specified swig executable.
