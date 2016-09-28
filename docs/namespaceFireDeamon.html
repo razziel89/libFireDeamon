@@ -507,7 +507,25 @@ sort_it: boolean, optional, default: False
           <td class="memname">def FireDeamon::IsosurfacePy </td>
           <td>(</td>
           <td class="paramtype">&nbsp;</td>
-          <td class="paramname"> <em>dxfile</em>, </td>
+          <td class="paramname"> <em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&nbsp;</td>
+          <td class="paramname"> <em>origin</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&nbsp;</td>
+          <td class="paramname"> <em>counts</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&nbsp;</td>
+          <td class="paramname"> <em>delta</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -545,9 +563,10 @@ sort_it: boolean, optional, default: False
 <p>High level wrapper to create an isosurface of arbitrary high discretization through volumetric data. </p>
 <div class="fragment"><pre class="fragment">
 High level wrapper to create an isosurface of arbitrary high discretization
-through volumetric data. The data is contained within a dx-file. One isosurface
-per element of points_inside is computed and overlaps are discarded. Using
-few points for points_inside greatly speeds up the computation.
+through volumetric data. The data is given on an implicit regular grid in 3
+dimensions. One isosurface per element of points_inside is computed and
+overlaps are discarded. Using few points for points_inside greatly speeds
+up the computation.
 
 WARNING: if points_inside does not fit the data, the algorithm might not
          yield the actual iso surface.
@@ -556,8 +575,23 @@ WARNING: the first mesh criterion (angular bound) is &lt;30.0, the algorithm
 HINT: if creating an iso-density-surface around a molecule, it is usually
       sufficient to pass the poisition of only one atom via points_inside.
 
-dxfile: str
-    The name of the dx-file that contains the volumetric data.
+data: list of N floats
+    A flat list of the volumetric data. The order of indices is that of
+    dx-files, which is as follows:
+        z - fast
+        y - middle
+        x - slow
+origin: list of 3 floats
+    The origin of the 3 dimensional regular grid.
+counts: list of 3 int
+    The number of points in each of the three directions of the grid.
+    The product of these three values is the length of 'data'.
+delta: a 3x3 matrix (list of 3 lists with 3 elements each)
+    The three vectors stored in this parameter form the vertex of the
+    regular grid on which the data is defined. The matrix than can be
+    built from these vectors must have any values unequal 0.0 solely
+    on its main diagonal. This means that the three axes of the grid
+    have to be aligned parallel to the three Cartesian axes.
 isovalue: float
     The isovalue at which to compute the isosurface.
 points_inside: an iterable of [float,float,float]

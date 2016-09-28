@@ -508,12 +508,13 @@ def LocalMinimaPy(neighbour_list, values, degeneration, nr_neighbours, prog_repo
     return minima
 
 ## \brief High level wrapper to create an isosurface of arbitrary high discretization through volumetric data
-def IsosurfacePy(dxfile,isovalue,points_inside,relative_precision=1.0e-05,mesh_criteria=[30,5,5]):
+def IsosurfacePy(data,origin,counts,delta,isovalue,points_inside,relative_precision=1.0e-05,mesh_criteria=[30,5,5]):
     """
     High level wrapper to create an isosurface of arbitrary high discretization
-    through volumetric data. The data is contained within a dx-file. One isosurface
-    per element of points_inside is computed and overlaps are discarded. Using
-    few points for points_inside greatly speeds up the computation.
+    through volumetric data. The data is given on an implicit regular grid in 3
+    dimensions. One isosurface per element of points_inside is computed and
+    overlaps are discarded. Using few points for points_inside greatly speeds
+    up the computation.
 
     WARNING: if points_inside does not fit the data, the algorithm might not
              yield the actual iso surface.
@@ -522,8 +523,23 @@ def IsosurfacePy(dxfile,isovalue,points_inside,relative_precision=1.0e-05,mesh_c
     HINT: if creating an iso-density-surface around a molecule, it is usually
           sufficient to pass the poisition of only one atom via points_inside.
 
-    dxfile: str
-        The name of the dx-file that contains the volumetric data.
+    data: list of N floats
+        A flat list of the volumetric data. The order of indices is that of
+        dx-files, which is as follows:
+            z - fast
+            y - middle
+            x - slow
+    origin: list of 3 floats
+        The origin of the 3 dimensional regular grid.
+    counts: list of 3 int
+        The number of points in each of the three directions of the grid.
+        The product of these three values is the length of 'data'.
+    delta: a 3x3 matrix (list of 3 lists with 3 elements each)
+        The three vectors stored in this parameter form the vertex of the
+        regular grid on which the data is defined. The matrix than can be
+        built from these vectors must have any values unequal 0.0 solely
+        on its main diagonal. This means that the three axes of the grid
+        have to be aligned parallel to the three Cartesian axes.
     isovalue: float
         The isovalue at which to compute the isosurface.
     points_inside: an iterable of [float,float,float]
@@ -549,24 +565,18 @@ def IsosurfacePy(dxfile,isovalue,points_inside,relative_precision=1.0e-05,mesh_c
             the center of a surface Delaunay ball of this facet.
     """
 
-    from collection.read import read_dx
     import numpy as np
 
-    header = {}
-
-    data = read_dx(dxfile,unit_conversion=1.0,invert_charge_data=False,density=True,header_dict=header,
-        grid=False,data=True,silent=False,gzipped=False,comments=False)
-
-    origin = np.array(header["org_xyz"])
-    counts = np.array(header["counts_xyz"])
-    delta  = np.array([header["delta_x"],header["delta_y"],header["delta_z"]])
+    origin = np.array(origin)
+    counts = np.array(counts)
+    delta  = np.array(delta)
 
     if not np.allclose(delta, np.diag(np.diag(delta))):
         raise ValueError("ERROR: the voxel vectors must be parallel to the three cartesian axes.")
 
     delta_total = np.diag(delta)*counts
 
-    data_vec   = VectorDouble([d for d in data["data"]]);
+    data_vec   = VectorDouble([d for d in data]);
     extent_vec = VectorInt(list(counts))
     origin_vec = VectorDouble(list(origin))
     voxel_vec  = VectorDouble(list(np.diag(delta)))
