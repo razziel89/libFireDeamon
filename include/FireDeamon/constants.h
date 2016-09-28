@@ -38,7 +38,7 @@ extern const double sqrt_two_lplus1_div4pi[]; //!< a C-type array containing the
                                               //! \f$ \sqrt{\frac{2i+1}{4\pi}} \forall i \wedge i>0 \wedge i<16 \f$
                                               //! and the array index is i
 
-extern const double one_div_sqrt_factorial[]; //!< //!< a C-type array containing the integer numbers
+extern const double one_div_sqrt_factorial[]; //!< a C-type array containing the integer numbers
                                               //! \f$ \frac{1}{\sqrt{i!}} \forall i \wedge i>0 \wedge i<16 \f$
                                               //! and the array index is i
 extern const double sqrt_factorial[] ;        //!< a C-type array containing the inverse values of \a one_div_sqrt_factorial

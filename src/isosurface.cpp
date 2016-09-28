@@ -80,6 +80,9 @@ void iso_signal_callback_handler(int signal){
     }}
 }
 
+/**
+ * \brief A class that allows to copy a polyhedron declared on one kernel to a polyhedron declared on another kernel.
+ */
 template <class Polyhedron_input,
           class Polyhedron_output>
 struct Copy_polyhedron_to
@@ -136,6 +139,16 @@ private:
     const Polyhedron_input& in_poly;
 }; // end Copy_polyhedron_to<>
 
+/**
+ * \brief A wrapper function that allows to copy a polyhedron declared on one kernel to a polyhedron declared on another kernel.
+ *
+ * This function wraps Copy_polyhedron_to for easy access. Be warned: not all destination kernels
+ * can reproduce the same polyhedra that can be expressed using the original kernel. Some might
+ * be fully incompatible.
+ *
+ * \param poly_a Poly_A - polyhedron on original kernel
+ * \param poly_b Poly_B - polyhedron on destination kernel
+ */
 template <class Poly_A, class Poly_B>
 void copy_to(const Poly_A& poly_a, Poly_B& poly_b)
 {
@@ -143,35 +156,71 @@ void copy_to(const Poly_A& poly_a, Poly_B& poly_b)
         poly_b.delegate(modifier);
 }
 
+/**
+ * \brief A class for vector operations.
+ */
 struct Point3d;
 typedef struct Point3d {
-    double x,y,z;
+
+    double x,   //!< double - the point's x-coordinate
+           y,   //!< double - the point's y-coordinate
+           z;   //!< double - the point's z-coordinate
+    /**
+     * \brief Alternate constructor.
+     *
+     * When given a pointer to a double, take what thsi pointer points to
+     * as the x-coordinate and the 2 values after that in memory as y- and
+     * z-coordinates.
+     *
+     * \param p pointer to double - pointer to x-coordinate
+     */
     Point3d(double* p){
         x = *(p+0);
         y = *(p+1);
         z = *(p+2);
     }
+    //! \brief Default constructor.
+    //!
+    //! The point is initialized to the origin.
     Point3d() : x(0.0), y(0.0), z(0.0){}
+    /**
+     * \brief Alternate constructor.
+     *
+     * \param _x double - x-coordinate
+     * \param _y double - y-coordinate
+     * \param _z double - z-coordinate
+     */
     Point3d(double _x, double _y, double _z) : x(_x), y(_y), z(_z){}
+    /**
+     * \brief Copy constructor.
+     *
+     * \param p Point3d - point to copy
+     */
     Point3d(const Point3d& p) : x(p.x), y(p.y), z(p.z){}
+    //! \brief subtract a vector
     struct Point3d operator-(struct Point3d p){
         return Point3d(x-p.x,y-p.y,z-p.z);
     }
+    //! \brief add a vector
     struct Point3d operator+(struct Point3d p){
         return Point3d(x+p.x,y+p.y,z+p.z);
     }
+    //! \brief add a vector directly
     struct Point3d& operator+=(const struct Point3d p){
         x += p.x;
         y += p.y;
         z += p.z;
         return *this;
     }
+    //! \brief subtract a vector directly
     struct Point3d& operator-=(const struct Point3d p){
         x -= p.x;
         y -= p.y;
         z -= p.z;
         return *this;
     }
+    //! \brief access the vector's 3 elements
+    //! \return an element of the vector
     double operator[](int i){
         if     (i==0){return x;}
         else{if(i==1){return y;}
@@ -179,9 +228,8 @@ typedef struct Point3d {
         else{throw std::logic_error("Index to point must be >=0 and <=2");
         }}}
     }
-    //double operator*(struct Point3d p){
-    //    return x*p.x + y*p.y + z*p.z;
-    //}
+    //! \brief Compute the cross product of 2 vectors.
+    //! \param p Point3d - vector with whom the cross product shall be computed
     struct Point3d operator*(struct Point3d p){
         return Point3d(
                 y*p.z - p.y*z,
@@ -189,19 +237,29 @@ typedef struct Point3d {
                 x*p.y - p.x*y
                 );
     }
+    //! \brief Scale a vector by a factor.
+    //! \param d double - the scaling factor
+    //! \return the scaled vector
     struct Point3d operator*(double d){
         return Point3d(x*d, y*d, z*d);
     }
+    //! \brief Scale a vector by the inverse of a factor.
+    //! \param d double - the inverse of the scaling factor
+    //! \return the scaled vector
     struct Point3d& operator/=(double d){
         x /= d;
         y /= d;
         z /= d;
         return *this;
     }
+    //! \brief Scale a vector by the inverse of a factor.
+    //! \param i int - the inverse of the scaling factor
+    //! \return the scaled vector
     struct Point3d& operator/=(unsigned int i){
         double d = static_cast<double>(i);
         return *this /= d;
     }
+    //! \brief Normalize this vector
     void normalize(){
         double norm = sqrt(x*x + y*y + z*z);
         x /= norm;

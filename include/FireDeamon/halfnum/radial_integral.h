@@ -52,8 +52,8 @@ class RadInt{
         double etaPP,   //!< \f$\eta\cot P^2\f$
                PP,      //!< \f$P^2\f$
                etaPetaP;//!< \f$\eta^2\cdot P^2\f$
-        double erfetaP; //!< \f$\sqrt{\pi}\cdot\marhtm{erf}(P\cdot\sqrt{eta})\f$
-        double expetaPP;//!< \f$\marhtm{e}^{-\eta\cdot P^2}\f$
+        double erfetaP; //!< \f$\sqrt{\pi}\cdot\mathrm{erf}(P\cdot\sqrt{eta})\f$
+        double expetaPP;//!< \f$\mathrm{e}^{-\eta\cdot P^2}\f$
         double _eta,        //!< \f$\frac{1}{ \eta }\f$ 
                _P,          //!< \f$\frac{1}{ P }\f$ 
                _sqrteta,    //!< \f$\frac{1}{ \sqrt{\eta} }\f$ 

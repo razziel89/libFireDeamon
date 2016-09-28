@@ -367,18 +367,47 @@ void make_neighbour_list_irregular(bool progress_reports, int nr_gridpoints, int
     pg_global = NULL;
 }
 
+/**
+ * \brief A class that aides in finding indices of neighbours to a point on a regular grid.
+ *
+ * The class is initialized using the grids dimensions (nx, ny, nz: number of
+ * points in each direction).  Then, it is passed the one-dimensional index
+ * of a point (starting at 0 and ending at nx*ny*nz-1). Then, when given a
+ * displacement (in the form of index offsets in the 3 Cartesian directions) it
+ * returns the one-dimensional index of that point (if it exists in the grid).
+ * I implemented it this way because one-dimensional indices have to be used
+ * with flat data structures (which are easier to handle, IMHO) but it is easier
+ * to think in terms of three-dimensional indices when it comes to regular grids.
+ */
 class Slices {
     private:
-        const int _nx, _ny, _nz, _nr;
-        int _sx, _sy, _sz;
+        const int _nx,  //!< int - number of points in x-direction
+              _ny,      //!< int - number of points in y-direction
+              _nz,      //!< int - number of points in z-direction
+              _nr;      //!< int - total number of points in the grid
+        int _sx,        //!< int - x-part of the 3d index of a given point
+            _sy,        //!< int - y-part of the 3d index of a given point
+            _sz;        //!< int - z-part of the 3d index of a given point
 
     public:
 
-        //constructor
+        //! \brief Constructor
+        //! \param nx int - number of points in x-direction
+        //! \param ny int - number of points in y-direction
+        //! \param nz int - number of points in z-direction
         Slices(int nx, int ny, int nz) 
             : _nx(nx), _ny(ny), _nz(nz), _nr(nx*ny*nz), 
             _sx(-1), _sy(-1), _sz(-1) {}
 
+        /**
+         * \brief Declare a reference point.
+         *
+         * When passing a 3d displacement to \a GetNeighbourIndex, the displacements
+         * are taken relative to the point declared in this function.
+         *
+         * \param index int - one dimensional index of the point
+         * \return whether or not the poin is on the grid
+         */
         bool SetPoint(int index){
             if (index < 0 || index > _nr){
                 return false;
@@ -394,6 +423,16 @@ class Slices {
             }
         }
 
+        /**
+         * \brief Get the one dimensional index of a point relative to a central point.
+         *
+         * The central point is declared using \a SetPoint.
+         *
+         * \param dx int - index displacement in x-direction
+         * \param dy int - index displacement in y-direction
+         * \param dz int - index displacement in z-direction
+         * \return the one dimensional index of the point
+         */
         int GetNeighbourIndex(int dx,int dy,int dz){
             //a point is never its own neighbour
             if (dx == 0 && dy == 0 && dz == 0){
