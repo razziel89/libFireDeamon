@@ -53,7 +53,7 @@ void make_skin_surface(
                                             //! values specifying the Cartesian coordinates of the vertices of the skin surface 
         std::vector<double> *nvec,          //!< pointer to std::vector<double> - this flat vector will be filled with triples of
                                             //! values that specify the normal vectors associated with each vertex
-        std::vector<int> *length            //!< pointer to std::vector<int>    - this flat vector will contain the number of vertices
+        std::vector<int> *length,           //!< pointer to std::vector<int>    - this flat vector will contain the number of vertices
                                             //! and the number of facets, in that order
         int nr_refinements                  //!< int - the number of refinement steps to perform
         );
