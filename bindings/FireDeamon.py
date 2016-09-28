@@ -1,37 +1,11 @@
-// FireDeamon.i
-%module FireDeamon
-
-%include "typemaps.i"
-%include "std_vector.i"
-
-namespace std {
-    %template(VectorDouble) vector<double>;
-    %template(VectorInt) vector<int>;
-};
-
-%{
-#include "FireDeamon/skin_surface_deamon.h"
-#include "FireDeamon/isosurface.h"
-#include "FireDeamon/electrostatic_potential_charges.h"
-#include "FireDeamon/electrostatic_potential_orbitals.h"
-#include "FireDeamon/irregular_grid_interpolation.h"
-#include "FireDeamon/arbitrary_grid_local_minima.h"
-#include "FireDeamon/electron_density.h"
-#include "FireDeamon/orbital_overlap.h"
-%}
-
-%pythoncode %{
-
+## \package FireDeamon
+#  \brief Python module for libFireDeamon
+"""
+This module includes Python wrapper functions to easily access the included
+C++ functionality of libFireDeamon. It is simply called FireDeamon.
+"""
 import sys
-
-class LengthDisagreementError(Exception):
-    pass
-
-class ShrinkFactorError(Exception):
-    pass
-
-class NumberRefinementsError(Exception):
-    pass
+from .cpp import *
 
 def _generate_three_one(coordinates,radii):
     for c,r in zip(coordinates,radii):
@@ -44,6 +18,7 @@ def _generate_triples(l,length):
     for i in range(0,length,3):
         yield [l[i],l[i+1],l[i+2]]
 
+## \brief High level function that wraps the generation of a skin surface.
 def SkinSurfacePy(shrink_factor,coordinates,radii,refinesteps=1):
     """
     High level function that wraps the generation of a skin surface.
@@ -55,13 +30,13 @@ def SkinSurfacePy(shrink_factor,coordinates,radii,refinesteps=1):
     refinesteps: refinement steps to perform. 0 will turn it off.
     """
     if len(coordinates)!=len(radii):
-        raise LengthDisagreementError("Lengths of coordinate list and radii list are not equal.")
+        raise ValueError("Lengths of coordinate list and radii list are not equal.")
 
     if shrink_factor<=0.0 or shrink_factor>=1.0:
-        raise ShrinkFactorError("Shrink factor must be between 0.0 and 1.0, excluding these borders.")
+        raise ValueError("Shrink factor must be between 0.0 and 1.0, excluding these borders.")
 
     if refinesteps<0:
-        raise NumberRefinementsError("The number of refinement steps must be a positive integer or 0.")
+        raise ValueError("The number of refinement steps must be a positive integer or 0.")
     
     coord_radii_vec=VectorDouble([cr for cr in _generate_three_one(coordinates,radii)]);
 
@@ -92,6 +67,7 @@ def SkinSurfacePy(shrink_factor,coordinates,radii,refinesteps=1):
 
 from itertools import chain as iterchain
 
+## \brief High level function that wraps the computation of the electrostatic potential via multithreaded C++ code.
 def ElectrostaticPotentialPy(points, charges, coordinates, prog_report=True,cutoff=10000000.0):
     """
     High level function that wraps the computation of the electrostatic potential via
@@ -106,7 +82,7 @@ def ElectrostaticPotentialPy(points, charges, coordinates, prog_report=True,cuto
                  (since it can take long)
     """
     if len(charges)!=len(coordinates):
-        raise LengthDisagreementError("Lengths of coordinate list and charges list are not equal.")
+        raise ValueError("Lengths of coordinate list and charges list are not equal.")
 
     charges_coordinates_vec=VectorDouble([cc for cc in _generate_three_one(coordinates,charges)]);
     points_vec=VectorDouble(list(iterchain.from_iterable(points)))
@@ -124,6 +100,7 @@ def ElectrostaticPotentialPy(points, charges, coordinates, prog_report=True,cuto
     
     return potential
 
+## \brief High level function that wraps the interpolation of arbitrary data on an irregular grid via multithreaded C++ code.
 def InterpolationPy(coordinates, vals, points, config=None, prog_report=True):
     """
     High level function that wraps the interpolation of arbitrary data
@@ -143,7 +120,7 @@ def InterpolationPy(coordinates, vals, points, config=None, prog_report=True):
                  (since it can take long)
     """
     if len(coordinates)!=len(vals):
-        raise LengthDisagreementError("Lengths of coordinate list and vals list are not equal.")
+        raise ValueError("Lengths of coordinate list and vals list are not equal.")
 
     if config is None: #default to narest neighbour interpolation
         interpolation_type=1
@@ -182,6 +159,7 @@ def InterpolationPy(coordinates, vals, points, config=None, prog_report=True):
     
     return interpolation 
 
+## \brief Initialize data required to perform some computations on a grid
 def InitializeGridCalculationOrbitalsPy(grid,basis,scale=1.0,normalize=True):
     """
     Create data structures suitable for efficiently computing
@@ -222,6 +200,7 @@ def InitializeGridCalculationOrbitalsPy(grid,basis,scale=1.0,normalize=True):
 
     return vec_prim_centers, vec_prim_exponents, vec_prim_coefficients, vec_prim_angular, vec_density_grid, density_indices
 
+## \brief Compute the electron density due to molecular orbitals
 def ElectronDensityPy(coefficients_list,data,occupations=None,volume=1.0,prog_report=True,detailed_prog=False, cutoff=-1.0,correction=None):
     """
     Calculate the electron density due to some molecular orbitals on a grid.
@@ -304,6 +283,7 @@ def ElectronDensityPy(coefficients_list,data,occupations=None,volume=1.0,prog_re
     
     return density
 
+## \brief deprecated
 def NeighbourListPy(grid, nr_neighbours, cutoff, max_nr_neighbours=None, prog_report=True, cutoff_type='eukledian', sort_it=False):
     """
     Deprecated version of IrregularNeighbourListPy. Will be removed soon.
@@ -311,6 +291,7 @@ def NeighbourListPy(grid, nr_neighbours, cutoff, max_nr_neighbours=None, prog_re
     print >>sys.stderr,"WARNING: use of NeighbourListPy is deprecated, use the new IrregularNeighbourListPy instead (same interface)."
     return IrregularNeighbourListPy(grid, nr_neighbours, cutoff, max_nr_neighbours, prog_report, cutoff_type, sort_it)
 
+## \brief Generate a list of neighbours of each point on an arbitrary grid
 def IrregularNeighbourListPy(grid, nr_neighbours, cutoff, max_nr_neighbours=None, prog_report=True, cutoff_type='eukledian', sort_it=False):
     """
     Generate a list of neighbours of each point on an arbitrary grid.
@@ -398,6 +379,7 @@ def IrregularNeighbourListPy(grid, nr_neighbours, cutoff, max_nr_neighbours=None
 
     return neighbours_vec
 
+## \brief Generate a list of neighbours of each point on a regular grid.
 def RegularNeighbourListPy(nr_gridpoints_xyz, nr_neighbour_shells, prog_report=True):
     """
     Generate a list of neighbours of each point on a regular grid.
@@ -440,6 +422,7 @@ def RegularNeighbourListPy(nr_gridpoints_xyz, nr_neighbour_shells, prog_report=T
 
     return neighbours_vec
 
+## \brief Given a neighbour list (as created by NeighbourListPy), find local minima
 def LocalMinimaPy(neighbour_list, values, degeneration, nr_neighbours, prog_report=False, upper_cutoff=None, lower_cutoff=None, sort_it=1, depths=None):
     """
     Given a neighbour list (as created by NeighbourListPy), find local minima. This is
@@ -524,10 +507,11 @@ def LocalMinimaPy(neighbour_list, values, degeneration, nr_neighbours, prog_repo
 
     return minima
 
+## \brief High level wrapper to create an isosurface of arbitrary high discretization through volumetric data
 def IsosurfacePy(dxfile,isovalue,points_inside,relative_precision=1.0e-05,mesh_criteria=[30,5,5]):
     """
     High level wrapper to create an isosurface of arbitrary high discretization
-    through volumetric. The data is contained within a dx-file. One isosurface
+    through volumetric data. The data is contained within a dx-file. One isosurface
     per element of points_inside is computed and overlaps are discarded. Using
     few points for points_inside greatly speeds up the computation.
 
@@ -629,6 +613,7 @@ def IsosurfacePy(dxfile,isovalue,points_inside,relative_precision=1.0e-05,mesh_c
 
     return result
 
+## \brief Calculate the electron density due to some molecular orbitals on a grid.
 def ElectrostaticPotentialOrbitalsPy(coefficients_list,Smat,occupations,data,prog_report=True):
     """
     Calculate the electron density due to some molecular orbitals on a grid.
@@ -689,14 +674,3 @@ def ElectrostaticPotentialOrbitalsPy(coefficients_list,Smat,occupations,data,pro
     del P_vec
 
     return potential
-
-%}
-
-%include "FireDeamon/skin_surface_deamon.h"
-%include "FireDeamon/isosurface.h"
-%include "FireDeamon/electrostatic_potential_charges.h"
-%include "FireDeamon/electrostatic_potential_orbitals.h"
-%include "FireDeamon/irregular_grid_interpolation.h"
-%include "FireDeamon/arbitrary_grid_local_minima.h"
-%include "FireDeamon/electron_density.h"
-%include "FireDeamon/orbital_overlap.h"

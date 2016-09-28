@@ -105,18 +105,19 @@ main_install :
 .PHONY : main_uninstall 
 main_uninstall : 
 	rm -f $(PREFIX)/lib/libFireDeamon.so $(PREFIX)/lib/libFireDeamon.a
-	rm -f $(PREFIX)/include/FireDeamon
+	rm -rf $(PREFIX)/include/FireDeamon
 
 .PHONY : python_install 
 python_install :
 	@echo "Will install in $(PYTHON_DEST_DIR)"
 	mkdir -p $(PYTHON_DEST_DIR)/FireDeamon
 	cp $(PYTHONDIR)/FireDeamon.py $(PYTHON_DEST_DIR)/FireDeamon/__init__.py
-	cp $(PYTHONDIR)/_FireDeamon.so $(PYTHON_DEST_DIR)/FireDeamon/_FireDeamon.so
+	cp $(PYTHONDIR)/cpp.py $(PYTHON_DEST_DIR)/FireDeamon/cpp.py
+	cp $(PYTHONDIR)/_cpp.so $(PYTHON_DEST_DIR)/FireDeamon/_cpp.so
 
 .PHONY : python_uninstall 
 python_uninstall : 
-	rm -rf $(PYTHON_DEST_DIR)/FireDeamon/__init__.py* $(PYTHON_DEST_DIR)/FireDeamon/_FireDeamon.so
+	rm -rf $(PYTHON_DEST_DIR)/FireDeamon
 #-----------------------------------------------------
 #              BUILD RULES FOR LANGUAGE BINDINGS
 #-----------------------------------------------------
@@ -128,11 +129,11 @@ bindings : $(MAINOBJ) $(SWIGRUN)
 #-----------------------------------------------------
 python_bindings : $(PYTHONBINDOBJ)
 	@echo "Linking shared python library..."
-	$(GXX) -shared -fPIC $(PYTHONBINDOBJ) -L$(PYTHONLIB) -L$(LIBDIR) -lFireDeamon $(PYTHONLDFLAGS) -o $(PYTHONDIR)/_FireDeamon.so
+	$(GXX) -shared -fPIC $(PYTHONBINDOBJ) -L$(PYTHONLIB) -L$(LIBDIR) -lFireDeamon $(PYTHONLDFLAGS) -o $(PYTHONDIR)/_cpp.so
 
 .PHONY : python_swig
 python_swig :
-	$(SWIG)  -classic -c++ -I$(INCDIR) -I$(SWIGINC)/python -python -o $(PYTHONDIR)/FireDeamon_wrap.cxx $(PYTHONDIR)/FireDeamon.i
+	$(SWIG)  -classic -c++ -I$(INCDIR) -I$(SWIGINC)/python -python -o $(PYTHONDIR)/FireDeamon_wrap.cxx $(PYTHONDIR)/cpp.i
 #-----------------------------------------------------
 #              BUILD RULES FOR C++ LIBRARY
 #-----------------------------------------------------
@@ -160,7 +161,7 @@ clean : clean_bindings clean_mainlib clean_doc
 
 .PHONY : clean_bindings
 clean_bindings : 
-	rm -f  $(PYTHONDIR)/*.o $(PYTHONDIR)/*.py  $(PYTHONDIR)/*.cxx $(PYTHONDIR)/*.so
+	rm -f  $(PYTHONDIR)/*.o $(PYTHONDIR)/cpp.py  $(PYTHONDIR)/*.cxx $(PYTHONDIR)/*.so
 
 .PHONY : clean_mainlib
 clean_mainlib : 
