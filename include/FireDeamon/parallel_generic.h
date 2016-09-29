@@ -463,23 +463,38 @@ void do_parallel_generic(
         int rc = pthread_create(globals->threads+i, NULL, thread_func, (void *)data->GetSubData(i));
         assert(rc==0);
     }
+    char prog_char = '|';
     if ( progress_reports ){
         bool looping = true;
         int here_progress_bar = 0;
-        fprintf(stdout, "Progress: %6.2f%% | Total: %d/%d", 0.0 , 0, nr_calcs);
+        fprintf(stdout, "Progress: %6.2f%% | Total: %d/%d %c", 0.0 , 0, nr_calcs, prog_char);
         fflush(stdout);
         while (looping) {
             sleep(1);
+            switch (prog_char){
+                case '|':
+                    prog_char = '/';
+                    break;
+                case '/':
+                    prog_char = '-';
+                    break;
+                case '-':
+                    prog_char = '\\';
+                    break;
+                case '\\':
+                    prog_char = '|';
+                    break;
+            }
             pthread_mutex_lock(&(globals->mutex));
             here_progress_bar = globals->progress_bar;
             pthread_mutex_unlock(&(globals->mutex));
             fprintf(stdout,"%c[2K\r", 27);
             if ( here_progress_bar >= nr_calcs){
-                fprintf(stdout,"Progress: %6.2f%% | Total: %d/%d", 100.0, nr_calcs, nr_calcs);
+                fprintf(stdout,"Progress: %6.2f%% | Total: %d/%d  ", 100.0, nr_calcs, nr_calcs);
                 looping = false;
             }
             else{
-                fprintf(stdout,"Progress: %6.2f%% | Total: %d/%d",here_progress_bar*100.0/nr_calcs, here_progress_bar, nr_calcs);
+                fprintf(stdout,"Progress: %6.2f%% | Total: %d/%d %c",here_progress_bar*100.0/nr_calcs, here_progress_bar, nr_calcs, prog_char);
             }
             fflush(stdout);
         }
