@@ -380,7 +380,7 @@ def IrregularNeighbourListPy(grid, nr_neighbours, cutoff, max_nr_neighbours=None
     return neighbours_vec
 
 ## \brief Generate a list of neighbours of each point on a regular grid.
-def RegularNeighbourListPy(nr_gridpoints_xyz, nr_neighbour_shells, prog_report=True):
+def RegularNeighbourListPy(nr_gridpoints_xyz, nr_neighbour_shells, prog_report=True, exclude_border=False):
     """
     Generate a list of neighbours of each point on a regular grid.
     Returns a std::vector<int> with (2*nr_neighbour_shells+1)**3-1 elements per gridpoint indicating
@@ -396,6 +396,9 @@ def RegularNeighbourListPy(nr_gridpoints_xyz, nr_neighbour_shells, prog_report=T
     prog_report: boolean, optional, default: True
         Whether or not information about the progress of the calculation
         should be printed to stdout.
+    exclude_border: boolean, optional, default: False
+        Whether or not points that do not have the maximum number of neighbours (i.e., those
+        that lie close to or at the border) should be possible candidates for minima.
     """
 
     try:
@@ -418,7 +421,7 @@ def RegularNeighbourListPy(nr_gridpoints_xyz, nr_neighbour_shells, prog_report=T
     neighbours_vec = VectorInt()
     neighbours_vec.reserve(nr_gridpoints*(nr_neighbours+1));
 
-    make_neighbour_list_regular(prog_report, nr_gridpoints_xyz[0], nr_gridpoints_xyz[1], nr_gridpoints_xyz[2], nr_neighbour_shells, neighbours_vec)
+    make_neighbour_list_regular(prog_report, exclude_border, nr_gridpoints_xyz[0], nr_gridpoints_xyz[1], nr_gridpoints_xyz[2], nr_neighbour_shells, neighbours_vec)
 
     return neighbours_vec
 

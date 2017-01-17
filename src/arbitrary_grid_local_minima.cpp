@@ -457,7 +457,7 @@ class Slices {
 
 };
 
-void make_neighbour_list_regular(bool progress_reports, int nr_gridpoints_x, int nr_gridpoints_y, int nr_gridpoints_z, int nr_neighbour_shells, std::vector<int>* neighbour_list)
+void make_neighbour_list_regular(bool progress_reports, bool exclude_border, int nr_gridpoints_x, int nr_gridpoints_y, int nr_gridpoints_z, int nr_neighbour_shells, std::vector<int>* neighbour_list)
 {
     //x is slow, y is middle and z is fast index
     //only one thread used because this is fast
@@ -484,7 +484,7 @@ void make_neighbour_list_regular(bool progress_reports, int nr_gridpoints_x, int
     if (nr_gridpoints_x > std::numeric_limits<int>::max() / nr_gridpoints_y){
         too_many = true;
     }
-    if (nr_gridpoints_x * nr_gridpoints_y > std::numeric_limits<int>::max() / nr_gridpoints_z){
+    if (too_many || (nr_gridpoints_x * nr_gridpoints_y > std::numeric_limits<int>::max() / nr_gridpoints_z)){
         too_many = true;
     }
     if (too_many){
@@ -504,7 +504,7 @@ void make_neighbour_list_regular(bool progress_reports, int nr_gridpoints_x, int
     neighbour_list->reserve(ng*(ni+1));
     neighbour_list->assign( ng*(ni+1), -1 ); //assign -1 to all elements
 
-    std::vector<int>::iterator it, startit;
+    std::vector<int>::iterator startit;
     startit = neighbour_list->begin();
 
     //this data structure is used to get the x, y and z indices from the overall index
@@ -517,15 +517,19 @@ void make_neighbour_list_regular(bool progress_reports, int nr_gridpoints_x, int
     }
     //loop over all points in the grid
     for (int p=0; p<ng; ++p, startit += (ni+1)){
+        //save the data for the current point to this vector
+        std::vector<int> point_data;
+        point_data.reserve(ni+1);
+        point_data.assign(ni+1,-1);
         //start at the first element for this point
-        it = startit + 1;
+        std::vector<int>::iterator point_it = point_data.begin() + 1;
         //find the number of the slice in each direction, i.e., the x, y and z index from the overall one
         if (!slices.SetPoint(p)){
             fprintf(stderr,"ERROR treating point number %d, skipping.",p);
             continue;
         }
         //this will count how many neighbours already have been found
-        int nr_neigh = 0;
+        unsigned int nr_neigh = 0;
         //check whether has neighbour in all directions
         for (int ix = -nr_neighbour_shells; ix <= nr_neighbour_shells; ++ix){
             for (int iy = -nr_neighbour_shells; iy <= nr_neighbour_shells; ++iy){
@@ -533,14 +537,22 @@ void make_neighbour_list_regular(bool progress_reports, int nr_gridpoints_x, int
                     int index;
                     if ( ( index = slices.GetNeighbourIndex(ix,iy,iz) ) != -1){
                         ++nr_neigh;
-                        *it = index;
-                        ++it;
+                        *point_it = index;
+                        ++point_it;
                     }
                 }//iz
             }//iy
         }//ix
-        //assign the actual number of neighbours to the appropriate place
-        *startit = nr_neigh;
+        point_it = point_data.begin();
+        *point_it = (int)nr_neigh;
+        if (!exclude_border || nr_neigh==ni){
+            //assign the actual number of neighbours to the appropriate place and copy data
+            for (std::vector<int>::iterator it=startit; point_it!=point_data.end(); ++it, ++point_it){
+                *it = *point_it;
+            }
+        }else{
+            *startit = 0;
+        }
         if (progress_reports){
             if (p%500 == 0){
                 fprintf(stdout,"%c[2K\r", 27);
@@ -578,7 +590,7 @@ void local_minima_from_neighbour_list(bool progress_reports, int nr_neighbours, 
         fflush(stdout);
     }
     for (val_it = values.begin(); val_it != values.end(); ++val_it, ++val_count){
-        bool is_min       = true; //innocent until proven guilty. the americans could learn from that.
+        bool is_min       = true; //innocent until proven guilty. the americans could learn from that ^^.
         int nr_neigh      = *next_neigh_it;
         std::vector<int>::iterator temp_it = next_neigh_it+1;
         neigh_it          = next_neigh_it+1;
@@ -587,7 +599,7 @@ void local_minima_from_neighbour_list(bool progress_reports, int nr_neighbours, 
         bool screened;
         screened          = use_upper_cutoff ? here_value>upper_cutoff : false;
         screened          = use_lower_cutoff ? (screened || here_value<lower_cutoff) : screened;
-        if (screened){
+        if (screened || nr_neigh<=0){
             is_min = false;
         }
         else{

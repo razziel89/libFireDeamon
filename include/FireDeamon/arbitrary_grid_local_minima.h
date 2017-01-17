@@ -77,6 +77,8 @@ void make_neighbour_list_irregular(
  */
 void make_neighbour_list_regular(
         bool progress_reports,          //!< bool - whether or not to give progress reports
+        bool exclude_border,            //!< bool - whether or not to allow points close to the
+                                        //!         border to be possible candidates for minima
         int nr_gridpoints_x,            //!< int  - how many points in the first direction the regular grid has
         int nr_gridpoints_y,            //!< int  - how many points in the second direction the regular grid has
         int nr_gridpoints_z,            //!< int  - how many points in the third direction the regular grid has
