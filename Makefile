@@ -11,7 +11,7 @@ MAINSRC  := \
 	$(SRCDIR)/irregular_grid_interpolation.cpp $(SRCDIR)/electron_density.cpp $(SRCDIR)/arbitrary_grid_local_minima.cpp \
 	$(SRCDIR)/isosurface.cpp $(SRCDIR)/halfnum/angular_integral.cpp \
 	$(SRCDIR)/halfnum/radial_integral.cpp $(SRCDIR)/electrostatic_potential_orbitals.cpp \
-	$(SRCDIR)/constants.cpp $(SRCDIR)/orbital_overlap.cpp
+	$(SRCDIR)/constants.cpp $(SRCDIR)/orbital_overlap.cpp $(SRCDIR)/set_procname.cpp
 MAINOBJ  := $(MAINSRC:$(SRCDIR)%.cpp=$(OBJDIR)%.o)
 #-----------------------------------------------------
 #         SOURCE FOR TEST FILES

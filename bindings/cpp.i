@@ -3,6 +3,7 @@
 
 %include "typemaps.i"
 %include "std_vector.i"
+%include "std_string.i"
 
 namespace std {
     %template(VectorDouble) vector<double>;
@@ -18,6 +19,7 @@ namespace std {
 #include "FireDeamon/arbitrary_grid_local_minima.h"
 #include "FireDeamon/electron_density.h"
 #include "FireDeamon/orbital_overlap.h"
+#include "FireDeamon/set_procname.h"
 %}
 
 %include "FireDeamon/skin_surface_deamon.h"
@@ -28,3 +30,4 @@ namespace std {
 %include "FireDeamon/arbitrary_grid_local_minima.h"
 %include "FireDeamon/electron_density.h"
 %include "FireDeamon/orbital_overlap.h"
+%include "FireDeamon/set_procname.h"
