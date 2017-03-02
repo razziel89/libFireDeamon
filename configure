@@ -269,8 +269,8 @@ fi
 echo "Using swig:               $SWIG"
 echo "Using g++:                $GXX"
 echo "Using ar:                 $AR"
-echo "Using swig include:       $SWIGINC"S
-if [[ ! -d $SWIGINC ]]
+echo "Using swig include:       $SWIGINC"
+if [[ ! -d $SWIGINC ]] && ! [[ $MINIMUMDEPS == true ]]
 then
     echo "The swig inclusion directory $SWIGINC does not exist, aborting."
     exit 102
