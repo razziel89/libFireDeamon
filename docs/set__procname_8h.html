@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>libFireDeamon: Member List</title>
+<title>libFireDeamon: include/FireDeamon/set_procname.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javaScript" src="search/search.js"></script>
@@ -20,8 +20,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="index.html"><span>Main&nbsp;Page</span></a></li>
       <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
       <li><a href="namespaces.html"><span>Namespaces</span></a></li>
-      <li class="current"><a href="annotated.html"><span>Classes</span></a></li>
-      <li><a href="files.html"><span>Files</span></a></li>
+      <li><a href="annotated.html"><span>Classes</span></a></li>
+      <li class="current"><a href="files.html"><span>Files</span></a></li>
       <li>
         <div id="MSearchBox" class="MSearchBoxInactive">
         <img id="MSearchSelect" src="search/search.png"
@@ -39,16 +39,55 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </div>
   <div class="tabs">
     <ul>
-      <li><a href="annotated.html"><span>Class&nbsp;List</span></a></li>
-      <li><a href="hierarchy.html"><span>Class&nbsp;Hierarchy</span></a></li>
-      <li><a href="functions.html"><span>Class&nbsp;Members</span></a></li>
+      <li><a href="files.html"><span>File&nbsp;List</span></a></li>
+      <li><a href="globals.html"><span>File&nbsp;Members</span></a></li>
     </ul>
   </div>
 </div>
 <div class="contents">
-<h1>set_to_NULL_functor Member List</h1>This is the complete list of members for <a class="el" href="structset__to__NULL__functor.html">set_to_NULL_functor</a>, including all inherited members.<table>
-  <tr class="memlist"><td><a class="el" href="structset__to__NULL__functor.html#a8b38204c11098ada20dbb110264635fb">operator()</a>(T **t, int i)</td><td><a class="el" href="structset__to__NULL__functor.html">set_to_NULL_functor</a></td><td><code> [inline]</code></td></tr>
-</table></div>
+<h1>include/FireDeamon/set_procname.h File Reference</h1>
+<p>Function to set the name of the current process.  
+<a href="#_details">More...</a></p>
+<code>#include &lt;string&gt;</code><br/>
+
+<p><a href="set__procname_8h_source.html">Go to the source code of this file.</a></p>
+<table border="0" cellpadding="0" cellspacing="0">
+<tr><td colspan="2"><h2>Functions</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="set__procname_8h.html#adfed3392d551e561b70d60be1ba37f6d">set_procname</a> (std::string newname)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the process name.  <a href="#adfed3392d551e561b70d60be1ba37f6d"></a><br/></td></tr>
+</table>
+<hr/><a name="_details"></a><h2>Detailed Description</h2>
+<p>Function to set the name of the current process. </p>
+<hr/><h2>Function Documentation</h2>
+<a class="anchor" id="adfed3392d551e561b70d60be1ba37f6d"></a><!-- doxytag: member="set_procname.h::set_procname" ref="adfed3392d551e561b70d60be1ba37f6d" args="(std::string newname)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void set_procname </td>
+          <td>(</td>
+          <td class="paramtype">std::string&nbsp;</td>
+          <td class="paramname"> <em>newname</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Set the process name. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>newname</em>&nbsp;</td><td>std::string - the new name to be used </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>argv</em>&nbsp;</td><td>char** - the argunent vector array </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>whether or not setting the name succeeded </dd></dl>
+
+</div>
+</div>
+</div>
 <!--- window showing the filter options -->
 <div id="MSearchSelectWindow"
      onmouseover="return searchBox.OnSearchSelectShow()"

@@ -55,8 +55,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <tr><td colspan="2"><h2>Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="arbitrary__grid__local__minima_8h.html#a7418a4df3de2f53ada541e48047f780e">make_neighbour_list_irregular</a> (bool progress_reports, int nr_gridpoints, int max_nr_neighbours, int nr_neighbours, int cutoff_type, std::vector&lt; double &gt; points, std::vector&lt; double &gt; distance_cutoff, std::vector&lt; int &gt; *neighbour_list, bool sort_it=true)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Generate a list of all neighbours of an irregular grid within the given cutoff.  <a href="#a7418a4df3de2f53ada541e48047f780e"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="arbitrary__grid__local__minima_8h.html#ab067a76c1a16fa73dfbb0feac0524bfe">make_neighbour_list_regular</a> (bool progress_reports, int nr_gridpoints_x, int nr_gridpoints_y, int nr_gridpoints_z, int nr_neighbour_shells, std::vector&lt; int &gt; *neighbour_list)</td></tr>
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Generate a list of all neighbours of a regular grid within the given cutoff.  <a href="#ab067a76c1a16fa73dfbb0feac0524bfe"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="arbitrary__grid__local__minima_8h.html#a5381cae59359237220faf4dd38781d60">make_neighbour_list_regular</a> (bool progress_reports, bool exclude_border, int nr_gridpoints_x, int nr_gridpoints_y, int nr_gridpoints_z, int nr_neighbour_shells, std::vector&lt; int &gt; *neighbour_list)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Generate a list of all neighbours of a regular grid within the given cutoff.  <a href="#a5381cae59359237220faf4dd38781d60"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="arbitrary__grid__local__minima_8h.html#adc42e3c273876b956475d6023e050197">local_minima_from_neighbour_list</a> (bool progress_reports, int nr_neighbours, int nr_values, std::vector&lt; int &gt; neighbour_list, std::vector&lt; double &gt; values, std::vector&lt; int &gt; *minima, std::vector&lt; double &gt; degeneration_cutoffs, bool use_upper_cutoff=false, bool use_lower_cutoff=false, double upper_cutoff=0.0, double lower_cutoff=0.0, int sort_it=0, std::vector&lt; double &gt; *depths=NULL)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Extract the indices of local minimum points using a pre-computed neighbour list.  <a href="#adc42e3c273876b956475d6023e050197"></a><br/></td></tr>
 </table>
@@ -280,7 +280,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 </div>
 </div>
-<a class="anchor" id="ab067a76c1a16fa73dfbb0feac0524bfe"></a><!-- doxytag: member="arbitrary_grid_local_minima.h::make_neighbour_list_regular" ref="ab067a76c1a16fa73dfbb0feac0524bfe" args="(bool progress_reports, int nr_gridpoints_x, int nr_gridpoints_y, int nr_gridpoints_z, int nr_neighbour_shells, std::vector&lt; int &gt; *neighbour_list)" -->
+<a class="anchor" id="a5381cae59359237220faf4dd38781d60"></a><!-- doxytag: member="arbitrary_grid_local_minima.h::make_neighbour_list_regular" ref="a5381cae59359237220faf4dd38781d60" args="(bool progress_reports, bool exclude_border, int nr_gridpoints_x, int nr_gridpoints_y, int nr_gridpoints_z, int nr_neighbour_shells, std::vector&lt; int &gt; *neighbour_list)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -289,6 +289,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
           <td>(</td>
           <td class="paramtype">bool&nbsp;</td>
           <td class="paramname"> <em>progress_reports</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&nbsp;</td>
+          <td class="paramname"> <em>exclude_border</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -334,6 +340,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>progress_reports</em>&nbsp;</td><td>bool - whether or not to give progress reports </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>exclude_border</em>&nbsp;</td><td>bool - whether or not to allow points close to the border to be possible candidates for minima </td></tr>
     <tr><td valign="top"></td><td valign="top"><em>nr_gridpoints_x</em>&nbsp;</td><td>int - how many points in the first direction the regular grid has </td></tr>
     <tr><td valign="top"></td><td valign="top"><em>nr_gridpoints_y</em>&nbsp;</td><td>int - how many points in the second direction the regular grid has </td></tr>
     <tr><td valign="top"></td><td valign="top"><em>nr_gridpoints_z</em>&nbsp;</td><td>int - how many points in the third direction the regular grid has </td></tr>
@@ -360,7 +367,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </iframe>
 </div>
 
-<hr size="1"/><address style="text-align: right;"><small>Generated on 28 Sep 2016 for libFireDeamon by&nbsp;
+<hr size="1"/><address style="text-align: right;"><small>Generated on 2 Mar 2017 for libFireDeamon by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.1 </small></address>
 </body>

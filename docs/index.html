@@ -39,7 +39,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </div>
 </div>
 <div class="contents">
-<h1>Overview over libFireDeamon</h1><h3>1.0 </h3><h2><a class="anchor" id="Introduction">
+<h1>Overview over libFireDeamon</h1><h3>1.1 </h3><h2><a class="anchor" id="Introduction">
 Introduction</a></h2>
 <p>What you are currently viewing contains the documentation for <em>libFireDeamon</em>, a C++-library written to perform some tasks related to what I did during my time as a PhD student that will be detailed in this documentation. For any license-related information, please see the file called <em>COPYING</em> and the header of each individual C++ source file.</p>
 <p>The library <em>libFireDeamon</em> contains functionality that I think is useful for people working in physical chemistry or quantum chemistry/physics, who perform quantum chemical calculations and evaluate them afterwards (or use them in any other way). It consists of functionality that I could not find anywhere at all or not anywhere I could just use it (like when it's in proprietary software). The functionality includes:</p>
@@ -82,15 +82,22 @@ Prerequisites</a></h2>
 <p>You need to have at least the following programmes/libraries installed to use <em>libFireDeamon:</em> </p>
 <ul>
 <li>a C++ compiler that supports the C++11 standard (tested with g++4.8 and icpc16.0)</li>
-<li>CGAL (Computational Geometry Algorithms Library)</li>
-<li>the Boost C++ libraries</li>
 <li>GNU make</li>
 <li>git (not needed if downloaded separately, e.g., as a zip-archive)</li>
 </ul>
+<p>If you want to compute the electrostatic potential or density or if you want to perform any computation involving surfaces, you also need:</p>
+<ul>
+<li>CGAL (Computational Geometry Algorithms Library)</li>
+<li>the Boost C++ libraries</li>
+</ul>
 <p>If you want to use the Python bindings (strongly recommended) you also need:</p>
 <ul>
-<li>SWIG (Simplified Wrapper Interface Generator)</li>
 <li>a Python interpreter (version&gt;=2.7.6)</li>
+<li>the NumPy Python module</li>
+</ul>
+<p>If you change anything, you will have to regenerate the Python bindings, which you will have to do using:</p>
+<ul>
+<li>SWIG (Simplified Wrapper Interface Generator)</li>
 </ul>
 <h2><a class="anchor" id="Installation">
 Installation</a></h2>
@@ -98,11 +105,9 @@ Installation</a></h2>
 <div class="fragment"><pre class="fragment">
 git clone git://github.com/razziel89/libfiredeamon.git libFireDeamon
 cd libFireDeamon
-./configure --prefix PREFIX --inc /usr/include --lib /usr/local/lib \
-            --swig-inc /usr/share/swig2.0/python --compiler-type gnu
+./configure --prefix PREFIX
 make
 make install
-make doc
 </pre></div><p> Please replace PREFIX with the location where you want to install <em>libFireDeamon</em>. You might have to adjust the include and library paths and the compiler type. Please run </p>
 <div class="fragment"><pre class="fragment">
 ./configure --help
@@ -125,7 +130,7 @@ make doc
 </iframe>
 </div>
 
-<hr size="1"/><address style="text-align: right;"><small>Generated on 28 Sep 2016 for libFireDeamon by&nbsp;
+<hr size="1"/><address style="text-align: right;"><small>Generated on 2 Mar 2017 for libFireDeamon by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.1 </small></address>
 </body>
