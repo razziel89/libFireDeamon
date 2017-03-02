@@ -5,12 +5,12 @@
 # local configuration parameters.
 
 cat << EOF
-This script is not like you ordinary configure script as it has not been
-created using autoconf and automake but manually. hence, you won't get
-messages about libraries not found or similar things. Instead, it only uses
+This script is not like your ordinary configure script as it has not been
+created using autoconf and automake (or similar) but manually. Hence, you won't
+get messages about libraries not found or similar things. Instead, it only uses
 the proviced flags to generate a file called "make.vars" which contains
-important variables for the Makefile. If libraries/headers cannot be found,
-you will get these error messages during the make process.
+important variables for the Makefile. If libraries/headers cannot be found, you
+will get these error messages during the make process.
 EOF
 
 # Output file name
@@ -18,66 +18,84 @@ output=make.vars
 commandlinesave="$@"
 
 # Default configuration options
-PREFIX=
+tmp=$(mktemp -u | awk -v FS=/ '{print $NF}')
+if mkdir -p /usr/local/include/FireDeamon/$tmp &>/dev/null
+then
+    rmdir /usr/local/include/FireDeamon/$tmp
+    rmdir /usr/local/include/FireDeamon/ &>/dev/null
+    PREFIX=/usr/local
+else
+    PREFIX=$HOME/local
+fi
+unset tmp
 OBJDIR=objdir
 LIBDIR=lib
 INCDIR=include
 SRCDIR=src
 TESTDIR=test
 PYTHONDIR=bindings
-
-PYTHONLIB=
-PYTHONINC=
-CGALLIB=
-CGALINC=
-BOOSTINC=
-SWIGINC=
-GXX=
-AR=
-SWIG=
-PYTHON=
-DEBUG=
-
+if [[ $(uname -i) == x86_64 ]]
+then
+    PYTHONLIB=/usr/lib64
+    CGALLIB=/usr/lib64
+else
+    PYTHONLIB=/usr/lib
+    CGALLIB=/usr/lib
+fi
+USEPYTHON=true
+CGALINC=/usr/include
+BOOSTINC=/usr/include
+GXX=$(which g++)
+AR=$(which ar)
+SWIG=$(which swig)
+PYTHON=$(which python)
+pythonversion="$($PYTHON -c 'import sys; print sys.version[:3]')"
+libpython="python${pythonversion}"
+PYTHONINC="/usr/include/python${pythonversion}"
+swigversion=$($SWIG -version | awk '$1 ~ /SWIG/ && $2 ~ /Version/{print $3}')
+SWIGINC="$(dirname $SWIG)/../share/swig/$swigversion/python"
 compilertype=gnu
+DEBUG=
+SWIGRUN=false
 ADD_LDFLAGS=
 ADD_PYLDFLAGS=
-
-USEPYTHON=true
+MINIMUMDEPS=true
 
 function helptext {
 cat << EOF
-Will generate a file called "make.vars" which contains
-local configuration parameters. Heavy optimization will be used
-(-O3 flag) because of the huge speedup it provides.
+Will generate a file called "make.vars" which contains local configuration
+parameters. Heavy optimization will be used (-O3 flag) because of the huge
+speedup it provides.
 
 Usage:
-configure --prefix PREFIX -I INCLUDEDIR -L LIBDIR [FLAGS]
+configure --prefix PREFIX [FLAGS]
 
 Each --enable-XXX flag has a corresponding --disable-XXX
 flag that can be used to turn off the feature.
 
 Flags:
---prefix                the prefix for the whole installation
---enable-python         will also build python bindings
+--prefix                the prefix for the whole installation (default: $PREFIX)
+--enable-python         will also build python bindings (default: enabled)
 --inc                   set all include directories to this value.
                         Further diversification possible using
-                        following inc options
+                        following inc options (default: $CGALINC)
 --lib                   set all lib directories to this value.
                         Further diversification possible using
-                        following lib options
---cgal-inc              the cgal include directory
---cgal-lib              the cgal lib directory. Contains libCGAL.so
---python-inc            the python include directory. NOT YET NEEDED
---python-lib            the python lib directory. NOT YET NEEDED
+                        following lib options (default: $CGALLIB)
+--cgal-inc              the cgal include directory (default: $CGALINC)
+--cgal-lib              the cgal lib directory. Contains libCGAL.so (default: $CGALLIB)
+--python-inc            the python include directory. (default: $PYTHONINC)
+--python-lib            the python lib directory. (default: $PYTHONLIB)
 --swig                  will use the specified swig executable.
-                        Deafault: first in PATH
---swig-inc              the directory for swigs *.i files
+                        (default: $SWIG)
+--swig-inc              the directory for swigs *.i files (default: $SWIGINC)
+--run-swig              rebuild python bindings (default: don't)
 --ar                    will use the specified ar.
-                        Deafault: first ar in PATH
+                        (default: $AR)
 --g++                   will use the specified g++ compiler.
-                        Deafault: first g++ in PATH
+                        (default: $GXX)
 --python                will use the specified python interpreter.
-                        Deafault: first in PATH
+                        (default: $PYTHON)
 --compiler-type         declare what type of compiler you want to be using.
                         This can be GNU (default) or Intel (case insensitive).
 --debug                 enable debugging mode, switch off optimization and
@@ -124,10 +142,15 @@ do
         --disable-python)
             USEPYTHON=false
         ;;
+        --run-swig)
+            SWIGRUN=true
+        ;;
         --inc)
             shift
             nospace "$1"
-            PYTHONINC="$1"
+            pythonversion="$($PYTHON -c 'import sys; print sys.version[:3]')"
+            libpython="python${pythonversion}"
+            PYTHONINC="$1/python${pythonversion}"
             CGALINC="$1"
             BOOSTINC="$1"
             SWIGINC="$1"
@@ -188,7 +211,6 @@ do
             nospace "$1"
             PYTHON="$1"
         ;;
-        #--rounding-type)
         --compiler-type)
             shift
             case ${1,,} in
@@ -213,9 +235,19 @@ do
 done
 
 notdef --prefix "$PREFIX" 
-notdef --cgal-lib "$CGALLIB" 
-notdef --cgal-inc "$CGALINC" 
-notdef --boost-inc "$BOOSTINC" 
+
+if [[ -d $CGALLIB ]] && [[ -d $CGALINC ]] && [[ -d $BOOSTINC/boost ]]
+then
+    if ls $CGALLIB/libCGAL.so &>/dev/null
+    then
+        MINIMUMDEPS=false
+    fi
+fi
+if [[ $MINIMUMDEPS == true ]]
+then
+    echo "Will build with minimum dependencies (i.e., without boost and cgal) because they could not be found."
+fi
+
 
 case $compilertype in
     gnu)
@@ -228,94 +260,67 @@ case $compilertype in
         ;;
 esac
 
-if [ "$USEPYTHON" == "true" ]
+if [[ "$USEPYTHON" == "true" ]]
 then
     notdef --python-inc "$PYTHONINC"
     notdef --python-lib "$PYTHONLIB"
 fi
 
-if [[ ! "$SWIG" ]]
-then
-    SWIG=$(which swig)
-fi
 echo "Using swig:               $SWIG"
-if [[ ! "$GXX" ]]
-then
-    GXX=$(which g++)
-fi
 echo "Using g++:                $GXX"
-if [[ ! "$AR" ]]
+echo "Using ar:                 $AR"
+echo "Using swig include:       $SWIGINC"S
+if [[ ! -d $SWIGINC ]]
 then
-    AR=$(which ar)
+    echo "The swig inclusion directory $SWIGINC does not exist, aborting."
+    exit 102
 fi
-if [[ ! "$SWIGINC" ]]
-then
-    swigversion=$($SWIG -version | awk '$1 ~ /SWIG/ && $2 ~ /Version/{print $3}')
-    if [ -d $(dirname $SWIG)/../share/swig/$swigversion/python ]
-    then
-        SWIGINC="$(dirname $SWIG)/../share/swig/$swigversion/python"
-    else
-        echo "The swig inclusion directory $(dirname $SWIG)/../share/swig/$swigversion/python does not exist, aborting."
-        exit 102
-    fi
-fi
-echo "Using swig include:       $SWIGINC"
 
-if [ "$USEPYTHON" == "true" ]
+if [[ "$USEPYTHON" == "true" ]]
 then
-    if [[ ! "$PYTHON" ]]
-    then
-        PYTHON=$(which python)
-    fi
     echo "Using python:             $PYTHON"
-    pythonversion="$($PYTHON -c 'import sys; print sys.version[:3]')"
-    libpython="python${pythonversion}"
-    PYTHONINC="$PYTHONINC/python${pythonversion}"
 fi
 
 cat > $output << EOF
 # This file was built as follows."
 # $0 $commandlinesave
 
-PREFIX    := $PREFIX
+PREFIX      := $PREFIX
 
-SRCDIR    := $SRCDIR
-OBJDIR    := $OBJDIR
-LIBDIR    := $LIBDIR
-INCDIR    := $INCDIR
-TESTDIR   := $TESTDIR
+SRCDIR      := $SRCDIR
+OBJDIR      := $OBJDIR
+LIBDIR      := $LIBDIR
+INCDIR      := $INCDIR
+TESTDIR     := $TESTDIR
 
-GXX       := $GXX $([[ $DEBUG -eq 1 ]] && echo " -O0 -g -DFDDEBUG" || echo " -O3")
-AR        := $AR
+GXX         := $GXX $([[ $DEBUG -eq 1 ]] && echo " -O0 -g -DFDDEBUG" || echo " -O3")
+AR          := $AR
 
-CGALLIB   := $CGALLIB
-CGALINC   := $CGALINC
+OTHERINC    := $OTHERINC
+OTHERLIB    := $OTHERLIB
 
-BOOSTINC  := $BOOSTINC
+LDFLAGSMIN  := $LDFLAGS $ADD_LDFLAGS -lpthread
+LDFLAGSMAX  := -lmpfr -lgmp -lboost_thread -lCGAL
+CPPFLAGSMAX := $rounding
+CPPFLAGSMIN := $CPPFLAGS
 
-OTHERINC  := $OTHERINC
-OTHERLIB  := $OTHERLIB
+CGALLIB     := $CGALLIB
+CGALINC     := $CGALINC
+BOOSTINC    := $BOOSTINC
 
-LDFLAGS   := $LDFLAGS $ADD_LDFLAGS -lmpfr -lgmp -lboost_thread -lCGAL -lpthread
-CPPFLAGS  := $CPPFLAGS $rounding
-
-EOF
-if [ "$USEPYTHON" == "true" ]
-then cat >> $output << EOF
-SWIG      := $SWIG
-SWIGINC   := $SWIGINC/python
-
-PYTHONDIR     := $PYTHONDIR
-PYTHONLIB     := $PYTHONLIB
-PYTHONINC     := $PYTHONINC
-PYTHON        := $PYTHON
+PYTHONDIR   := $PYTHONDIR
+PYTHONLIB   := $PYTHONLIB
+PYTHONINC   := $PYTHONINC
+PYTHON      := $PYTHON
 
 PYTHONLDFLAGS := $LDFLAGS $ADD_PYLDFLAGS -l$libpython
 
-EOF
-fi
-cat >> $output << EOF
-USEPYTHON     := $USEPYTHON
+SWIG        := $SWIG
+SWIGINC     := $SWIGINC
+
+USEPYTHON   := $USEPYTHON
+SWIGRUN     := $SWIGRUN
+MINIMUMDEPS := $MINIMUMDEPS
 EOF
 
 for dir in $OBJDIR $LIBDIR $INCDIR $SRCDIR $PYTHONDIR $TESTDIR
