@@ -206,17 +206,18 @@ def RegularNeighbourListPy(nr_gridpoints_xyz, nr_neighbour_shells, prog_report=T
         if not isinstance(val,int):
             raise TypeError("nr_gridpoints_xyz must contain integers.",e)
 
-    try:
-        nr_gridpoints = reduce(int.__mul__,nr_gridpoints_xyz)
-    except TypeError as e:
-        raise TypeError("Too many points in grid, total number cannot be represented as integers.",e)
+    nr_gridpoints = 1
+    for npts in nr_gridpoints_xyz:
+        nr_gridpoints *= int(npts)
+    if type(nr_gridpoints)!=int:
+        raise TypeError("Too many points in grid, total number cannot be represented as integers.")
 
     nr_neighbours = (2*nr_neighbour_shells+1)**3 - 1
 
     neighbours_vec = VectorInt()
     neighbours_vec.reserve(nr_gridpoints*(nr_neighbours+1));
 
-    make_neighbour_list_regular(prog_report, exclude_border, nr_gridpoints_xyz[0], nr_gridpoints_xyz[1], nr_gridpoints_xyz[2], nr_neighbour_shells, neighbours_vec)
+    make_neighbour_list_regular(prog_report, exclude_border, int(nr_gridpoints_xyz[0]), int(nr_gridpoints_xyz[1]), int(nr_gridpoints_xyz[2]), nr_neighbour_shells, neighbours_vec)
 
     return neighbours_vec
 
