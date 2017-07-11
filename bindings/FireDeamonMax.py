@@ -109,8 +109,8 @@ def InitializeGridCalculationOrbitalsPy(grid,basis,scale=1.0,normalize=True):
         primnitives are normalized or not.
     """
     import numpy as np
-    vec_density_grid      = VectorDouble([p/scale for gpoint in grid for p in gpoint])
-    density_indices       = np.array([ bc for b,bc in zip(basis,xrange(len(basis))) for prim in xrange(len(b[2])) ])
+    vec_density_grid      = VectorDouble([1.0*p/scale for gpoint in grid for p in gpoint])
+    density_indices       = np.array([ bc for b,bc in zip(basis,range(len(basis))) for prim in range(len(b[2])) ])
     vec_prim_centers      = VectorDouble([ p for b in basis for prim in b[2] for p in b[0] ])
     vec_prim_angular      = VectorInt([ a for b in basis for prim in b[2] for a in b[1] ])
     vec_prim_exponents    = VectorDouble([ prim[0] for b in basis for prim in b[2] ])
@@ -166,7 +166,7 @@ def ElectronDensityPy(coefficients_list,data,occupations=None,volume=1.0,prog_re
     maxrcount = len(coefficients_list)
 
     if prog_report:
-        print "  %4d/%d"%(0,maxrcount)+CURSOR_UP_ONE
+        print("  %4d/%d"%(0,maxrcount)+CURSOR_UP_ONE)
     rcount = 0
 
     for coefficients in coefficients_list:
@@ -193,10 +193,10 @@ def ElectronDensityPy(coefficients_list,data,occupations=None,volume=1.0,prog_re
         rcount+=1
         if prog_report:
             reportstring = "  %4d/%d"%(rcount,maxrcount)
-            print ERASE_LINE+reportstring+CURSOR_UP_ONE
+            print(ERASE_LINE+reportstring+CURSOR_UP_ONE)
 
     if prog_report:
-        print
+        print()
 
     density*=1.0/volume
 
@@ -298,7 +298,7 @@ def IsosurfacePy(data,origin,counts,delta,isovalue,points_inside,relative_precis
     mesh_criteria_vec = VectorDouble([float(e) for e in mesh_criteria])
 
     #for v in [origin_vec, voxel_vec, extent_vec,points_inside_vec, mesh_criteria_vec, radii_vec]:
-    #    print [i for i in v]
+    #    print([i for i in v])
 
     index_vec=VectorInt()
     length_vec=VectorInt()
@@ -364,12 +364,14 @@ def ElectrostaticPotentialOrbitalsPy(coefficients_list,Smat,occupations,data,pro
     P_vec = VectorDouble([p for pinner in P for p in pinner])
     #screen_vec = VectorInt([s for sinner in screen for s in sinner])
 
+    primlist = list(range(nr_primitives))
+
     S = [
             [
                 Smat[potential_indices[mu]][potential_indices[nu]]
-            for nu in xrange(nr_primitives)
+            for nu in primlist
             ]
-        for mu in xrange(nr_primitives)
+        for mu in primlist
         ]
     S_vec = VectorDouble([s for sinner in S for s in sinner])
 

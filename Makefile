@@ -62,7 +62,7 @@ PYTHONBINDCATDEST := $(PYTHONDIR)/cpp.i
 INSTALL           += python_install
 UNINSTALL         += python_uninstall
 RUNBIND           += python_bindings
-PYTHON_DEST_DIR   := $(PREFIX)/lib/python$(shell $(PYTHON) -c 'import sys; print sys.version[:3]')/site-packages
+PYTHON_DEST_DIR   := $(PREFIX)/lib/python$(shell $(PYTHON) -c 'import sys; sys.stdout.write(sys.version[:3]+"\n")')/site-packages
 ifeq ($(MINIMUMDEPS), false) 
 TEST              += python_test
 PYTHONCAT         += $(PYTHONDIR)/FireDeamonMax.py

@@ -4,6 +4,10 @@
 This module includes Python wrapper functions to easily access the included
 C++ functionality of libFireDeamon. It is simply called FireDeamon.
 """
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import sys
 from itertools import chain as iterchain
 from .cpp import *
@@ -83,7 +87,7 @@ def NeighbourListPy(grid, nr_neighbours, cutoff, max_nr_neighbours=None, prog_re
     """
     Deprecated version of IrregularNeighbourListPy. Will be removed soon.
     """
-    print >>sys.stderr,"WARNING: use of NeighbourListPy is deprecated, use the new IrregularNeighbourListPy instead (same interface)."
+    print("WARNING: use of NeighbourListPy is deprecated, use the new IrregularNeighbourListPy instead (same interface).",file=sys.stderr)
     return IrregularNeighbourListPy(grid, nr_neighbours, cutoff, max_nr_neighbours, prog_report, cutoff_type, sort_it)
 
 ## \brief Generate a list of neighbours of each point on an arbitrary grid
@@ -160,7 +164,7 @@ def IrregularNeighbourListPy(grid, nr_neighbours, cutoff, max_nr_neighbours=None
             raise ValueError("The value for max_nr_neighbours cannot be smaller than nr_neighbours.")
 
     if not sort_it and max_nr_neighbours > nr_neighbours:
-        print >>sys.stderr, "WARNING: not sorting with respect to distances but using max_nr_neighbours > nr_neighbours might throw away actual nearest neighbours."
+        print ("WARNING: not sorting with respect to distances but using max_nr_neighbours > nr_neighbours might throw away actual nearest neighbours.",file=sys.stderr)
 
     neighbours_vec = VectorInt()
     neighbours_vec.reserve(nr_gridpoints*(nr_neighbours+1));
