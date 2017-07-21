@@ -18,7 +18,7 @@ def SkinSurfacePy(shrink_factor,coordinates,radii,refinesteps=1):
     if refinesteps<0:
         raise ValueError("The number of refinement steps must be a positive integer or 0.")
     
-    coord_radii_vec=VectorDouble([cr for cr in _generate_three_one(coordinates,radii)]);
+    coord_radii_vec=VectorDouble([float(cr) for cr in _generate_three_one(coordinates,radii)]);
 
     nr_atoms=len(radii)
     
@@ -64,8 +64,8 @@ def ElectrostaticPotentialPy(points, charges, coordinates, prog_report=True,cuto
     if len(charges)!=len(coordinates):
         raise ValueError("Lengths of coordinate list and charges list are not equal.")
 
-    charges_coordinates_vec=VectorDouble([cc for cc in _generate_three_one(coordinates,charges)]);
-    points_vec=VectorDouble(list(iterchain.from_iterable(points)))
+    charges_coordinates_vec=VectorDouble([float(cc) for cc in _generate_three_one(coordinates,charges)]);
+    points_vec=VectorDouble([float(p) for p in iterchain.from_iterable(points)])
 
     potential_vec=VectorDouble()
     potential_vec.reserve(len(points))
@@ -109,12 +109,12 @@ def InitializeGridCalculationOrbitalsPy(grid,basis,scale=1.0,normalize=True):
         primnitives are normalized or not.
     """
     import numpy as np
-    vec_density_grid      = VectorDouble([1.0*p/scale for gpoint in grid for p in gpoint])
+    vec_density_grid      = VectorDouble([float(1.0*p/scale) for gpoint in grid for p in gpoint])
     density_indices       = np.array([ bc for b,bc in zip(basis,range(len(basis))) for prim in range(len(b[2])) ])
-    vec_prim_centers      = VectorDouble([ p for b in basis for prim in b[2] for p in b[0] ])
-    vec_prim_angular      = VectorInt([ a for b in basis for prim in b[2] for a in b[1] ])
-    vec_prim_exponents    = VectorDouble([ prim[0] for b in basis for prim in b[2] ])
-    vec_prim_coefficients = VectorDouble([ prim[1] for b in basis for prim in b[2] ])
+    vec_prim_centers      = VectorDouble([float(p) for b in basis for prim in b[2] for p in b[0] ])
+    vec_prim_angular      = VectorInt([int(a) for b in basis for prim in b[2] for a in b[1] ])
+    vec_prim_exponents    = VectorDouble([float(prim[0]) for b in basis for prim in b[2] ])
+    vec_prim_coefficients = VectorDouble([float(prim[1]) for b in basis for prim in b[2] ])
 
     if normalize:
         normalize_gaussians(vec_prim_coefficients,vec_prim_exponents,vec_prim_angular)
@@ -171,7 +171,7 @@ def ElectronDensityPy(coefficients_list,data,occupations=None,volume=1.0,prog_re
 
     for coefficients in coefficients_list:
 
-        vec_mo_coefficients = VectorDouble(list(np.array(coefficients)[density_indices]))
+        vec_mo_coefficients = VectorDouble([float(moc) for moc in np.array(coefficients)[density_indices]])
 
         density_vec = VectorDouble()
         density_vec.reserve(nr_gridpoints)
@@ -273,10 +273,10 @@ def IsosurfacePy(data,origin,counts,delta,isovalue,points_inside,relative_precis
 
     delta_total = np.diag(delta)*counts
 
-    data_vec   = VectorDouble([d for d in data]);
-    extent_vec = VectorInt(list(counts))
-    origin_vec = VectorDouble(list(origin))
-    voxel_vec  = VectorDouble(list(np.diag(delta)))
+    data_vec   = VectorDouble([float(d) for d in data]);
+    extent_vec = VectorInt([int(c) for c in counts])
+    origin_vec = VectorDouble([float(o) for o in origin])
+    voxel_vec  = VectorDouble([float(d) for d in np.diag(delta)])
 
     #points at all corners
     #points_inside=[origin+np.dot(delta_total,d) for d in np.array([[0,0,0],[1,0,0],[0,1,0],[0,0,1],[1,1,0],[1,0,1],[0,1,1],[1,1,1]],dtype=float)]
@@ -292,8 +292,8 @@ def IsosurfacePy(data,origin,counts,delta,isovalue,points_inside,relative_precis
                 radius = temp
         radii.append(radius)
 
-    radii_vec = VectorDouble(radii)
-    points_inside_vec = VectorDouble([c for p in points_inside for c in p])
+    radii_vec = VectorDouble([float(r) for r in radii])
+    points_inside_vec = VectorDouble([float(c) for p in points_inside for c in p])
 
     mesh_criteria_vec = VectorDouble([float(e) for e in mesh_criteria])
 
@@ -350,21 +350,20 @@ def ElectrostaticPotentialOrbitalsPy(coefficients_list,Smat,occupations,data,pro
     np_o = np.array(occupations,dtype=float)
     np_c = np.array(coefficients_list,dtype=float).T
     #compute the first order density matrix P_mu_nu
+    primlist = list(range(nr_primitives))
     P = [
             [
                 np.sum( np_o * np_c[potential_indices[mu]] * np_c[potential_indices[nu]] )
-            for nu in xrange(nr_primitives)
+            for nu in primlist
             ]
-        for mu in xrange(nr_primitives)
+        for mu in primlist
         ]
 
     potential_vec = VectorDouble()
     potential_vec.reserve(nr_gridpoints)
 
-    P_vec = VectorDouble([p for pinner in P for p in pinner])
+    P_vec = VectorDouble([float(p) for pinner in P for p in pinner])
     #screen_vec = VectorInt([s for sinner in screen for s in sinner])
-
-    primlist = list(range(nr_primitives))
 
     S = [
             [
@@ -373,7 +372,7 @@ def ElectrostaticPotentialOrbitalsPy(coefficients_list,Smat,occupations,data,pro
             ]
         for mu in primlist
         ]
-    S_vec = VectorDouble([s for sinner in S for s in sinner])
+    S_vec = VectorDouble([float(s) for sinner in S for s in sinner])
 
     electrostatic_potential_orbitals(prog_report, nr_gridpoints, vec_prim_centers, vec_prim_exponents, vec_prim_coefficients, vec_prim_angular, vec_potential_grid, P_vec, S_vec, potential_vec );
 

@@ -64,9 +64,9 @@ def InterpolationPy(coordinates, vals, points, config=None, prog_report=True):
         else:
             raise TypeError("Supported interpolation types are: 'nearest' and 'distance'.")
 
-    vals_vec=VectorDouble(vals);
-    points_vec=VectorDouble(list(iterchain.from_iterable(points)))
-    coordinates_vec=VectorDouble(list(iterchain.from_iterable(coordinates)))
+    vals_vec=VectorDouble([float(v) for v in vals]);
+    points_vec=VectorDouble([float(p) for p in iterchain.from_iterable(points)])
+    coordinates_vec=VectorDouble([float(c) for c in iterchain.from_iterable(coordinates)])
 
     interpolation_vec=VectorDouble()
     interpolation_vec.reserve(len(points))
@@ -169,7 +169,7 @@ def IrregularNeighbourListPy(grid, nr_neighbours, cutoff, max_nr_neighbours=None
     neighbours_vec = VectorInt()
     neighbours_vec.reserve(nr_gridpoints*(nr_neighbours+1));
 
-    grid_vec = VectorDouble([component for point in grid for component in point])
+    grid_vec = VectorDouble([float(component) for point in grid for component in point])
 
     make_neighbour_list_irregular(prog_report, nr_gridpoints, max_nr_neighbours, nr_neighbours, cutoff_int, grid_vec, cutoff_vec, neighbours_vec, sort_it);
 
@@ -205,10 +205,6 @@ def RegularNeighbourListPy(nr_gridpoints_xyz, nr_neighbour_shells, prog_report=T
             raise ValueError("The variable nr_gridpoints_xyz must contain three values.")
     except TypeError as e:
         raise TypeError("The variable nr_gridpoints_xyz must be a list with three ints.",e)
-
-    for val in nr_gridpoints_xyz:
-        if not isinstance(val,int):
-            raise TypeError("nr_gridpoints_xyz must contain integers.",e)
 
     nr_gridpoints = 1
     for npts in nr_gridpoints_xyz:
@@ -266,7 +262,7 @@ def LocalMinimaPy(neighbour_list, values, degeneration, nr_neighbours, prog_repo
     """
 
     minima_vec = VectorInt()
-    values_vec = VectorDouble(values)
+    values_vec = VectorDouble([float(v) for v in values])
 
     try:
         nr_degen = len(degeneration)
@@ -274,7 +270,7 @@ def LocalMinimaPy(neighbour_list, values, degeneration, nr_neighbours, prog_repo
         degeneration = [degeneration]
         nr_degen = 1
 
-    degeneration_vec = VectorDouble(degeneration)
+    degeneration_vec = VectorDouble([float(d) for d in degeneration])
 
     nr_values = len(values)
 
