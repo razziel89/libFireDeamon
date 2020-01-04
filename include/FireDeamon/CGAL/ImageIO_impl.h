@@ -241,7 +241,7 @@ char *ImageIO_gets( const _image *im, char *str, int size )
 
 
 CGAL_INLINE_FUNCTION
-int ImageIO_seek( const _image *im, long offset, int whence ) {
+long ImageIO_seek( const _image *im, long offset, int whence ) {
   switch(im->openMode) {
   case OM_CLOSE :
   default :
