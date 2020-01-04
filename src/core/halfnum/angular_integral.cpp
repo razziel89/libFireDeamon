@@ -21,7 +21,7 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 //#include <stdexcept>
 
-#include <FireDeamon/halfnum/angular_integral.h>
+#include <FireDeamon/core/halfnum/angular_integral.h>
 
 const static double Pi  = acos(-1.0L);
 const static double S00 = 1.0L/(2.0L*sqrt(Pi));

@@ -37,8 +37,8 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <signal.h>
 #include <time.h>
 #include <unistd.h>
-#include <FireDeamon/iterate_over_tuple.h>
-#include <FireDeamon/deamon_functors.h>
+#include <FireDeamon/core/iterate_over_tuple.h>
+#include <FireDeamon/core/deamon_functors.h>
 
 #include <iostream>
 

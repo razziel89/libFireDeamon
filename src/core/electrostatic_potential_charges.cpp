@@ -22,8 +22,8 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <math.h>
 #include <time.h>
 #include <tuple>
-#include <FireDeamon/parallel_generic.h>
-#include <FireDeamon/electrostatic_potential_charges.h>
+#include <FireDeamon/core/parallel_generic.h>
+#include <FireDeamon/core/electrostatic_potential_charges.h>
 
 void* _potentialThread(void* data){
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);

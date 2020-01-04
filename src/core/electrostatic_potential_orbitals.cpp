@@ -23,11 +23,11 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <math.h>
 #include <time.h>
 #include <boost/math/special_functions/legendre.hpp>
-#include <FireDeamon/parallel_generic.h>
-#include <FireDeamon/halfnum/radial_integral.h>
-#include <FireDeamon/halfnum/angular_integral.h>
-#include <FireDeamon/electrostatic_potential_orbitals.h>
-#include <FireDeamon/constants.h>
+#include <FireDeamon/core/parallel_generic.h>
+#include <FireDeamon/core/halfnum/radial_integral.h>
+#include <FireDeamon/core/halfnum/angular_integral.h>
+#include <FireDeamon/core/electrostatic_potential_orbitals.h>
+#include <FireDeamon/core/constants.h>
 
 //header for the deprecated code below
 //#include <gsl/gsl_sf_legendre.h>

@@ -18,7 +18,7 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 ***********/
 #include <string.h>
 #include <string>
-#include <FireDeamon/set_procname.h>
+#include <FireDeamon/core/set_procname.h>
 #define NAMEMAXBYTES 16
 //PR_SET_NAME
 #include <sys/prctl.h>

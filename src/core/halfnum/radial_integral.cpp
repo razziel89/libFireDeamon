@@ -18,7 +18,7 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 ***********/
 #include <cmath>
 #include <stdexcept>
-#include <FireDeamon/halfnum/radial_integral.h>
+#include <FireDeamon/core/halfnum/radial_integral.h>
 
 static const double sqrtPi = sqrt(acos(-1.0L));
 

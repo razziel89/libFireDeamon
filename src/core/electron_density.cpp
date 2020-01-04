@@ -22,9 +22,9 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdexcept>
 #include <math.h>
 #include <time.h>
-#include <FireDeamon/parallel_generic.h>
-#include <FireDeamon/electron_density.h>
-#include <FireDeamon/constants.h>
+#include <FireDeamon/core/parallel_generic.h>
+#include <FireDeamon/core/electron_density.h>
+#include <FireDeamon/core/constants.h>
 
 //const static double pi_to_3_half = 5.5683279968317078453;
 //const static double sqrt_pihalf_to_3_4 = 1.4031041455342160267;

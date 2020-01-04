@@ -25,8 +25,8 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <time.h>
 #include <utility>
 #include <algorithm>
-#include <FireDeamon/parallel_generic.h>
-#include <FireDeamon/arbitrary_grid_local_minima.h>
+#include <FireDeamon/core/parallel_generic.h>
+#include <FireDeamon/core/arbitrary_grid_local_minima.h>
 
 bool sort_by_first(std::pair<double,int> p1, std::pair<double,int> p2){
     return p1.first < p2.first;

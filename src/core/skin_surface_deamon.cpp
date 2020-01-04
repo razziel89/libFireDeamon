@@ -27,7 +27,7 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 #include <CGAL/Skin_surface_refinement_policy_3.h>
 #include <list>
 #include <vector>
-#include <FireDeamon/skin_surface_deamon.h>
+#include <FireDeamon/core/skin_surface_deamon.h>
 
 template <class SkinSurface, class Polyhedron>
 //extract data into 2 arrays and return length in 2 integers

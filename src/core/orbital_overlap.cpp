@@ -17,8 +17,8 @@ You should have received a copy of the GNU General Public License
 along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 ***********/
 #include <math.h>
-#include <FireDeamon/constants.h>
-#include <FireDeamon/orbital_overlap.h>
+#include <FireDeamon/core/constants.h>
+#include <FireDeamon/core/orbital_overlap.h>
 
 double normalization_coefficient(double alpha, int l, int m, int n){
     return pow(2*alpha,0.75) * pow(4.0*alpha,0.5*(l+m+n)) * odbsdfo2[l]*odbsdfo2[m]*odbsdfo2[n];
