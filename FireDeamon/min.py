@@ -10,7 +10,7 @@ from __future__ import print_function
 
 import sys
 from itertools import chain as iterchain
-from .cpp import *
+from .cpp_min import *
 
 def _generate_three_one(coordinates,radii):
     for c,r in zip(coordinates,radii):

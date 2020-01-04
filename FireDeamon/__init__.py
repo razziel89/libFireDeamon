@@ -1,6 +1,11 @@
-from .cpp_min import *
+import os
+
+from .min import *
 try:
-    from .cpp_max import *
-    MIN_SUPPORT = False
-except ImportError:
-    MIN_SUPPORT = True
+    from .max import *
+    FULL_SUPPORT = True
+except ImportError as e:
+    if os.environ.get("FD_REQ_FULL_SUPPORT", "0") == "1":
+        raise e
+    FULL_SUPPORT = False
+

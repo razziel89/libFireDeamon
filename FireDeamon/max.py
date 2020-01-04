@@ -1,3 +1,20 @@
+## \package FireDeamon
+#  \brief Python module for libFireDeamon
+"""
+This module includes Python wrapper functions to easily access the included
+C++ functionality of libFireDeamon. It is simply called FireDeamon.
+"""
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+import sys
+from itertools import chain as iterchain
+try:
+    from .cpp_max import *
+except (ImportError, ModuleNotFoundError):
+    raise ImportError("Cannot import C++ extension to get maximum functionality")
+
 ## \brief High level function that wraps the generation of a skin surface.
 def SkinSurfacePy(shrink_factor,coordinates,radii,refinesteps=1):
     """
@@ -44,8 +61,6 @@ def SkinSurfacePy(shrink_factor,coordinates,radii,refinesteps=1):
     del normal_vec
     
     return result
-
-from itertools import chain as iterchain
 
 ## \brief High level function that wraps the computation of the electrostatic potential via multithreaded C++ code.
 def ElectrostaticPotentialPy(points, charges, coordinates, prog_report=True,cutoff=10000000.0):
