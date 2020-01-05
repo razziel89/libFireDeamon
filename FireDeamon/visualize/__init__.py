@@ -1,5 +1,8 @@
 import sys
-from .cpp import *
+try:
+    from .cpp import *
+except ImportError:
+    raise ImportError("Cannot import C++ extension")
 
 def add_mesh(data):
     if len(data[0]) == 3:

@@ -1,4 +1,4 @@
-*.so
-*.a
-*.o
 make.vars
+*.egg-info/
+dist/
+build/
