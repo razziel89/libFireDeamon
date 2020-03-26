@@ -1,4 +1,11 @@
-make.vars
+# Ignore files and directories created in the process of distribution
 *.egg-info/
 dist/
 build/
+# Ignore files and directories created when installing in dev mode
+*-linux-gnu.so
+__pycache__/
+cpp.py
+cpp_wrap.cpp
+# Ignore VIM swap files
+*.swp
