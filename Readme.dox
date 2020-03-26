@@ -1,0 +1,16 @@
+/**
+\mainpage   Overview over libFireDeamon
+
+\section    Introduction
+
+What you are currently viewing contains the C++ documentation for \a
+libFireDeamon. Please see the associated documentation of the Python package for
+details on the capabilities of this library and install instructions.
+For any license-related information, please see the file called \a COPYING and
+the header of each individual C++ source file.
+
+\author     Torsten Sachse
+\date       2015-2016
+\version    1.0
+\copyright  GNU General Public License
+*/
