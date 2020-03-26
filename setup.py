@@ -138,7 +138,7 @@ def get_ext_modules(basename):
     use OpenGL. Effectively, this removes libGL.so as a hard dependency. 
 
     If FDINST_FULL_SURFACE_SUPPORT is not 1, the bare minimum required to run the
-    energyscan tool will be installed. Parts of manipapp might also works but there are
+    energyscan tool will be installed. Parts of manipagg might also works but there are
     no guarantees.
 
     Args:
@@ -184,13 +184,12 @@ def get_ext_modules(basename):
             "src/core/orbital_overlap.cpp",
         ]
         libraries += ["pthread", "mpfr", "gmp", "CGAL"]
-        # libraries += ["pthread", "mpfr", "gmp", "boost_thread", "CGAL"]
         extra_compile_args += ["-frounding-math"]
         # Define the symbol FD_FULL_SUPPORT to have the swig pre-processor include
         # everything.
         swig_opts += ["-DFD_FULL_SUPPORT"]
 
-    # Create the main C++ extension with either min or ma funtionality
+    # Create the main C++ extension with either min or max funtionality
     fd_cpp_ext = Extension(
         basename + "._cpp",
         sources=sources,
