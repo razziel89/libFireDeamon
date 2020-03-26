@@ -40,8 +40,10 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * \brief Generate a list of all neighbours of an irregular grid within the given
- * cutoff. \bug segfault (at least undefined behaviour) if \a max_nr_neighbours is
- * smaller than the number of possible neighbours a point might have
+ * cutoff.
+ *
+ * \bug segfault (at least undefined behaviour) if \a max_nr_neighbours is smaller than
+ * the number of possible neighbours a point might have
  */
 void make_neighbour_list_irregular(
     /*! bool - whether or not to give progress reports */

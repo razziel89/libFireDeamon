@@ -22,7 +22,7 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef SET_PROCNAME_H
 #define SET_PROCNAME_H
-//PR_SET_NAME
+// PR_SET_NAME
 //#include <sys/prctl.h>
 #include <string>
 /**
@@ -34,4 +34,4 @@ along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
  */
 void set_procname(std::string newname);
 
-#endif //SET_PROCNAME_H
+#endif // SET_PROCNAME_H
