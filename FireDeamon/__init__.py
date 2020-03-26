@@ -1,5 +1,3 @@
-## \package FireDeamon
-#  \brief Python module for libFireDeamon
 """
 This module includes Python wrapper functions to easily access the included
 C++ functionality of libFireDeamon. It is simply called FireDeamon.
@@ -44,27 +42,33 @@ def _generate_triples(l, length):
         yield [l[i], l[i + 1], l[i + 2]]
 
 
-## \brief High level function that wraps the interpolation of arbitrary data on an irregular grid via multithreaded C++ code.
 def InterpolationPy(coordinates, vals, points, config=None, prog_report=True):
-    """
-    High level function that wraps the interpolation of arbitrary data
-    on an irregular grid via multithreaded C++ code.
-    
-    coordinates: a list of 3-element elements containing the Cartesian coordinates
-                 at which the given values are localized
-    vals: the list of given values
-    points: a list of 3-element elements containing the Cartesian coordinates
-            at which to interpolate
-    config: a dictionary of configuration values. Keys are:
-                method: the interpolation method ('nearest' for nearest neighbours, 
-                    'distance' for weighted inverse distance)
-                for 'distance', also are needed:
-                    exponent: exponent for norm (int)
-                    function: 2 equals Eukledian norm, 3 equals the three norm (int)
-                    cutoff: points farther away than this in the specified norm are
-                        ignored, set to a negative value to include all points (float)
-    prog_report: whether or not to get progress reports during the computation
-                 (since it can take long)
+    """Interpolatee arbitrary data on an irregular grid via multithreaded C++ code.
+
+    Args:
+        coordinates: a list of 3-element elements containing the Cartesian coordinates
+            at which the given values are localized
+
+        vals: the list of given values
+
+        points: a list of 3-element elements containing the Cartesian coordinates at
+            which to interpolate
+
+        config: a dictionary of configuration values, keys are
+
+            method: the interpolation method 'nearest' for nearest neighbours,
+            'distance' for weighted inverse distance
+
+            exponent: exponent for norm (int) (only for 'distance')
+
+            function: 2 equals Eukledian norm, 3 equals the three norm (int)  (only for
+            'distance')
+
+            cutoff: points farther away than this in the specified norm are ignored, set
+            to a negative value to include all points (float) (only for 'distance')
+
+        prog_report: whether or not to get progress reports during the computation
+            (since it can take long) (only for 'distance')
     """
     if len(coordinates) != len(vals):
         raise ValueError("Lengths of coordinate list and vals list are not equal.")
@@ -124,7 +128,6 @@ def InterpolationPy(coordinates, vals, points, config=None, prog_report=True):
     return interpolation
 
 
-## \brief Generate a list of neighbours of each point on an arbitrary grid
 def IrregularNeighbourListPy(
     grid,
     nr_neighbours,
@@ -134,8 +137,7 @@ def IrregularNeighbourListPy(
     cutoff_type="eukledian",
     sort_it=False,
 ):
-    """
-    Generate a list of neighbours of each point on an arbitrary grid.
+    """ Generate a list of neighbours of each point on an arbitrary grid.
 
     This is a multi-step procedure. For each point, first, all other points are located
     that lie within the specified cutoff. Let N be that number. However, if N would be
@@ -147,36 +149,35 @@ def IrregularNeighbourListPy(
     N<max_nr_neighbours and with a large cutoff, many points will be checked for their
     distance to the reference point, which can negatively impact performance.
 
-    grid: list of [float,float,float]
-        The coordinates of each point in the grid.
-    nr_neighbours: int
-        How many neighbours shall be seeked per gridpoint.
-    cutoff: float or [float,float,float] (depending on cutoff_type)
-        Declare the cutoff distance for the given cutoff_type in units of the grid.
-    max_nr_neighbours: int, optional, default: nr_neighbours
-        The maximum number of neighbours to be searched per gridpoint.  This cannot be
-        smaller than nr_neighbours. If the given number of neighbours has been found
-        within the given cutoff, no further neighbours are being searched. So you might
-        not get the nearest ones if this value is too small. Greatly impacts
-        performance.
-    prog_report: boolean, optional, default: True
-        Whether or not information about the progress of the calculation should be
-        printed to stdout.
-    cutoff_type: string, optional, default: eukledian
-        define how to determine whether a gridpoint is too far away from another to be
-        considered its neighbour. Possible values:
-        eukledian:
-            The distance is the absolute value of the difference vector.  Requires
-            cutoff to be one float.
-        manhattan_single:
-            The sum of the distances in x,y and z directions is the distance. Requires
-            cutoff to be one float.
-        manhattan_multiple:
-            Treat each Cartesian direction independently. Requires cutoff to be
-            [float,float,float].
-    sort_it: boolean, optional, default: False
-        Whether or not the neighbours found should be sorted with respect to the
-        distance to the given point in increasing order.
+    Args:
+        grid: (list of [float,float,float]) - The coordinates of each point in the grid.
+        nr_neighbours: (int) - How many neighbours shall be seeked per gridpoint.
+        cutoff: (float or [float,float,float]) - (depending on cutoff_type) Declare the
+            cutoff distance for the given cutoff_type in units of the grid.
+        max_nr_neighbours: (int, optional, default: nr_neighbours) - The maximum number
+            of neighbours to be searched per gridpoint.  This cannot be smaller than
+            nr_neighbours. If the given number of neighbours has been found within the
+            given cutoff, no further neighbours are being searched. So you might not get
+            the nearest ones if this value is too small. Greatly impacts performance.
+        prog_report: (boolean, optional, default: True) - Whether or not information
+            about the progress of the calculation should be printed to stdout.
+        cutoff_type: (string, optional, default: "eukledian")
+
+            define how to determine whether a gridpoint is too far away from another to
+            be considered its neighbour. Possible values:
+
+            eukledian: The distance is the absolute value of the difference vector.
+            Requires cutoff to be one float.
+
+            manhattan_single: The sum of the distances in x,y and z directions is the
+            distance. Requires cutoff to be one float.
+
+            manhattan_multiple: Treat each Cartesian direction independently. Requires
+            cutoff to be [float,float,float].
+
+        sort_it: (boolean, optional, default: False) - Whether or not the neighbours
+            found should be sorted with respect to the distance to the given point in
+            increasing order.
     """
 
     nr_gridpoints = len(grid)
@@ -254,7 +255,6 @@ def IrregularNeighbourListPy(
     return neighbours_vec
 
 
-## \brief Generate a list of neighbours of each point on a regular grid.
 def RegularNeighbourListPy(
     nr_gridpoints_xyz, nr_neighbour_shells, prog_report=True, exclude_border=False
 ):
@@ -265,22 +265,21 @@ def RegularNeighbourListPy(
     neighbours. If fewer than the maximum number of gridpoints was found (e.g. because
     the point is at a corner), -1's will be added.
 
-    nr_gridpoints_xyz: [int, int, int]
-        The number of points in each of the three directions of the regular 3D-grid.
-    nr_neighbour_shells: int
-        How many neighbour shells shall be treated (i.e., consider all those points to
-        be neighbours who lie inside a cuboid that is spanned by 2*nr_neighbour_shells
-        times the vectors that make up the grid. That cuboid is centered around each
-        point.)
-    prog_report: boolean, optional, default: True
-        Whether or not information about the progress of the calculation should be
-        printed to stdout.
-    exclude_border: boolean, optional, default: False
-        Whether or not points that do not have the maximum number of neighbours (i.e.,
-        those that lie close to or at the border, depending on nr_neighbour_shells)
-        should be considered to have neighbours. This is important when finding minima
-        with LocalMinimaPy. When setting exclude_border to True, those excluded points
-        are not considered possible minima.
+    Args:
+        nr_gridpoints_xyz: ([int, int, int]) - The number of points in each of the three
+            directions of the regular 3D-grid.
+        nr_neighbour_shells: (int) - How many neighbour shells shall be treated (i.e.,
+            consider all those points to be neighbours who lie inside a cuboid that is
+            spanned by 2*nr_neighbour_shells times the vectors that make up the grid.
+            That cuboid is centered around each point.)
+        prog_report: (boolean, optional, default: True) - Whether or not information
+            about the progress of the calculation should be printed to stdout.
+        exclude_border: (boolean, optional, default: False) - Whether or not points that
+            do not have the maximum number of neighbours (i.e., those that lie close to
+            or at the border, depending on nr_neighbour_shells) should be considered to
+            have neighbours. This is important when finding minima with LocalMinimaPy.
+            When setting exclude_border to True, those excluded points are not
+            considered possible minima.
     """
 
     try:
@@ -319,7 +318,6 @@ def RegularNeighbourListPy(
     return neighbours_vec
 
 
-## \brief Given a neighbour list (as created by *NeighbourListPy), find local minima
 def LocalMinimaPy(
     neighbour_list,
     values,
@@ -331,41 +329,43 @@ def LocalMinimaPy(
     sort_it=1,
     depths=None,
 ):
-    """
+    """Search local minima.
+
     Given a neighbour list (as created by RegularNeighbourListPy or
     IrregularNeighbourListPy), find local minima. This is done by comparing the data at
     each point to that of its neighbours. The point is a local minimum if its associated
     value is at least 'degeneration' lower than that of all its neighbours.
 
-    neighbour_list: std::vector<int> (or SWIG proxy)
-        A list of neighbours. The format is: N, N1, N2, N3, ... NM and this repeats for
-        every point. M is equal to nr_neighbours and N is the number of actual
-        neighbours that have been found for the respective point.
-    values: list of floats
-        The volumetric data in which the local minima shall be found.
-    degeneration: float
-        As mentioned in the above description. Can be positive or negative.
-    prog_report: boolean, optional, default: False
-        Whether or not information about the progress of the calculation should be
-        printed to stdout.
-    upper_cutoff: float, optional, default: do not use
-        Do not consider points as possible minima whose associated values are at least
-        this large.
-    lower_cutoff: float, optional, default: do not use
-        Do not consider points as possible minima whose associated values are at most
-        this large.
-    sort_it: int, optional, default: 1
-        If 0, do not sort the minima by depths and do not return the depths.
-        If 1, sort the minima with respect to the difference between the value
-        at the minimum and the average of all surrounding points. If depths
-        is not None, also append the estimated depths.
-        If 2, sort the minima with respect to the difference between the value
-        at the minimum and the minimum value of all surrounding points. If depths
-        is not None, also append the estimated depths.
-    depths: object that has an 'append' method
-        if not None, append to the list (or other object) the estimated depths of the
-        minima according to the value of sort_it. If it does not have this method, do
-        not append the depths.
+    Args:
+        neighbour_list: (std::vector<int> (or SWIG proxy)) - A list of neighbours. The
+            format is: N, N1, N2, N3, ... NM and this repeats for every point. M is
+            equal to nr_neighbours and N is the number of actual neighbours that have
+            been found for the respective point.
+        values: (list of floats) - The volumetric data in which the local minima shall
+            be found.
+        degeneration: (float) - As mentioned in the above description. Can be positive
+            or negative.
+        prog_report: (boolean, optional, default: False) - Whether or not information
+            about the progress of the calculation should be printed to stdout.
+        upper_cutoff: (float, optional, default: do not use) - Do not consider points as
+            possible minima whose associated values are at least this large.
+        lower_cutoff: (float, optional, default: do not use) - Do not consider points as
+            possible minima whose associated values are at most this large.
+        sort_it: (int, optional, default: 1)
+
+            If 0, do not sort the minima by depths and do not return the depths.
+
+            If 1, sort the minima with respect to the difference between the value at
+            the minimum and the average of all surrounding points. If depths is not
+            None, also append the estimated depths.
+
+            If 2, sort the minima with respect to the difference between the value at
+            the minimum and the minimum value of all surrounding points. If depths is
+            not None, also append the estimated depths.
+
+        depths: (object that has an 'append' method) - if not None, append to the list
+            (or other object) the estimated depths of the minima according to the value
+            of sort_it. If it does not have this method, do not append the depths.
     """
 
     minima_vec = VectorInt()
@@ -432,16 +432,15 @@ def LocalMinimaPy(
 # Define functions available with full support
 if FULL_SUPPORT:
 
-    ## \brief High level function that wraps the generation of a skin surface.
     def SkinSurfacePy(shrink_factor, coordinates, radii, refinesteps=1):
-        """
-        High level function that wraps the generation of a skin surface.
+        """ High level function that wraps the generation of a skin surface.
         
-        shrink_factor: shrink factor for the skin surface generation
-        coordinates: a list of cartesian coordinates declaring the centers of
-                     the spheres
-        radii: a list containing all the radii 
-        refinesteps: refinement steps to perform. 0 will turn it off.
+        Args:
+            shrink_factor: (float) - shrink factor for the skin surface generation
+            coordinates: a list of cartesian coordinates declaring the centers of the
+                spheres
+            radii: a list containing all the radii 
+            refinesteps: (int) - refinement steps to perform. 0 will turn it off.
         """
         if len(coordinates) != len(radii):
             raise ValueError("Lengths of coordinate list and radii list are not equal.")
@@ -494,21 +493,22 @@ if FULL_SUPPORT:
 
         return result
 
-    ## \brief High level function that wraps the computation of the electrostatic potential via multithreaded C++ code.
     def ElectrostaticPotentialPy(
         points, charges, coordinates, prog_report=True, cutoff=10000000.0
     ):
-        """
-        High level function that wraps the computation of the electrostatic potential via
-        multithreaded C++ code.
+        """Compute the electrostatic potential.
+
+        High level function that wraps the computation of the electrostatic potential
+        via multithreaded C++ code.
         
-        points: a list of 3-element elements containing the Cartesian coordinates
-                at which to compute the potential
-        charges: a list of charges at the coordinates
-        coordinates: a list of 3-element elements containing the Cartesian coordinates
-                     at which the previously given charges are localized
-        prog_report: whether or not to get progress reports during the computation
-                     (since it can take long)
+        Args:
+            points: a list of 3-element elements containing the Cartesian coordinates at
+                which to compute the potential
+            charges: a list of charges at the coordinates
+            coordinates: a list of 3-element elements containing the Cartesian
+                coordinates at which the previously given charges are localized
+            prog_report: whether or not to get progress reports during the computation
+                (since it can take long)
         """
         if len(charges) != len(coordinates):
             raise ValueError(
@@ -540,33 +540,37 @@ if FULL_SUPPORT:
 
         return potential
 
-    ## \brief Initialize data required to perform some computations on a grid
     def InitializeGridCalculationOrbitalsPy(grid, basis, scale=1.0, normalize=True):
-        """
-        Create data structures suitable for efficiently computing
-        the elctron density on an arbitrary grid. Call this first
-        and then ElectronDensityPy(coefficients_list,data) where data
-        is what this function returns.
+        """Initialize a grid calculation based on orbitals.
+
+        Create data structures suitable for efficiently computing the elctron density on
+        an arbitrary grid. Call this first and then
+        ElectronDensityPy(coefficients_list,data) where data is what this function
+        returns.
     
-        grid: list of [float,float,float]
-            The Cartesian coordinates of the grid
-        basis: a list of [A,L,Prim]
-               with
-               A: a list of 3 floats
-                    The center of the contracted Cartesian Gaussian function
-               L: a list of 3 ints
-                    The polynomial exponents of the contracted Cartesian Gaussian
-               Prim: a list of [alpha,pre]
-                    with
-                    alpha: float
-                        The exponential factor of the primitive Gaussian function
-                    pre: float
-                        The contraction coefficient of the primitive Gaussian function
-        scale: float, optional (default: 1.0)
-            Divide each coordinate by this value (coordinate transformation).
-        normalize: bool, optional (default: True)
-            Whether or not to assume that the Gaussian functions that make up the
-            primnitives are normalized or not.
+        Args:
+            grid: (list of [float,float,float]) - The Cartesian coordinates of the grid
+            basis: a list of [A,L,Prim] with
+
+                   A: a list of 3 floats The center of the contracted Cartesian Gaussian
+                   function
+
+                   L: a list of 3 ints The polynomial exponents of the contracted
+                   Cartesian Gaussian
+
+                   Prim: a list of [alpha,pre] with
+
+                        alpha: float The exponential factor of the primitive Gaussian
+                        function
+
+                        pre: float The contraction coefficient of the primitive Gaussian
+                        function
+
+            scale: (float, optional, default: 1.0) - Divide each coordinate by this
+                value (coordinate transformation).
+            normalize: (bool, optional, default: True) - Whether or not to assume that
+                the Gaussian functions that make up the primnitives are normalized or
+                not.
         """
         import numpy as np
 
@@ -603,7 +607,6 @@ if FULL_SUPPORT:
             density_indices,
         )
 
-    ## \brief Compute the electron density due to molecular orbitals
     def ElectronDensityPy(
         coefficients_list,
         data,
@@ -614,24 +617,19 @@ if FULL_SUPPORT:
         cutoff=-1.0,
         correction=None,
     ):
-        """
-        Calculate the electron density due to some molecular orbitals on a grid.
-    
-        coefficients_list: list of lists of floats
-            The coefficients of the molecular orbitals.
-        data: what InitializeGridCalculationOrbitalsPy returned
-    
-        volume: float
-            Scale the whole density by the inverse of this value.
-        prog_report: bool
-            Whether or not to give progress reports over MOs.
-        detailed_prog:
-            Whether or not to give progress reports while a MO
-            is being treated.
-        cutoff: float in units of the grid
-            No density will be computed if the difference between the
-            gridpoint and the center of the basis function is larger
-            than this value.
+        """ Calculate the electron density due to some molecular orbitals on a grid.
+
+        Args:
+            coefficients_list: list of lists of floats The coefficients of the molecular
+                orbitals.
+            data: what InitializeGridCalculationOrbitalsPy returned
+            volume: (float) - Scale the whole density by the inverse of this value.
+            prog_report: (bool) - Whether or not to give progress reports over MOs.
+            detailed_prog: (bool) - Whether or not to give progress reports while a MO
+                is being treated.
+            cutoff: (float in units of the grid) - No density will be computed if the
+                difference between the gridpoint and the center of the basis function is
+                larger than this value.
         """
         import numpy as np
 
@@ -712,7 +710,6 @@ if FULL_SUPPORT:
 
         return density
 
-    ## \brief High level wrapper to create an isosurface of arbitrary high discretization through volumetric data
     def IsosurfacePy(
         data,
         origin,
@@ -723,60 +720,63 @@ if FULL_SUPPORT:
         relative_precision=1.0e-05,
         mesh_criteria=[30, 5, 5],
     ):
-        """
+        """Generate an isosurface.
+
         High level wrapper to create an isosurface of arbitrary high discretization
         through volumetric data. The data is given on an implicit regular grid in 3
-        dimensions. One isosurface per element of points_inside is computed and
-        overlaps are discarded. Using few points for points_inside greatly speeds
-        up the computation.
+        dimensions. One isosurface per element of points_inside is computed and overlaps
+        are discarded. Using few points for points_inside greatly speeds up the
+        computation.
     
-        WARNING: if points_inside does not fit the data, the algorithm might not
-                 yield the actual iso surface.
-        WARNING: the first mesh criterion (angular bound) is <30.0, the algorithm
-                 is not guaranteed to finish.
-        HINT: if creating an iso-density-surface around a molecule, it is usually
-              sufficient to pass the poisition of only one atom via points_inside.
+        Beware the following:
+
+        - If points_inside does not fit the data, the algorithm might not
+          yield the actual iso surface.
+        - If the first mesh criterion (angular bound) is <30.0, the algorithm is not be
+          guaranteed to finish.
+        - If creating an iso-density-surface around a molecule, it is usually sufficient
+          to pass the poisition of only one atom via points_inside.
     
-        data: list of N floats
-            A flat list of the volumetric data. The order of indices is that of
-            dx-files, which is as follows:
-                z - fast
-                y - middle
-                x - slow
-        origin: list of 3 floats
-            The origin of the 3 dimensional regular grid.
-        counts: list of 3 int
-            The number of points in each of the three directions of the grid.
-            The product of these three values is the length of 'data'.
-        delta: a 3x3 matrix (list of 3 lists with 3 elements each)
-            The three vectors stored in this parameter form the vertex of the
-            regular grid on which the data is defined. The matrix than can be
-            built from these vectors must have any values unequal 0.0 solely
-            on its main diagonal. This means that the three axes of the grid
-            have to be aligned parallel to the three Cartesian axes.
-        isovalue: float
-            The isovalue at which to compute the isosurface.
-        points_inside: an iterable of [float,float,float]
-            Points that are expected to lie inside of (or at least very close to)
-            the resulting isosurface. In the case of molecules, this can be the
-            atoms' coordinates.
-        relative_precision: float, optional (default: 1.0e-05)
-            Precision value used to compute the isosurface. A lower value results
-            in more highly discretized surfaces.
-        mesh_criteria: a list of A,R,D, all floats. optional (default: [30.0,5.0,5.0]
-            Explanations from: http://doc.cgal.org/latest/Surface_mesher/index.html
-            A: float
-                Angular bound for surface mesh generation. If <30, the algorithm is
-                not guaranteed to finish. This is the lower bound in degrees for
-                the angles during mesh generation.
-            R: float
-                Radius bound used during mesh generation. It is an upper bound on
-                the radii of surface Delaunay balls. A surface Delaunay ball is a
-                ball circumscribing a mesh facet and centered on the surface.
-            D: float
-                Distance bound used during surface mesh generation. It is an upper
-                bound for the distance between the circumcenter of a mesh facet and
-                the center of a surface Delaunay ball of this facet.
+        Args:
+            data:
+                list of N floats
+
+                A flat list of the volumetric data. The order of indices is that of
+                dx-files, which is as follows: z: fast, y: middle, x: slow
+
+            origin: (list of 3 floats) - The origin of the 3 dimensional regular grid.
+            counts: (list of 3 int) - The number of points in each of the three
+                directions of the grid.  The product of these three values is the length
+                of 'data'.
+            delta: (a 3x3 matrix (list of 3 lists with 3 elements each)) - The three
+                vectors stored in this parameter form the vertex of the regular grid on
+                which the data is defined. The matrix than can be built from these
+                vectors must have any values unequal 0.0 solely on its main diagonal.
+                This means that the three axes of the grid have to be aligned parallel
+                to the three Cartesian axes.
+            isovalue: (float) - The isovalue at which to compute the isosurface.
+            points_inside: (an iterable of [float,float,float]) - Points that are
+                expected to lie inside of (or at least very close to) the resulting
+                isosurface. In the case of molecules, this can be the atoms' coordinates.
+            relative_precision: (float, optional, default: 1.0e-05) - Precision value
+                used to compute the isosurface. A lower value results in more highly
+                discretized surfaces.
+            mesh_criteria:
+                a list of A,R,D, all floats, optional ,default: [30.0,5.0,5.0]
+
+                Explanations from: http://doc.cgal.org/latest/Surface_mesher/index.html
+
+                A: Angular bound for surface mesh generation. If <30, the
+                algorithm is not guaranteed to finish. This is the lower bound in
+                degrees for the angles during mesh generation.
+
+                R: Radius bound used during mesh generation. It is an upper bound on the
+                radii of surface Delaunay balls. A surface Delaunay ball is a ball
+                circumscribing a mesh facet and centered on the surface.
+
+                D: Distance bound used during surface mesh generation. It is an upper
+                bound for the distance between the circumcenter of a mesh facet and the
+                center of a surface Delaunay ball of this facet.
         """
 
         import numpy as np
@@ -864,23 +864,20 @@ if FULL_SUPPORT:
 
         return result
 
-    ## \brief Calculate the electron density due to some molecular orbitals on a grid.
     def ElectrostaticPotentialOrbitalsPy(
         coefficients_list, Smat, occupations, data, prog_report=True
     ):
-        """
-        Calculate the electron density due to some molecular orbitals on a grid.
+        """ Calculate the electron density due to some molecular orbitals on a grid.
     
-        coefficients_list: list of lists of floats
-            The coefficients of the molecular orbitals.
-        Smat: list of lists of floats
-            The overlap matrix between the primitive Gaussian functions
-        occupations: a list of floats 
-            The occupation number of the corresponding molecular orbital
-        data: what InitializeGridCalculationOrbitalsPy returned
-    
-        prog_report: bool
-            Whether or not to give progress reports over the grid.
+        Args:
+            coefficients_list: (list of lists of floats) - The coefficients of the
+                molecular orbitals.
+            Smat: (list of lists of floats) - The overlap matrix between the primitive
+                Gaussian functions
+            occupations: (a list of floats) - The occupation number of the corresponding
+                molecular orbital
+            data: what InitializeGridCalculationOrbitalsPy returned
+            prog_report: (bool) - Whether or not to give progress reports over the grid.
         """
         import numpy as np
 
