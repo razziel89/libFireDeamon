@@ -1,0 +1,642 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Welcome to FireDeamon’s documentation! &mdash; FireDeamon 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="#" class="icon icon-home"> FireDeamon
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">Welcome to FireDeamon’s documentation!</a></li>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#module-FireDeamon">The Python Package</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+</div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">FireDeamon</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#">Docs</a> &raquo;</li>
+        
+      <li>Welcome to FireDeamon’s documentation!</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="welcome-to-firedeamon-s-documentation">
+<h1>Welcome to FireDeamon’s documentation!<a class="headerlink" href="#welcome-to-firedeamon-s-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p>Find the C++ documentation at <a class="reference external" href="./cpp/index.html">CPP</a>!</p>
+</div>
+<div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p>What you are currently viewing contains the documentation for FireDeamon, a
+Python package with a C++-backend written to perform some tasks related to what
+I did during my time as a PhD student that will be detailed in this
+documentation. The entire project is licensed under the GNU General Public
+License v3.</p>
+<p>The package FireDeamon contains functionality that I think is useful for
+people working in physical chemistry or quantum chemistry/physics, who perform
+quantum chemical calculations and evaluate them afterwards (or use them in any
+other way). It consists of functionality that I could not find anywhere at all
+or not anywhere I could just use it (like when it’s in proprietary
+software).</p>
+<dl class="simple">
+<dt>The functionality includes:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>a generic way to compute values defined on an arbitrary grid:</dt><dd><ul>
+<li><p>computed from values defined on an (not necessarily identical)
+arbitrary grid</p></li>
+<li><p>realized via variadic templates</p></li>
+<li><p>supports progress reports during the computation</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>finding local minima in volumetric data on arbitrary grids</p></li>
+<li><dl class="simple">
+<dt>compute the following chemical/physical quantities:</dt><dd><ul>
+<li><p>electron densities (from atomic basis sets)</p></li>
+<li><dl class="simple">
+<dt>electrostatic potentials from</dt><dd><ul>
+<li><p>clouds of point charges</p></li>
+<li><p>atomic basis sets</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>compute isosurfaces through volumetric data sets:</dt><dd><ul>
+<li><p>arbitrarily well discretized</p></li>
+<li><p>only regular grids supported</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>compute skin-surfaces around a set of spheres:</dt><dd><ul>
+<li><p>arbitrarily well discretized</p></li>
+<li><p>arbitrary radii supported</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>interpolate quantities on arbitrary grids using:</dt><dd><ul>
+<li><p>nearest-neighbour interpolation</p></li>
+<li><p>interpolation using inverse-distance weighting:</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>compute overlaps of atomic orbitals</p></li>
+</ul>
+</dd>
+</dl>
+<p>The package FireDeamon has been designed to be mainly used from Python via
+the provided language bindings. Many of the C++ functions are not that easy to
+use (i.e., their input is not that easily prepared in the correct format) and
+some sanity checks are missing. In contrast to that, the high-level Python
+wrapper functions perform many sanity checks and the input is more easily
+prepared properly. Thus, the Python bindings are the only supported way of using
+this package.</p>
+</div>
+<div class="section" id="prerequisites">
+<h1>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h1>
+<dl class="simple">
+<dt>You need the following dependencies to use this package:</dt><dd><ul class="simple">
+<li><p>a C++ compiler that supports the C++14 standard</p></li>
+<li><p>GNU make</p></li>
+<li><dl class="simple">
+<dt>Python:</dt><dd><ul>
+<li><p><a class="reference external" href="https://www.anaconda.com/">Anaconda</a>-based virtual environments highly recommended</p></li>
+<li><p>including the pip package manager</p></li>
+<li><p>including the packages setuptools and wheel</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt>To perform any computation involving surfaces, you also need:</dt><dd><ul class="simple">
+<li><p>CGAL (Computational Geometry Algorithms Library)</p></li>
+<li><p>the Boost C++ libraries</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>If you have all the aforementioned dependencies installed and you environment
+activated, simply run <cite>pip install FireDeamon</cite>.</p>
+</div>
+<div class="section" id="module-FireDeamon">
+<span id="the-python-package"></span><h1>The Python Package<a class="headerlink" href="#module-FireDeamon" title="Permalink to this headline">¶</a></h1>
+<p>This module includes Python wrapper functions to easily access the included
+C++ functionality of libFireDeamon. It is simply called FireDeamon.</p>
+<dl class="function">
+<dt id="FireDeamon.ElectronDensityPy">
+<code class="sig-prename descclassname">FireDeamon.</code><code class="sig-name descname">ElectronDensityPy</code><span class="sig-paren">(</span><em class="sig-param">coefficients_list</em>, <em class="sig-param">data</em>, <em class="sig-param">occupations=None</em>, <em class="sig-param">volume=1.0</em>, <em class="sig-param">prog_report=True</em>, <em class="sig-param">detailed_prog=False</em>, <em class="sig-param">cutoff=-1.0</em>, <em class="sig-param">correction=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FireDeamon.html#ElectronDensityPy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#FireDeamon.ElectronDensityPy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the electron density due to some molecular orbitals on a grid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coefficients_list</strong> – list of lists of floats The coefficients of the molecular
+orbitals.</p></li>
+<li><p><strong>data</strong> – what InitializeGridCalculationOrbitalsPy returned</p></li>
+<li><p><strong>volume</strong> – (float) - Scale the whole density by the inverse of this value.</p></li>
+<li><p><strong>prog_report</strong> – (bool) - Whether or not to give progress reports over MOs.</p></li>
+<li><p><strong>detailed_prog</strong> – (bool) - Whether or not to give progress reports while a MO
+is being treated.</p></li>
+<li><p><strong>cutoff</strong> – (float in units of the grid) - No density will be computed if the
+difference between the gridpoint and the center of the basis function is
+larger than this value.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="FireDeamon.ElectrostaticPotentialOrbitalsPy">
+<code class="sig-prename descclassname">FireDeamon.</code><code class="sig-name descname">ElectrostaticPotentialOrbitalsPy</code><span class="sig-paren">(</span><em class="sig-param">coefficients_list</em>, <em class="sig-param">Smat</em>, <em class="sig-param">occupations</em>, <em class="sig-param">data</em>, <em class="sig-param">prog_report=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FireDeamon.html#ElectrostaticPotentialOrbitalsPy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#FireDeamon.ElectrostaticPotentialOrbitalsPy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the electron density due to some molecular orbitals on a grid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coefficients_list</strong> – (list of lists of floats) - The coefficients of the
+molecular orbitals.</p></li>
+<li><p><strong>Smat</strong> – (list of lists of floats) - The overlap matrix between the primitive
+Gaussian functions</p></li>
+<li><p><strong>occupations</strong> – (a list of floats) - The occupation number of the corresponding
+molecular orbital</p></li>
+<li><p><strong>data</strong> – what InitializeGridCalculationOrbitalsPy returned</p></li>
+<li><p><strong>prog_report</strong> – (bool) - Whether or not to give progress reports over the grid.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="FireDeamon.ElectrostaticPotentialPy">
+<code class="sig-prename descclassname">FireDeamon.</code><code class="sig-name descname">ElectrostaticPotentialPy</code><span class="sig-paren">(</span><em class="sig-param">points</em>, <em class="sig-param">charges</em>, <em class="sig-param">coordinates</em>, <em class="sig-param">prog_report=True</em>, <em class="sig-param">cutoff=10000000.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FireDeamon.html#ElectrostaticPotentialPy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#FireDeamon.ElectrostaticPotentialPy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the electrostatic potential.</p>
+<p>High level function that wraps the computation of the electrostatic potential
+via multithreaded C++ code.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> – a list of 3-element elements containing the Cartesian coordinates at
+which to compute the potential</p></li>
+<li><p><strong>charges</strong> – a list of charges at the coordinates</p></li>
+<li><p><strong>coordinates</strong> – a list of 3-element elements containing the Cartesian
+coordinates at which the previously given charges are localized</p></li>
+<li><p><strong>prog_report</strong> – whether or not to get progress reports during the computation
+(since it can take long)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="FireDeamon.InitializeGridCalculationOrbitalsPy">
+<code class="sig-prename descclassname">FireDeamon.</code><code class="sig-name descname">InitializeGridCalculationOrbitalsPy</code><span class="sig-paren">(</span><em class="sig-param">grid</em>, <em class="sig-param">basis</em>, <em class="sig-param">scale=1.0</em>, <em class="sig-param">normalize=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FireDeamon.html#InitializeGridCalculationOrbitalsPy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#FireDeamon.InitializeGridCalculationOrbitalsPy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a grid calculation based on orbitals.</p>
+<p>Create data structures suitable for efficiently computing the elctron density on
+an arbitrary grid. Call this first and then
+ElectronDensityPy(coefficients_list,data) where data is what this function
+returns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>grid</strong> – (list of [float,float,float]) - The Cartesian coordinates of the grid</p></li>
+<li><p><strong>basis</strong> – <p>a list of [A,L,Prim] with</p>
+<p>A: a list of 3 floats The center of the contracted Cartesian Gaussian
+function</p>
+<p>L: a list of 3 ints The polynomial exponents of the contracted
+Cartesian Gaussian</p>
+<p>Prim: a list of [alpha,pre] with</p>
+<blockquote>
+<div><p>alpha: float The exponential factor of the primitive Gaussian
+function</p>
+<p>pre: float The contraction coefficient of the primitive Gaussian
+function</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>scale</strong> – (float, optional, default: 1.0) - Divide each coordinate by this
+value (coordinate transformation).</p></li>
+<li><p><strong>normalize</strong> – (bool, optional, default: True) - Whether or not to assume that
+the Gaussian functions that make up the primnitives are normalized or
+not.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="FireDeamon.InterpolationPy">
+<code class="sig-prename descclassname">FireDeamon.</code><code class="sig-name descname">InterpolationPy</code><span class="sig-paren">(</span><em class="sig-param">coordinates</em>, <em class="sig-param">vals</em>, <em class="sig-param">points</em>, <em class="sig-param">config=None</em>, <em class="sig-param">prog_report=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FireDeamon.html#InterpolationPy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#FireDeamon.InterpolationPy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpolatee arbitrary data on an irregular grid via multithreaded C++ code.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coordinates</strong> – a list of 3-element elements containing the Cartesian coordinates
+at which the given values are localized</p></li>
+<li><p><strong>vals</strong> – the list of given values</p></li>
+<li><p><strong>points</strong> – a list of 3-element elements containing the Cartesian coordinates at
+which to interpolate</p></li>
+<li><p><strong>config</strong> – <p>a dictionary of configuration values, keys are</p>
+<p>method: the interpolation method ‘nearest’ for nearest neighbours,
+‘distance’ for weighted inverse distance</p>
+<p>exponent: exponent for norm (int) (only for ‘distance’)</p>
+<p>function: 2 equals Eukledian norm, 3 equals the three norm (int)  (only for
+‘distance’)</p>
+<p>cutoff: points farther away than this in the specified norm are ignored, set
+to a negative value to include all points (float) (only for ‘distance’)</p>
+</p></li>
+<li><p><strong>prog_report</strong> – whether or not to get progress reports during the computation
+(since it can take long) (only for ‘distance’)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="FireDeamon.IrregularNeighbourListPy">
+<code class="sig-prename descclassname">FireDeamon.</code><code class="sig-name descname">IrregularNeighbourListPy</code><span class="sig-paren">(</span><em class="sig-param">grid</em>, <em class="sig-param">nr_neighbours</em>, <em class="sig-param">cutoff</em>, <em class="sig-param">max_nr_neighbours=None</em>, <em class="sig-param">prog_report=True</em>, <em class="sig-param">cutoff_type='eukledian'</em>, <em class="sig-param">sort_it=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FireDeamon.html#IrregularNeighbourListPy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#FireDeamon.IrregularNeighbourListPy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a list of neighbours of each point on an arbitrary grid.</p>
+<p>This is a multi-step procedure. For each point, first, all other points are located
+that lie within the specified cutoff. Let N be that number. However, if N would be
+larger than max_nr_neighbours, only the first max_nr_neighbours many points will be
+retained and the other N-max_nr_neighbours many points will be silently ignored.
+Next, the first nr_neighbours many points out of those N points are found and
+retained. If sort_it is True, the N points are first sorted by distance before
+returning nr_neighbours many. This process is performed for eery grid point. If
+N&lt;max_nr_neighbours and with a large cutoff, many points will be checked for their
+distance to the reference point, which can negatively impact performance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>grid</strong> – (list of [float,float,float]) - The coordinates of each point in the grid.</p></li>
+<li><p><strong>nr_neighbours</strong> – (int) - How many neighbours shall be seeked per gridpoint.</p></li>
+<li><p><strong>cutoff</strong> – (float or [float,float,float]) - (depending on cutoff_type) Declare the
+cutoff distance for the given cutoff_type in units of the grid.</p></li>
+<li><p><strong>max_nr_neighbours</strong> – (int, optional, default: nr_neighbours) - The maximum number
+of neighbours to be searched per gridpoint.  This cannot be smaller than
+nr_neighbours. If the given number of neighbours has been found within the
+given cutoff, no further neighbours are being searched. So you might not get
+the nearest ones if this value is too small. Greatly impacts performance.</p></li>
+<li><p><strong>prog_report</strong> – (boolean, optional, default: True) - Whether or not information
+about the progress of the calculation should be printed to stdout.</p></li>
+<li><p><strong>cutoff_type</strong> – <p>(string, optional, default: “eukledian”)</p>
+<p>define how to determine whether a gridpoint is too far away from another to
+be considered its neighbour. Possible values:</p>
+<p>eukledian: The distance is the absolute value of the difference vector.
+Requires cutoff to be one float.</p>
+<p>manhattan_single: The sum of the distances in x,y and z directions is the
+distance. Requires cutoff to be one float.</p>
+<p>manhattan_multiple: Treat each Cartesian direction independently. Requires
+cutoff to be [float,float,float].</p>
+</p></li>
+<li><p><strong>sort_it</strong> – (boolean, optional, default: False) - Whether or not the neighbours
+found should be sorted with respect to the distance to the given point in
+increasing order.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="FireDeamon.IsosurfacePy">
+<code class="sig-prename descclassname">FireDeamon.</code><code class="sig-name descname">IsosurfacePy</code><span class="sig-paren">(</span><em class="sig-param">data, origin, counts, delta, isovalue, points_inside, relative_precision=1e-05, mesh_criteria=[30, 5, 5]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FireDeamon.html#IsosurfacePy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#FireDeamon.IsosurfacePy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate an isosurface.</p>
+<p>High level wrapper to create an isosurface of arbitrary high discretization
+through volumetric data. The data is given on an implicit regular grid in 3
+dimensions. One isosurface per element of points_inside is computed and overlaps
+are discarded. Using few points for points_inside greatly speeds up the
+computation.</p>
+<p>Beware the following:</p>
+<ul class="simple">
+<li><p>If points_inside does not fit the data, the algorithm might not
+yield the actual iso surface.</p></li>
+<li><p>If the first mesh criterion (angular bound) is &lt;30.0, the algorithm is not be
+guaranteed to finish.</p></li>
+<li><p>If creating an iso-density-surface around a molecule, it is usually sufficient
+to pass the poisition of only one atom via points_inside.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – <p>list of N floats</p>
+<p>A flat list of the volumetric data. The order of indices is that of
+dx-files, which is as follows: z: fast, y: middle, x: slow</p>
+</p></li>
+<li><p><strong>origin</strong> – (list of 3 floats) - The origin of the 3 dimensional regular grid.</p></li>
+<li><p><strong>counts</strong> – (list of 3 int) - The number of points in each of the three
+directions of the grid.  The product of these three values is the length
+of ‘data’.</p></li>
+<li><p><strong>delta</strong> – (a 3x3 matrix (list of 3 lists with 3 elements each)) - The three
+vectors stored in this parameter form the vertex of the regular grid on
+which the data is defined. The matrix than can be built from these
+vectors must have any values unequal 0.0 solely on its main diagonal.
+This means that the three axes of the grid have to be aligned parallel
+to the three Cartesian axes.</p></li>
+<li><p><strong>isovalue</strong> – (float) - The isovalue at which to compute the isosurface.</p></li>
+<li><p><strong>points_inside</strong> – (an iterable of [float,float,float]) - Points that are
+expected to lie inside of (or at least very close to) the resulting
+isosurface. In the case of molecules, this can be the atoms’ coordinates.</p></li>
+<li><p><strong>relative_precision</strong> – (float, optional, default: 1.0e-05) - Precision value
+used to compute the isosurface. A lower value results in more highly
+discretized surfaces.</p></li>
+<li><p><strong>mesh_criteria</strong> – <p>a list of A,R,D, all floats, optional ,default: [30.0,5.0,5.0]</p>
+<p>Explanations from: <a class="reference external" href="http://doc.cgal.org/latest/Surface_mesher/index.html">http://doc.cgal.org/latest/Surface_mesher/index.html</a></p>
+<p>A: Angular bound for surface mesh generation. If &lt;30, the
+algorithm is not guaranteed to finish. This is the lower bound in
+degrees for the angles during mesh generation.</p>
+<p>R: Radius bound used during mesh generation. It is an upper bound on the
+radii of surface Delaunay balls. A surface Delaunay ball is a ball
+circumscribing a mesh facet and centered on the surface.</p>
+<p>D: Distance bound used during surface mesh generation. It is an upper
+bound for the distance between the circumcenter of a mesh facet and the
+center of a surface Delaunay ball of this facet.</p>
+</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="FireDeamon.LocalMinimaPy">
+<code class="sig-prename descclassname">FireDeamon.</code><code class="sig-name descname">LocalMinimaPy</code><span class="sig-paren">(</span><em class="sig-param">neighbour_list</em>, <em class="sig-param">values</em>, <em class="sig-param">degeneration</em>, <em class="sig-param">nr_neighbours</em>, <em class="sig-param">prog_report=False</em>, <em class="sig-param">upper_cutoff=None</em>, <em class="sig-param">lower_cutoff=None</em>, <em class="sig-param">sort_it=1</em>, <em class="sig-param">depths=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FireDeamon.html#LocalMinimaPy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#FireDeamon.LocalMinimaPy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search local minima.</p>
+<p>Given a neighbour list (as created by RegularNeighbourListPy or
+IrregularNeighbourListPy), find local minima. This is done by comparing the data at
+each point to that of its neighbours. The point is a local minimum if its associated
+value is at least ‘degeneration’ lower than that of all its neighbours.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>neighbour_list</strong> – (std::vector&lt;int&gt; (or SWIG proxy)) - A list of neighbours. The
+format is: N, N1, N2, N3, … NM and this repeats for every point. M is
+equal to nr_neighbours and N is the number of actual neighbours that have
+been found for the respective point.</p></li>
+<li><p><strong>values</strong> – (list of floats) - The volumetric data in which the local minima shall
+be found.</p></li>
+<li><p><strong>degeneration</strong> – (float) - As mentioned in the above description. Can be positive
+or negative.</p></li>
+<li><p><strong>prog_report</strong> – (boolean, optional, default: False) - Whether or not information
+about the progress of the calculation should be printed to stdout.</p></li>
+<li><p><strong>upper_cutoff</strong> – (float, optional, default: do not use) - Do not consider points as
+possible minima whose associated values are at least this large.</p></li>
+<li><p><strong>lower_cutoff</strong> – (float, optional, default: do not use) - Do not consider points as
+possible minima whose associated values are at most this large.</p></li>
+<li><p><strong>sort_it</strong> – <p>(int, optional, default: 1)</p>
+<p>If 0, do not sort the minima by depths and do not return the depths.</p>
+<p>If 1, sort the minima with respect to the difference between the value at
+the minimum and the average of all surrounding points. If depths is not
+None, also append the estimated depths.</p>
+<p>If 2, sort the minima with respect to the difference between the value at
+the minimum and the minimum value of all surrounding points. If depths is
+not None, also append the estimated depths.</p>
+</p></li>
+<li><p><strong>depths</strong> – (object that has an ‘append’ method) - if not None, append to the list
+(or other object) the estimated depths of the minima according to the value
+of sort_it. If it does not have this method, do not append the depths.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="FireDeamon.RegularNeighbourListPy">
+<code class="sig-prename descclassname">FireDeamon.</code><code class="sig-name descname">RegularNeighbourListPy</code><span class="sig-paren">(</span><em class="sig-param">nr_gridpoints_xyz</em>, <em class="sig-param">nr_neighbour_shells</em>, <em class="sig-param">prog_report=True</em>, <em class="sig-param">exclude_border=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FireDeamon.html#RegularNeighbourListPy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#FireDeamon.RegularNeighbourListPy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a list of neighbours of each point on a regular grid.</p>
+<p>Returns a std::vector&lt;int&gt; with (2*nr_neighbour_shells+1)**3-1 elements per
+gridpoint indicating how many neighbours there are and which ones are the
+neighbours. If fewer than the maximum number of gridpoints was found (e.g. because
+the point is at a corner), -1’s will be added.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nr_gridpoints_xyz</strong> – ([int, int, int]) - The number of points in each of the three
+directions of the regular 3D-grid.</p></li>
+<li><p><strong>nr_neighbour_shells</strong> – (int) - How many neighbour shells shall be treated (i.e.,
+consider all those points to be neighbours who lie inside a cuboid that is
+spanned by 2*nr_neighbour_shells times the vectors that make up the grid.
+That cuboid is centered around each point.)</p></li>
+<li><p><strong>prog_report</strong> – (boolean, optional, default: True) - Whether or not information
+about the progress of the calculation should be printed to stdout.</p></li>
+<li><p><strong>exclude_border</strong> – (boolean, optional, default: False) - Whether or not points that
+do not have the maximum number of neighbours (i.e., those that lie close to
+or at the border, depending on nr_neighbour_shells) should be considered to
+have neighbours. This is important when finding minima with LocalMinimaPy.
+When setting exclude_border to True, those excluded points are not
+considered possible minima.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="FireDeamon.SkinSurfacePy">
+<code class="sig-prename descclassname">FireDeamon.</code><code class="sig-name descname">SkinSurfacePy</code><span class="sig-paren">(</span><em class="sig-param">shrink_factor</em>, <em class="sig-param">coordinates</em>, <em class="sig-param">radii</em>, <em class="sig-param">refinesteps=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FireDeamon.html#SkinSurfacePy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#FireDeamon.SkinSurfacePy" title="Permalink to this definition">¶</a></dt>
+<dd><p>High level function that wraps the generation of a skin surface.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>shrink_factor</strong> – (float) - shrink factor for the skin surface generation</p></li>
+<li><p><strong>coordinates</strong> – a list of cartesian coordinates declaring the centers of the
+spheres</p></li>
+<li><p><strong>radii</strong> – a list containing all the radii</p></li>
+<li><p><strong>refinesteps</strong> – (int) - refinement steps to perform. 0 will turn it off.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Torsten Sachse
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

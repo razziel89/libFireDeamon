@@ -1,0 +1,37 @@
+\form#0:$\pi$
+\form#1:$ (\frac{2}{\pi})^{\frac{3}{4}} $
+\form#2:$ \sqrt{2} $
+\form#3:$ \sqrt{(\frac{\pi}{2})^{\frac{3}{4}}} $
+\form#4:$ \frac{1}{\sqrt{(2i-1)!!}} \forall i \wedge i>0 \wedge i<16 $
+\form#5:$ \sqrt{\frac{2i+1}{4\pi}} \forall i \wedge i>0 \wedge i<16 $
+\form#6:$ \frac{1}{\sqrt{i!}} \forall i \wedge i>0 \wedge i<16 $
+\form#7:$ \Omega^{ijk}_{00,\lambda\mu} $
+\form#8:$\lambda$
+\form#9:$+1$
+\form#10:$\mu$
+\form#11:$-\lambda\le\mu\le\lambda$
+\form#12:$T_{N}^{\lambda}$
+\form#13:$\eta$
+\form#14:$\alpha$
+\form#15:$\mathrm{e}^{\alpha \vec{r}}$
+\form#16:$\eta\cot P^2$
+\form#17:$P^2$
+\form#18:$\eta^2\cdot P^2$
+\form#19:$\sqrt{\pi}\cdot\mathrm{erf}(P\cdot\sqrt{eta})$
+\form#20:$\mathrm{e}^{-\eta\cdot P^2}$
+\form#21:$\frac{1}{ \eta }$
+\form#22:$\frac{1}{ P }$
+\form#23:$\frac{1}{ \sqrt{\eta} }$
+\form#24:$\frac{1}{ \eta^2 }$
+\form#25:$\frac{1}{ \eta^{\frac{3}{2}} }$
+\form#26:$\frac{1}{ \eta\cdot P }$
+\form#27:$\frac{1}{ \eta\cdot P^2 }$
+\form#28:$\frac{1}{ \eta^2\cdot P^2 }$
+\form#29:$ G(\vec{r}) = (x-X_0)^l (y-Y_0)^m (z-Z_0)^n \cdot \mathrm{e}^{-\alpha (\vec{r}-\vec{R}_0)^2} $
+\form#30:$ \vec{R}_0 = \left(\begin{array}{c}X_0 \\ Y_0 \\ Z_0 \end{array}\right)$
+\form#31:$ \vec{r} = \left(\begin{array}{c}x \\ y \\ z \end{array}\right)$
+\form#32:$ G(x) = (x-X_0)^{a/b} \cdot \mathrm{e}^{-\alpha/\beta (x-X_0)^2} $
+\form#33:$ \alpha + \beta $
+\form#34:$\le 0$
+\form#35:$\ge 1$
+\form#36:$\ge 4$
