@@ -1,4 +1,7 @@
 // cpp.i
+/*
+SWIG interface file for the FireDeamon Python package.
+*/
 %module cpp
 
 %include "typemaps.i"
@@ -20,6 +23,12 @@ namespace std {
 %include "FireDeamon/core/arbitrary_grid_local_minima.h"
 %include "FireDeamon/core/set_procname.h"
 
+/*
+Some of the functionality requires quite a few dependencies. Hence, headers
+defining that functionality are only imported if so desired. The minimum
+functionality is sufficient to run the program energyscan, whereas the program
+manipagg requires the full functionality.
+*/
 #ifndef FD_FULL_SUPPORT
 
 %pythoncode %{
