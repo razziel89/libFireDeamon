@@ -1,178 +1,227 @@
-#include <cstdlib>
-#include <pthread.h>
-#include <vector>
-#include <tuple>
-#include <stdexcept>
 #include <assert.h>
-#include <stdio.h>
-#include <math.h>
-#include <time.h>
-#include <parallel_generic.h>
+#include <cstdlib>
 #include <electron_density.h>
+#include <math.h>
+#include <parallel_generic.h>
+#include <pthread.h>
 #include <static_numbers.h>
+#include <stdexcept>
+#include <stdio.h>
+#include <time.h>
+#include <tuple>
+#include <vector>
 
-//const static double sqrt_pihalf_to_3_4 = 1.4031041455342160267;
+// const static double sqrt_pihalf_to_3_4 = 1.4031041455342160267;
 
-inline double power(double base, unsigned int exp){
-    double result = 1.0;
-    while (exp){
-        if (exp & 1)
-            result *= base;
-        exp >>= 1;
-        base *= base;
-    }
-    return result;
+inline double power(double base, unsigned int exp) {
+  double result = 1.0;
+  while (exp) {
+    if (exp & 1)
+      result *= base;
+    exp >>= 1;
+    base *= base;
+  }
+  return result;
 }
 
-inline double X(double A[3], unsigned int a[3], double d, double eta){
-    double A_2 = A[0]*A[0] + A[1]*A[1] + A[2]*A[2];
-    //printf("%f %f %f %d %d %d | %f %f %f %f\n",A[0],A[1],A[2],a[0],a[1],a[2],d,eta, d*exp(-eta * A_2), sqrt_pihalf_to_3_4 * pow(eta,-0.75) * power(A[0],a[0]) * power(A[1],a[1]) * power(A[2],a[2]) * d * exp(-eta * A_2));
-    return /*sqrt_pihalf_to_3_4 * pow(eta,-0.75) **/ power(A[0],a[0]) * power(A[1],a[1]) * power(A[2],a[2]) * d * exp(-eta * A_2);
+inline double X(double A[3], unsigned int a[3], double d, double eta) {
+  double A_2 = A[0] * A[0] + A[1] * A[1] + A[2] * A[2];
+  // printf("%f %f %f %d %d %d | %f %f %f %f\n",A[0],A[1],A[2],a[0],a[1],a[2],d,eta,
+  // d*exp(-eta * A_2), sqrt_pihalf_to_3_4 * pow(eta,-0.75) * power(A[0],a[0]) *
+  // power(A[1],a[1]) * power(A[2],a[2]) * d * exp(-eta * A_2));
+  return /*sqrt_pihalf_to_3_4 * pow(eta,-0.75) **/ power(A[0], a[0]) *
+         power(A[1], a[1]) * power(A[2], a[2]) * d * exp(-eta * A_2);
 }
 
-void* _electronDensityThreadCutoff(void* data){
-    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
-    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,NULL);
-    struct timespec req = {0/*req.tv_sec*/, 1L/*req.tv_nsec*/};
-    //req.tv_sec = 0;
-    //req.tv_nsec = 1L;
-    GPSubData<double,double,double,int,double,double,double,int,double>* dat;
-    dat = static_cast<GPSubData<double,double,double,int,double,double,double,int,double>*>(data);
+void *_electronDensityThreadCutoff(void *data) {
+  pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+  pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+  struct timespec req = {0 /*req.tv_sec*/, 1L /*req.tv_nsec*/};
+  // req.tv_sec = 0;
+  // req.tv_nsec = 1L;
+  GPSubData<double, double, double, int, double, double, double, int, double> *dat;
+  dat = static_cast<
+      GPSubData<double, double, double, int, double, double, double, int, double> *>(
+      data);
 
-    double *grdpnts  = dat->GetData<0>(); //gridpoints
-    double *prm_cent = dat->GetData<1>(); //centers of primitives
-    int    *prm_ang  = dat->GetData<2>(); //angular exponents of primitives
-    double *prm_exp  = dat->GetData<3>(); //exponents of primitives
-    double *prm_coef = dat->GetData<4>(); //contraction coefficients of primitives
-    double *P_mu_nu  = dat->GetData<5>(); //first order density matrix P_mu_nu
-    int    *screen   = dat->GetData<6>(); //whether or not the overlap integral is sufficient
-    double *dens     = dat->GetDataOutput();
-    double *cutoff   = dat->GetData<7>();
-    double cutoff_2  = (*cutoff)*(*cutoff);
+  double *grdpnts = dat->GetData<0>();  // gridpoints
+  double *prm_cent = dat->GetData<1>(); // centers of primitives
+  int *prm_ang = dat->GetData<2>();     // angular exponents of primitives
+  double *prm_exp = dat->GetData<3>();  // exponents of primitives
+  double *prm_coef = dat->GetData<4>(); // contraction coefficients of primitives
+  double *P_mu_nu = dat->GetData<5>();  // first order density matrix P_mu_nu
+  int *screen = dat->GetData<6>(); // whether or not the overlap integral is sufficient
+  double *dens = dat->GetDataOutput();
+  double *cutoff = dat->GetData<7>();
+  double cutoff_2 = (*cutoff) * (*cutoff);
 
-    const int nr_prim  = dat->GetNr<4>();
-    const int nr_dens  = dat->GetNrOutput();
-    const int progress = 5000;
-    const bool progress_reports = dat->GetProgressReports();
-    int* progress_bar = dat->GetProgressBar();
-    pthread_mutex_t* mut = dat->GetMutex();
+  const int nr_prim = dat->GetNr<4>();
+  const int nr_dens = dat->GetNrOutput();
+  const int progress = 5000;
+  const bool progress_reports = dat->GetProgressReports();
+  int *progress_bar = dat->GetProgressBar();
+  pthread_mutex_t *mut = dat->GetMutex();
 
-    double* gp      = grdpnts;
-    double* density = dens;
-    for(int dp = 0; dp < nr_dens;){
-        for (int prog=0; prog<progress && dp<nr_dens; ++prog, ++dp){
-            double sum = 0.0;
-            double r[3];
-            r[0] = *gp; ++gp;
-            r[1] = *gp; ++gp;
-            r[2] = *gp; ++gp;
-            //mu
-            double* pcent_mu = prm_cent;
-            int*    pang_mu  = prm_ang;
-            double* pexp_mu  = prm_exp;
-            double* pcoef_mu = prm_coef;
-            //std::cout << "thread inner start" << std::endl << std::flush;
-            for (int mu=0; mu<nr_prim; ++mu){
-                double A[3];
-                A[0] = -*pcent_mu + r[0]; ++pcent_mu;
-                A[1] = -*pcent_mu + r[1]; ++pcent_mu;
-                A[2] = -*pcent_mu + r[2]; ++pcent_mu;
-                unsigned int a[3];
-                a[0] = (unsigned int)*pang_mu; ++pang_mu;
-                a[1] = (unsigned int)*pang_mu; ++pang_mu;
-                a[2] = (unsigned int)*pang_mu; ++pang_mu;
-                double xi_mu = *pexp_mu; ++pexp_mu;
-                double d_mu  = *pcoef_mu; ++pcoef_mu;
-                //screening
-                if ( ((A[0]*A[0]) + (A[1]*A[1]) + (A[2]*A[2])) < cutoff_2){
-                    double X_mu = X(A,a,d_mu,xi_mu);
-                    //printf("M: %d %d %d | %f %f %f | %f %f | %f %f %f | %e\n",a[0],a[1],a[2],r[0]-A[0],r[1]-A[1],r[2]-A[2],r[0],r[1],r[2],xi_mu,d_mu,X_mu);
-                    sum += P_mu_nu[mu*nr_prim + mu] * X_mu * X_mu;
-                    //nu
-                    double* pcent_nu = pcent_mu;
-                    int*    pang_nu  = pang_mu;
-                    double* pexp_nu  = pexp_mu;
-                    double* pcoef_nu = pcoef_mu;
-                    for (int nu=mu+1; nu<nr_prim; ++nu){ //both, P_mu_nu and X_mu_nu are symmetric
-                        double B[3];
-                        B[0] = -*pcent_nu + r[0]; ++pcent_nu;
-                        B[1] = -*pcent_nu + r[1]; ++pcent_nu;
-                        B[2] = -*pcent_nu + r[2]; ++pcent_nu;
-                        unsigned int b[3];
-                        b[0] = (unsigned int)*pang_nu; ++pang_nu;
-                        b[1] = (unsigned int)*pang_nu; ++pang_nu;
-                        b[2] = (unsigned int)*pang_nu; ++pang_nu;
-                        double xi_nu = *pexp_nu; ++pexp_nu;
-                        double d_nu  = *pcoef_nu; ++pcoef_nu;
-                        //screening
-                        if ( ((B[0]*B[0]) + (B[1]*B[1]) + (B[2]*B[2])) < cutoff_2){
-                            //combined values
-                            if ( screen[mu*nr_prim + nu] != 0 ){
-                                double X_nu = X(B,b,d_nu,xi_nu);
-                                sum += 2.0 * P_mu_nu[mu*nr_prim + nu] * X_mu * X_nu;
-                            }
-                        }
-                    }
-                }
+  double *gp = grdpnts;
+  double *density = dens;
+  for (int dp = 0; dp < nr_dens;) {
+    for (int prog = 0; prog < progress && dp < nr_dens; ++prog, ++dp) {
+      double sum = 0.0;
+      double r[3];
+      r[0] = *gp;
+      ++gp;
+      r[1] = *gp;
+      ++gp;
+      r[2] = *gp;
+      ++gp;
+      // mu
+      double *pcent_mu = prm_cent;
+      int *pang_mu = prm_ang;
+      double *pexp_mu = prm_exp;
+      double *pcoef_mu = prm_coef;
+      // std::cout << "thread inner start" << std::endl << std::flush;
+      for (int mu = 0; mu < nr_prim; ++mu) {
+        double A[3];
+        A[0] = -*pcent_mu + r[0];
+        ++pcent_mu;
+        A[1] = -*pcent_mu + r[1];
+        ++pcent_mu;
+        A[2] = -*pcent_mu + r[2];
+        ++pcent_mu;
+        unsigned int a[3];
+        a[0] = (unsigned int)*pang_mu;
+        ++pang_mu;
+        a[1] = (unsigned int)*pang_mu;
+        ++pang_mu;
+        a[2] = (unsigned int)*pang_mu;
+        ++pang_mu;
+        double xi_mu = *pexp_mu;
+        ++pexp_mu;
+        double d_mu = *pcoef_mu;
+        ++pcoef_mu;
+        // screening
+        if (((A[0] * A[0]) + (A[1] * A[1]) + (A[2] * A[2])) < cutoff_2) {
+          double X_mu = X(A, a, d_mu, xi_mu);
+          // printf("M: %d %d %d | %f %f %f | %f %f | %f %f %f |
+          // %e\n",a[0],a[1],a[2],r[0]-A[0],r[1]-A[1],r[2]-A[2],r[0],r[1],r[2],xi_mu,d_mu,X_mu);
+          sum += P_mu_nu[mu * nr_prim + mu] * X_mu * X_mu;
+          // nu
+          double *pcent_nu = pcent_mu;
+          int *pang_nu = pang_mu;
+          double *pexp_nu = pexp_mu;
+          double *pcoef_nu = pcoef_mu;
+          for (int nu = mu + 1; nu < nr_prim;
+               ++nu) { // both, P_mu_nu and X_mu_nu are symmetric
+            double B[3];
+            B[0] = -*pcent_nu + r[0];
+            ++pcent_nu;
+            B[1] = -*pcent_nu + r[1];
+            ++pcent_nu;
+            B[2] = -*pcent_nu + r[2];
+            ++pcent_nu;
+            unsigned int b[3];
+            b[0] = (unsigned int)*pang_nu;
+            ++pang_nu;
+            b[1] = (unsigned int)*pang_nu;
+            ++pang_nu;
+            b[2] = (unsigned int)*pang_nu;
+            ++pang_nu;
+            double xi_nu = *pexp_nu;
+            ++pexp_nu;
+            double d_nu = *pcoef_nu;
+            ++pcoef_nu;
+            // screening
+            if (((B[0] * B[0]) + (B[1] * B[1]) + (B[2] * B[2])) < cutoff_2) {
+              // combined values
+              if (screen[mu * nr_prim + nu] != 0) {
+                double X_nu = X(B, b, d_nu, xi_nu);
+                sum += 2.0 * P_mu_nu[mu * nr_prim + nu] * X_mu * X_nu;
+              }
             }
-            *density = sum; ++density;
+          }
         }
-        //the nanosleep function serves as a possible point where Ctrl-C
-        //can interrupt the programme
-        nanosleep(&req, (struct timespec *)NULL);
-        //the programme should not be cancelled while the mutex is locked
-        if (progress_reports){
-            pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,NULL);
-            pthread_mutex_lock(mut);
-            *progress_bar += progress;
-            pthread_mutex_unlock(mut);
-            pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
-        }
+      }
+      *density = sum;
+      ++density;
     }
-    pthread_exit(NULL);
+    // the nanosleep function serves as a possible point where Ctrl-C
+    // can interrupt the programme
+    nanosleep(&req, (struct timespec *)NULL);
+    // the programme should not be cancelled while the mutex is locked
+    if (progress_reports) {
+      pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+      pthread_mutex_lock(mut);
+      *progress_bar += progress;
+      pthread_mutex_unlock(mut);
+      pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    }
+  }
+  pthread_exit(NULL);
 }
 
-void normalize_gaussians(std::vector<double> prefactor, std::vector<double> exponent){
-    std::vector<double>::iterator preit, expit;
-    for (preit=prefactor.begin(),expit=exponent.begin(); preit!=prefactor.end() && expit!=exponent.end(); ++preit, ++expit){
-        *preit *= sqrt_pihalf_to_3_4 * pow(*expit,-0.75);
-    }
+void normalize_gaussians(std::vector<double> prefactor, std::vector<double> exponent) {
+  std::vector<double>::iterator preit, expit;
+  for (preit = prefactor.begin(), expit = exponent.begin();
+       preit != prefactor.end() && expit != exponent.end();
+       ++preit, ++expit) {
+    *preit *= sqrt_pihalf_to_3_4 * pow(*expit, -0.75);
+  }
 }
 
-void electron_density(bool progress_reports, int num_gridpoints, std::vector<double> prim_centers, std::vector<double> prim_exponents, std::vector<double> prim_coefficients, std::vector<int> prim_angular, std::vector<double> density_grid, std::vector<double> P_matrix, std::vector<int> screen, std::vector<double> *density, double cutoff)
-{
-    //initialize everything
-    PG globals; 
-    init_parallel_generic(&progress_reports, &globals);
+void electron_density(bool progress_reports, int num_gridpoints,
+                      std::vector<double> prim_centers,
+                      std::vector<double> prim_exponents,
+                      std::vector<double> prim_coefficients,
+                      std::vector<int> prim_angular, std::vector<double> density_grid,
+                      std::vector<double> P_matrix, std::vector<int> screen,
+                      std::vector<double> *density, double cutoff) {
+  // initialize everything
+  PG globals;
+  init_parallel_generic(&progress_reports, &globals);
 
-    //check whether a cutoff shall be considered
-    std::vector<double> vec_cutoff;
-    vec_cutoff.push_back(cutoff>0.0 ? cutoff : 1000000000000.0 );
+  // check whether a cutoff shall be considered
+  std::vector<double> vec_cutoff;
+  vec_cutoff.push_back(cutoff > 0.0 ? cutoff : 1000000000000.0);
 
-    const int split_factor = 3;
+  const int split_factor = 3;
 
-    normalize_gaussians(prim_coefficients,prim_exponents);
+  normalize_gaussians(prim_coefficients, prim_exponents);
 
-    //reserve data structures and fill them with input
-    tuple_of_vectors<double,double,int,double,double,double,int,double> input;
-    input = std::make_tuple(density_grid,prim_centers,prim_angular,prim_exponents,prim_coefficients,P_matrix,screen,vec_cutoff);
+  // reserve data structures and fill them with input
+  tuple_of_vectors<double, double, int, double, double, double, int, double> input;
+  input = std::make_tuple(density_grid,
+                          prim_centers,
+                          prim_angular,
+                          prim_exponents,
+                          prim_coefficients,
+                          P_matrix,
+                          screen,
+                          vec_cutoff);
 
-    //fill class that holds data for each thread
-    GPData<double,double,double,int,double,double,double,int,double> *data;
-    try
-    {
-        data = new GPData<double,double,double,int,double,double,double,int,double>(progress_reports, globals.nr_threads, input, density, &(globals.mutex), &(globals.progress_bar), split_factor, 1, /*interlace=*/true);
-    }
-    catch( const std::invalid_argument& e ) {
-        throw;
-    }
-    fflush(stdout);
-    //perform computation
-    do_parallel_generic<double,double,double,int,double,double,double,int,double>(_electronDensityThreadCutoff, &globals, progress_reports, num_gridpoints, data);
-    //transfer output data
-    data->TransferOutput();
-    //clean up
-    delete data;
-    finalize_parallel_generic(progress_reports, &globals);
-    pg_global = NULL;
+  // fill class that holds data for each thread
+  GPData<double, double, double, int, double, double, double, int, double> *data;
+  try {
+    data = new GPData<double, double, double, int, double, double, double, int, double>(
+        progress_reports,
+        globals.nr_threads,
+        input,
+        density,
+        &(globals.mutex),
+        &(globals.progress_bar),
+        split_factor,
+        1,
+        /*interlace=*/true);
+  } catch (const std::invalid_argument &e) {
+    throw;
+  }
+  fflush(stdout);
+  // perform computation
+  do_parallel_generic<double, double, double, int, double, double, double, int, double>(
+      _electronDensityThreadCutoff, &globals, progress_reports, num_gridpoints, data);
+  // transfer output data
+  data->TransferOutput();
+  // clean up
+  delete data;
+  finalize_parallel_generic(progress_reports, &globals);
+  pg_global = NULL;
 }

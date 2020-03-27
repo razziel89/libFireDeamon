@@ -16,15 +16,16 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with libFireDeamon.  If not, see <http://www.gnu.org/licenses/>.
 ***********/
+#include <FireDeamon/core/set_procname.h>
 #include <string.h>
 #include <string>
-#include <FireDeamon/core/set_procname.h>
 #define NAMEMAXBYTES 16
-//PR_SET_NAME
+// PR_SET_NAME
 #include <sys/prctl.h>
-void set_procname(std::string newname){
-    char* c = (char*)malloc(NAMEMAXBYTES*sizeof(char));
-    memset(c,'\0',NAMEMAXBYTES*sizeof(char));
-    strncpy(c,newname.c_str(),NAMEMAXBYTES*sizeof(char));
-    prctl(PR_SET_NAME, c, 0, 0, 0);
+void set_procname(std::string newname) {
+  char *c = (char *)malloc(NAMEMAXBYTES * sizeof(char));
+  memset(c, '\0', NAMEMAXBYTES * sizeof(char));
+  // Without the -1, the string is not guaranteed to end in a NULL character
+  strncpy(c, newname.c_str(), (NAMEMAXBYTES - 1) * sizeof(char));
+  prctl(PR_SET_NAME, c, 0, 0, 0);
 }
