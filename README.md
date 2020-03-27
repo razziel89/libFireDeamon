@@ -32,7 +32,7 @@ This project uses the following auto-formatters:
 * Python code: black (the uncompromising Python code formatter)
   <https://github.com/psf/black>
 * C++ code: clang-format <https://clang.llvm.org/docs/ClangFormat.html> with the
-  options `--style="{BasedOnStyle: llvm, ColumnLimit: 100}"`
+  options `--style="{BasedOnStyle: llvm, ColumnLimit: 100, BinPackArguments: false}"`
 
 Please make sure to auto-format your pull request with those options.
 Furthermore, please document any code you add.
