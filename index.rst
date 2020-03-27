@@ -76,7 +76,10 @@ You need the following dependencies to use this package:
 
 To perform any computation involving surfaces, you also need:
     * CGAL (Computational Geometry Algorithms Library)
-    * the Boost C++ libraries
+    * some `Boost_` functions:
+        * the functions `boost::format` and `boost::math::legendre_p`
+
+.. _Boost: https://www.boost.org/
 
 
 Installation
