@@ -385,11 +385,12 @@ GPData<Tout, Tsplit, Tins...>::GPData(
     std::vector<std::tuple<unsigned int, size_t, void *>> sizes_pointers_vec;
     sizes_pointers_vec.reserve(1 + sizeof...(Tins));
 
-    tuple_it::for_each_in_tuple_vector(&input, &sizes_pointers_vec,
-                                       get_size_in_bytes_and_pointer_functor());
+    tuple_it::for_each_in_tuple_vector(
+        &input, &sizes_pointers_vec, get_size_in_bytes_and_pointer_functor());
 
     tuple_it::for_each_in_tuple_vector(
-        &m_data, &sizes_pointers_vec,
+        &m_data,
+        &sizes_pointers_vec,
         copy_functor_interlace(m_split_factor_in, m_nr_subs, 0, m_interlace));
   }
   // create sub data
@@ -422,13 +423,17 @@ GPData<Tout, Tsplit, Tins...>::GPData(
     }
     subdata.push_back(GPSubData<Tout, Tsplit, Tins...>(
         // general information about thread
-        progress_reports, sub + 1,
+        progress_reports,
+        sub + 1,
         // input data
-        here_len_data, here_data,
+        here_len_data,
+        here_data,
         // output data
-        here_elements, m_output + m_split_factor_out * start,
+        here_elements,
+        m_output + m_split_factor_out * start,
         // information for parallelization
-        m_mut, m_progress_bar));
+        m_mut,
+        m_progress_bar));
     start += here_elements;
     too_many -= 1;
   }
@@ -526,8 +531,8 @@ void do_parallel_generic(
   signal(SIGINT, signal_callback_handler);
 
   for (int i = 0; i < globals->nr_threads; ++i) {
-    int rc = pthread_create(globals->threads + i, NULL, thread_func,
-                            (void *)data->GetSubData(i));
+    int rc = pthread_create(
+        globals->threads + i, NULL, thread_func, (void *)data->GetSubData(i));
     assert(rc == 0);
   }
   char prog_char = '|';
@@ -557,12 +562,15 @@ void do_parallel_generic(
       pthread_mutex_unlock(&(globals->mutex));
       fprintf(stdout, "%c[2K\r", 27);
       if (here_progress_bar >= nr_calcs) {
-        fprintf(stdout, "Progress: %6.2f%% | Total: %d/%d  ", 100.0, nr_calcs,
-                nr_calcs);
+        fprintf(
+            stdout, "Progress: %6.2f%% | Total: %d/%d  ", 100.0, nr_calcs, nr_calcs);
         looping = false;
       } else {
-        fprintf(stdout, "Progress: %6.2f%% | Total: %d/%d %c",
-                here_progress_bar * 100.0 / nr_calcs, here_progress_bar, nr_calcs,
+        fprintf(stdout,
+                "Progress: %6.2f%% | Total: %d/%d %c",
+                here_progress_bar * 100.0 / nr_calcs,
+                here_progress_bar,
+                nr_calcs,
                 prog_char);
       }
       fflush(stdout);
