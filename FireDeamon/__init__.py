@@ -643,9 +643,14 @@ if FULL_SUPPORT:
             CURSOR_UP_ONE = ""
             ERASE_LINE = ""
 
-        vec_prim_centers, vec_prim_exponents, vec_prim_coefficients, vec_prim_angular, vec_density_grid, density_indices = (
-            data
-        )
+        (
+            vec_prim_centers,
+            vec_prim_exponents,
+            vec_prim_coefficients,
+            vec_prim_angular,
+            vec_density_grid,
+            density_indices,
+        ) = data
 
         if not (vec_density_grid.size()) % 3 == 0:
             raise ValueError(
@@ -881,9 +886,14 @@ if FULL_SUPPORT:
         """
         import numpy as np
 
-        vec_prim_centers, vec_prim_exponents, vec_prim_coefficients, vec_prim_angular, vec_potential_grid, potential_indices = (
-            data
-        )
+        (
+            vec_prim_centers,
+            vec_prim_exponents,
+            vec_prim_coefficients,
+            vec_prim_angular,
+            vec_potential_grid,
+            potential_indices,
+        ) = data
 
         if not (vec_potential_grid.size()) % 3 == 0:
             raise ValueError(
