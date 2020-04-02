@@ -391,7 +391,7 @@ def main():
     # Package data
     PACKAGE_DATA = {
         "name": "FireDeamon",
-        "version": 0.1,
+        "version": "0.1.1",
         "description": "Misc routines for the ManipulateAggregates package",
         "author": "Torsten Sachse",
         "mail": "torsten.sachse@gmail.com",

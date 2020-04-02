@@ -12,15 +12,6 @@ The Python docs are available at:
 <https://razziel89.github.io/libFireDeamon/>.
 They link to the C++ documentation.
 
-# DOWNLOAD
-
-You can get libFireDeamon easily if you have `git` installed by executing
-
-> git clone git://github.com/razziel89/libfiredeamon.git
-
-In the future, the package will be made available via `pip`.
-Please check the more extensive online documentation for more details.
-
 # Contributing
 
 Contributions are very welcome!
