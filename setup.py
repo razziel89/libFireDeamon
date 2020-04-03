@@ -391,7 +391,7 @@ def main():
     # Package data
     PACKAGE_DATA = {
         "name": "FireDeamon",
-        "version": "0.1.1",
+        "version": "0.1.2",
         "description": "Misc routines for the ManipulateAggregates package",
         "author": "Torsten Sachse",
         "mail": "torsten.sachse@gmail.com",
@@ -402,7 +402,7 @@ def main():
             "Development Status :: 4 - Beta",
             "Intended Audience :: Developers",
             "Intended Audience :: Science/Research",
-            "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
+            "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
             "Natural Language :: English",
             "Operating System :: POSIX :: Linux",
             "Programming Language :: C++",
